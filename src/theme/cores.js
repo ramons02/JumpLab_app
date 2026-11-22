@@ -1,0 +1,36 @@
+/**
+ * Paleta única do app (tema escuro com destaque verde, D16), com os valores do protótipo validado.
+ * Lida pelo tailwind.config.js (classes do NativeWind) e importada onde a cor precisa ser valor
+ * (react-native-svg, navegação). Nenhum outro arquivo define cor em hexadecimal.
+ */
+module.exports = {
+  fundo: '#0b0f0e',
+  cartao: '#121816',
+  borda: '#263130',
+  texto: '#f1f5f3',
+  textoSecundario: '#93a29b',
+  destaque: '#2ee58a',
+  destaqueFundo: '#13361f',
+  aviso: { DEFAULT: '#f8c867', fundo: '#2b2210' },
+  erro: { DEFAULT: '#f87171', fundo: '#2c1414' },
+  personagem: {
+    pele: '#e8b48a',
+    peleFundo: '#c8936b',
+    cabelo: '#1c2220',
+    camiseta: '#2ee58a',
+    camisetaFundo: '#1fb56b',
+    camisetaLetra: '#0b3d25',
+    short: '#26322e',
+    tenis: '#f1f5f3',
+    sola: '#2ee58a',
+    meia: '#f1f5f3',
+    olho: '#1c2220',
+    boca: '#8a4b2f',
+    sombra: 'rgba(0,0,0,0.45)',
+    brilho: 'rgba(46,229,138,0.22)',
+    anilhaFundo: '#151b19',
+    anilhaBorda: '#94a3b8',
+    barra: '#cbd5e1',
+  },
+  marca: { fundoIcone: '#1b1b1b' },
+};

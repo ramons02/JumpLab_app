@@ -57,7 +57,7 @@ function PacienteNaoEncontrado({ aoVoltar }: { aoVoltar: () => void }) {
       <Pressable
         accessibilityRole="button"
         onPress={aoVoltar}
-        className="rounded-2xl bg-marca px-6 py-3"
+        className="rounded-2xl bg-destaque px-6 py-3"
       >
         <Text className="font-semibold text-fundo">Voltar</Text>
       </Pressable>

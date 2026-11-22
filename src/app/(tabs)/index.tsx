@@ -10,9 +10,9 @@ import { ROTULO_PERFIL } from '@/utils/rotulos';
 
 function ItemPaciente({ paciente, hoje }: { paciente: Patient; hoje: string }) {
   return (
-    <View className="mb-2 rounded-2xl border border-borda bg-superficie p-3">
+    <View className="mb-2 rounded-2xl border border-borda bg-cartao p-3">
       <Text className="font-semibold text-texto">{paciente.nome}</Text>
-      <Text className="mt-0.5 text-xs text-texto-suave">
+      <Text className="mt-0.5 text-xs text-textoSecundario">
         {ROTULO_PERFIL[paciente.perfil]} · {calcularIdade(paciente.dataNascimento, hoje)} anos
       </Text>
     </View>
@@ -22,7 +22,10 @@ function ItemPaciente({ paciente, hoje }: { paciente: Patient; hoje: string }) {
 function BotaoNovoPaciente() {
   return (
     <Link href="/patient/new" asChild>
-      <Pressable accessibilityRole="button" className="items-center rounded-2xl bg-marca px-5 py-4">
+      <Pressable
+        accessibilityRole="button"
+        className="items-center rounded-2xl bg-destaque px-5 py-4"
+      >
         <Text className="text-sm font-semibold text-fundo">+ Novo Paciente</Text>
       </Pressable>
     </Link>
@@ -57,7 +60,7 @@ export default function TelaPacientes() {
         renderItem={({ item }) => <ItemPaciente paciente={item} hoje={hoje} />}
         contentContainerClassName="p-4 pb-28"
         ListEmptyComponent={
-          <Text className="mt-16 text-center text-sm text-texto-suave">
+          <Text className="mt-16 text-center text-sm text-textoSecundario">
             Nenhum paciente cadastrado ainda.
           </Text>
         }

@@ -1,4 +1,5 @@
-/** Cores do tema escuro com destaque verde (D16), as mesmas do protótipo. */
+const cores = require('./src/theme/cores');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
@@ -6,15 +7,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        fundo: '#050706',
-        superficie: '#121816',
-        borda: '#263130',
-        'borda-forte': '#34403c',
-        texto: '#eef3f0',
-        'texto-suave': '#93a29b',
-        'texto-apagado': '#6b7a74',
-        marca: { fraca: '#13361f', DEFAULT: '#2ee58a', forte: '#5ff2a8' },
-        erro: { fraco: '#2c1414', DEFAULT: '#f87171' },
+        fundo: cores.fundo,
+        cartao: cores.cartao,
+        borda: cores.borda,
+        texto: cores.texto,
+        textoSecundario: cores.textoSecundario,
+        destaque: cores.destaque,
+        destaqueFundo: cores.destaqueFundo,
+        aviso: cores.aviso,
+        erro: cores.erro,
+      },
+      fontFamily: {
+        titulo: ['BebasNeue-Regular'],
       },
     },
   },

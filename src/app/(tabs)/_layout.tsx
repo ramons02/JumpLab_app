@@ -1,24 +1,18 @@
 import { Tabs } from 'expo-router/js-tabs';
 
-const COR_FUNDO = '#050706';
-const COR_BORDA = '#263130';
-const COR_MARCA = '#2ee58a';
-const COR_INATIVA = '#93a29b';
-const COR_TEXTO = '#eef3f0';
+import cores from '@/theme/cores';
+import { FONTE_TITULO } from '@/theme/fontes';
 
 export default function LayoutAbas() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: COR_FUNDO },
-        headerTintColor: COR_TEXTO,
-        tabBarStyle: { backgroundColor: COR_FUNDO, borderTopColor: COR_BORDA },
-        tabBarActiveTintColor: COR_MARCA,
-        tabBarInactiveTintColor: COR_INATIVA,
-        sceneStyle: { backgroundColor: COR_FUNDO },
+        headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 30 },
+        tabBarActiveTintColor: cores.destaque,
+        tabBarInactiveTintColor: cores.textoSecundario,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Pacientes' }} />
+      <Tabs.Screen name="index" options={{ title: 'PACIENTES', tabBarLabel: 'Pacientes' }} />
     </Tabs>
   );
 }
