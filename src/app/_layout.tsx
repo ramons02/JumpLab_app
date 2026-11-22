@@ -36,6 +36,7 @@ export default function LayoutRaiz() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="patient/new" options={{ title: 'NOVO PACIENTE' }} />
           <Stack.Screen name="patient/[id]/edit" options={{ title: 'EDITAR PACIENTE' }} />
+          <Stack.Screen name="assessment" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </SQLiteProvider>

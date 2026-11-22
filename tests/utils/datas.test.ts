@@ -1,5 +1,6 @@
 import {
   calcularIdade,
+  dataHoraLocal,
   dataHoraParaBr,
   hojeIso,
   mascararData,
@@ -75,5 +76,12 @@ describe('dataHoraParaBr', () => {
   it('mostra só a data, em dd/mm/aaaa', () => {
     expect(dataHoraParaBr('2026-11-22T22:30')).toBe('22/11/2026');
     expect(dataHoraParaBr('2026-01-05T08:00')).toBe('05/01/2026');
+  });
+});
+
+describe('dataHoraLocal', () => {
+  it('formata a hora local do aparelho como AAAA-MM-DDTHH:MM, sem segundos', () => {
+    expect(dataHoraLocal(new Date(2026, 10, 22, 22, 30, 15))).toBe('2026-11-22T22:30');
+    expect(dataHoraLocal(new Date(2026, 0, 5, 8, 4, 59))).toBe('2026-01-05T08:04');
   });
 });
