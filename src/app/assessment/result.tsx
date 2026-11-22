@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, Text, TextInput, ToastAndroid, View } fro
 
 import { BlocoResultado } from '@/components/BlocoResultado';
 import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
+import { useLaudoPdf } from '@/hooks/useLaudoPdf';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
@@ -15,7 +16,10 @@ import { PROTOCOLOS } from '@/utils/protocolos';
 import { montarResumo } from '@/utils/resumoAvaliacao';
 import { descartarVideos } from '@/video/descartarVideos';
 
-/** Resultado da avaliação em andamento, ainda não salva (HU008). */
+export const MENSAGEM_SALVA = 'Avaliação salva.';
+export const MENSAGEM_SALVA_SEM_PDF = 'Avaliação salva. Não foi possível gerar o PDF.';
+
+/** Resultado da avaliação em andamento, ainda não salva (HU008), com o laudo em PDF (HU010). */
 export default function TelaResultado() {
   const { rascunho } = useRascunhoAvaliacao();
   // Depois de salvar, o rascunho é apagado antes de a tela sair: a tela segue com o último.
@@ -31,9 +35,11 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
   const { descartarRascunho } = useRascunhoAvaliacao();
   const { paciente } = usePerfilPaciente(rascunho.pacienteId);
   const { salvando, salvar } = useSalvarAvaliacao();
+  const { gerando, gerarECompartilhar } = useLaudoPdf();
+  const ocupado = salvando || gerando;
   const [observacoes, setObservacoes] = useState('');
   const [salvo, setSalvo] = useState(false);
-  const [destino, setDestino] = useState<string | null>(null);
+  const [destino, setDestino] = useState<{ rota: string; aviso: string } | null>(null);
   const resumo = useMemo(() => {
     const nova = avaliacaoDoRascunho(rascunho);
     return nova ? montarResumo(nova) : null;
@@ -61,15 +67,25 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
   // Navega só depois de a proteção contra saída ser desligada (salvo = true).
   useEffect(() => {
     if (!destino) return;
-    router.dismissTo(destino as `/patient/${string}`);
-    ToastAndroid.show('Avaliação salva.', ToastAndroid.SHORT);
+    router.dismissTo(destino.rota as `/patient/${string}`);
+    ToastAndroid.show(destino.aviso, ToastAndroid.SHORT);
   }, [destino, router]);
 
   async function soSalvar() {
     const avaliacao = await salvar(observacoes);
     if (!avaliacao) return;
     setSalvo(true);
-    setDestino(`/patient/${avaliacao.pacienteId}`);
+    setDestino({ rota: `/patient/${avaliacao.pacienteId}`, aviso: MENSAGEM_SALVA });
+  }
+
+  /** Salva pelo mesmo caminho de Só salvar e já gera o laudo; falha no PDF não desfaz a gravação. */
+  async function salvarEExportar() {
+    const avaliacao = await salvar(observacoes);
+    if (!avaliacao) return;
+    setSalvo(true);
+    const resultado = await gerarECompartilhar(avaliacao.id);
+    const aviso = resultado === 'erro' ? MENSAGEM_SALVA_SEM_PDF : MENSAGEM_SALVA;
+    setDestino({ rota: `/patient/${avaliacao.pacienteId}`, aviso });
   }
 
   if (!resumo || !topo) return null;
@@ -114,16 +130,27 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
         </Text>
         <View style={{ height: ESPACO_FINAL_PX }} />
       </ScrollView>
-      <View className="border-t border-borda bg-fundo p-4">
+      <View className="flex-row gap-3 border-t border-borda bg-fundo p-4">
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: salvando }}
-          disabled={salvando}
+          accessibilityState={{ disabled: ocupado }}
+          disabled={ocupado}
           onPress={soSalvar}
-          className={`items-center rounded-2xl bg-destaque py-4 ${salvando ? 'opacity-60' : ''}`}
+          className={`flex-1 items-center rounded-2xl border border-destaque py-4 ${ocupado ? 'opacity-60' : ''}`}
         >
-          <Text className="text-sm font-semibold text-fundo">Só salvar</Text>
+          <Text className="text-sm font-semibold text-destaque">Só salvar</Text>
         </Pressable>
+        {resumo.tipo === 'salto' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: ocupado }}
+            disabled={ocupado}
+            onPress={salvarEExportar}
+            className={`flex-1 items-center rounded-2xl bg-destaque py-4 ${ocupado ? 'opacity-60' : ''}`}
+          >
+            <Text className="text-sm font-semibold text-fundo">Salvar e exportar PDF</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );

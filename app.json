@@ -12,8 +12,12 @@
         "backgroundColor": "#1b1b1b"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.CAMERA"],
-      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
       "package": "br.com.jumplab.app"
     },
     "plugins": [
@@ -22,7 +26,9 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/BebasNeue-Regular.ttf"]
+          "fonts": [
+            "./assets/fonts/BebasNeue-Regular.ttf"
+          ]
         }
       ],
       [
@@ -32,7 +38,8 @@
           "microphonePermission": false
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-sharing"
     ],
     "scheme": "jumplab",
     "experiments": {
