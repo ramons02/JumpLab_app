@@ -1,5 +1,4 @@
 import { aplicarMigracoes } from '@/database/migracoes';
-import { inserirPaciente } from '@/database/pacientes';
 
 import { criarBancoEmMemoria, type BancoDeTeste } from '../helpers/bancoEmMemoria';
 
@@ -24,25 +23,16 @@ describe('migração melhorias (spec 017)', () => {
   });
 
   it('linhas gravadas antes da migração ficam com melhorias_json nulo', async () => {
-    // Volta o banco para antes da migração melhorias (a 3), desfazendo ela e as seguintes,
-    // grava uma avaliação e então migra de novo.
-    await db.runAsync(`PRAGMA user_version = 0`);
-    await aplicarMigracoes(db);
-    await db.runAsync('DROP TABLE avaliador');
-    await db.runAsync('ALTER TABLE avaliacao DROP COLUMN melhorias_json');
-    await db.runAsync(`PRAGMA user_version = ${VERSAO_ANTES_DE_MELHORIAS}`);
-    const paciente = await inserirPaciente(db, {
-      nome: 'Ana Souza',
-      dataNascimento: '1995-03-15',
-      perfil: 'pos_lca',
-      pernaLesionada: 'direita',
-      dataLesao: '2026-05-20',
-    });
+    // Banco parado logo antes da migração melhorias (a 3): grava uma avaliação e então migra.
+    await aplicarMigracoes(db, VERSAO_ANTES_DE_MELHORIAS);
+    await db.runAsync(
+      `INSERT INTO paciente (id, nome, data_nascimento, perfil, perna_lesionada, data_lesao, criado_em, atualizado_em)
+       VALUES ('p1', 'Ana Souza', '1995-03-15', 'pos_lca', 'direita', '2026-05-20', 'x', 'x')`,
+    );
     await db.runAsync(
       `INSERT INTO avaliacao (id, paciente_id, protocolo, data_hora, perna_lesionada, carga_kg,
          observacoes, resultado_json, criado_em, atualizado_em, pendente_sync)
-       VALUES ('a1', ?, 'cmj_bi', '2026-11-01T09:00', 'direita', NULL, '', '{}', 'x', 'x', 1)`,
-      paciente.id,
+       VALUES ('a1', 'p1', 'cmj_bi', '2026-11-01T09:00', 'direita', NULL, '', '{}', 'x', 'x', 1)`,
     );
 
     await aplicarMigracoes(db);

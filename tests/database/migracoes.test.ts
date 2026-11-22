@@ -110,4 +110,55 @@ describe('aplicarMigracoes', () => {
       ),
     ).rejects.toThrow(/CHECK/);
   });
+
+  describe('migração sincronizacao (spec 013)', () => {
+    /** Versão logo antes da migração sincronizacao (a 5). */
+    const ANTES_DA_SINCRONIZACAO = 4;
+
+    it('estado_sync nasce com a linha 1 e cursor 0', async () => {
+      await aplicarMigracoes(db);
+      expect(await versao(db)).toBe(VERSAO_ATUAL);
+      expect(await db.getFirstAsync('SELECT * FROM estado_sync')).toEqual({
+        id: 1,
+        usuario_email: null,
+        cursor_servidor: 0,
+        ultima_sincronizacao: null,
+        ultimo_resultado: null,
+        ultimo_erro: null,
+      });
+    });
+
+    it('pacientes gravados antes da migração ficam pendentes', async () => {
+      await aplicarMigracoes(db, ANTES_DA_SINCRONIZACAO);
+      await db.runAsync(
+        INSERIR,
+        'p1',
+        'Ana',
+        '1995-03-15',
+        'corredor',
+        'nenhuma',
+        null,
+        CARIMBO,
+        CARIMBO,
+      );
+
+      await aplicarMigracoes(db);
+
+      expect(await db.getFirstAsync('SELECT pendente_sync FROM paciente')).toEqual({
+        pendente_sync: 1,
+      });
+    });
+
+    it('CHECK recusa pendente_sync 2 e rodar de novo não muda nada', async () => {
+      await aplicarMigracoes(db);
+      await expect(
+        db.runAsync(
+          `INSERT INTO paciente (id, nome, data_nascimento, perfil, perna_lesionada, data_lesao, criado_em, atualizado_em, pendente_sync)
+           VALUES ('p2', 'Ana', '1995-03-15', 'corredor', 'nenhuma', NULL, 'x', 'x', 2)`,
+        ),
+      ).rejects.toThrow();
+      await aplicarMigracoes(db);
+      expect(await db.getFirstAsync('SELECT COUNT(*) AS n FROM estado_sync')).toEqual({ n: 1 });
+    });
+  });
 });
