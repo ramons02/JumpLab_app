@@ -7,6 +7,9 @@ module.exports = {
     '<rootDir>/tests/helpers/',
     '<rootDir>/tests/setup.ts',
   ],
+  coverageThreshold: {
+    './src/utils/biomechanics.ts': { branches: 100, functions: 100, lines: 100, statements: 100 },
+  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

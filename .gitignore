@@ -45,3 +45,4 @@ yarn-error.*
 .env.*
 !.env.example
 coverage/
+videos-d1/

@@ -61,3 +61,32 @@ npx prettier --check .
 ```
 
 As quatro devem passar sem erro antes de abrir um PR.
+
+## Teste D1: navegação quadro a quadro (spec 006)
+
+Teste no aparelho que decide a técnica do analisador. Precisa de `ffmpeg` só na máquina de
+desenvolvimento.
+
+1. Gere os vídeos de teste (vão para `videos-d1/`, fora do git):
+
+   ```bash
+   scripts/gerar-videos-d1.sh
+   ```
+
+   - `d1_240_nativo.mp4`: 5 s, faixa a 240 fps, 1200 quadros;
+   - `d1_240_em_30.mp4`: os mesmos 1200 quadros com a faixa a 30 fps (40 s).
+
+   Cada imagem tem o número do quadro (a partir de 0) impresso no centro.
+
+2. Copie os dois vídeos para o aparelho (`adb push videos-d1/*.mp4 /sdcard/Movies/`) e grave
+   também um vídeo em câmera lenta filmando um cronômetro de milissegundos.
+3. Com o build de desenvolvimento instalado, abra a rota provisória:
+
+   ```bash
+   adb shell am start -a android.intent.action.VIEW -d "jumplab://dev/teste-d1"
+   ```
+
+4. Escolha o vídeo, marque a taxa da faixa (240 para o nativo, 30 para o regravado) e siga o
+   procedimento do `quickstart.md` da spec 006: 100 toques em `+1 Frame`, 100 em `-1 Frame`, 20
+   posições na barra e 10 sequências de 5 toques rápidos, comparando o número da imagem com o
+   "Quadro N / último" da tela.
