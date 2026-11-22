@@ -83,6 +83,8 @@ function Analisador({ rascunho, perna }: AnalisadorProps) {
         />
       ) : (
         <VideoDaTentativa
+          perna={perna}
+          numero={NUMERO_TENTATIVA}
           video={tentativa.video}
           fpsConfirmado={tentativa.fpsConfirmado}
           aoTrocarFps={atual.trocarFps}

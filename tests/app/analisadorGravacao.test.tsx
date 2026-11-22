@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
 import { abrirAnalisador, abrirCamera, botaoGravar } from '../helpers/fluxoCamera';
-import { limparSistemaArquivos } from '../helpers/mockSistemaArquivos';
+import { arquivosFalsos, limparSistemaArquivos } from '../helpers/mockSistemaArquivos';
 import { camera, reiniciarCamera } from '../helpers/mockVisionCamera';
 import { fecharBanco, prepararBanco } from '../helpers/telas';
 
@@ -67,5 +67,26 @@ describe('analisador: gravar com a câmera', () => {
 
     expect(await screen.findByText('gravacao_240fps.mp4')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Gravar com a câmera' })).toBeNull();
+  });
+
+  it('Gravar de novo troca o vídeo da tentativa e apaga a gravação anterior', async () => {
+    await abrirAnalisador();
+    await abrirCamera();
+    await gravarEParar();
+    await screen.findByText('gravacao_240fps.mp4');
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar FPS' }));
+    const primeira = [...arquivosFalsos];
+    expect(primeira).toHaveLength(1);
+
+    camera.caminhoGravado = '/data/camera/VID_2.mp4';
+    await fireEvent.press(screen.getByRole('button', { name: 'Gravar de novo' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: '120 fps' }));
+    await gravarEParar();
+
+    expect(await screen.findByText('gravacao_120fps.mp4')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: '120 fps' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Confirmar FPS' })).toBeOnTheScreen();
+    expect(arquivosFalsos.has(primeira[0])).toBe(false);
+    expect(arquivosFalsos.size).toBe(1);
   });
 });
