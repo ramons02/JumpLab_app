@@ -1,4 +1,5 @@
 import type { Attempt } from '@/types/attempt';
+import type { PontoMelhoria } from '@/types/melhoria';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import type { ResultadoSalto } from '@/types/resultadoSalto';
@@ -22,6 +23,8 @@ export interface NovaAvaliacao {
   tentativas: Attempt[];
   /** Só no agachamento (HU014). */
   serie: SquatSeries | null;
+  /** "O que melhorar" revisado pelo avaliador (HU017); null nas avaliações antigas. */
+  melhorias: PontoMelhoria[] | null;
 }
 
 export interface Assessment extends NovaAvaliacao {
@@ -40,4 +43,5 @@ export interface AvaliacaoDoHistorico {
   dataHora: string;
   pernaLesionada: PernaLesionada;
   resumo: ResumoAvaliacao;
+  melhorias: PontoMelhoria[] | null;
 }

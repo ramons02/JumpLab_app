@@ -2,12 +2,14 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { BlocoResultado } from '@/components/BlocoResultado';
+import { SecaoMelhorias } from '@/components/SecaoMelhorias';
 import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
 import { useAvaliacaoSalva } from '@/hooks/useAvaliacaoSalva';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import type { Assessment } from '@/types/assessment';
 import { paraBr } from '@/utils/datas';
+import { sugerirMelhorias } from '@/utils/melhorias';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
@@ -64,6 +66,10 @@ function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
         protocolo={avaliacao.protocolo}
         pernaLesionada={avaliacao.pernaLesionada}
         resumo={avaliacao.resumo}
+      />
+      <SecaoMelhorias
+        pontos={avaliacao.melhorias ?? sugerirMelhorias(avaliacao.resumo, avaliacao.pernaLesionada)}
+        avaliacao={avaliacao}
       />
       <View className="gap-2">
         <Text className="text-sm font-semibold text-texto">Observações</Text>

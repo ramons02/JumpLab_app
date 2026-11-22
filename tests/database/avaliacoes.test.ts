@@ -133,6 +133,7 @@ describe('repositório de avaliações', () => {
       dataHora: '2026-10-01T09:00',
       pernaLesionada: 'direita',
       resumo: antes.resumo,
+      melhorias: null,
     });
   });
 
@@ -150,5 +151,56 @@ describe('repositório de avaliações', () => {
 
     await expect(buscarAvaliacao(db, salva.id)).rejects.toThrow('formato desconhecido');
     await expect(listarAvaliacoesDoPaciente(db, ana.id)).rejects.toThrow('formato desconhecido');
+  });
+
+  describe('melhorias (spec 017)', () => {
+    const PONTOS = [
+      {
+        titulo: 'Glúteo médio',
+        grupos: [{ grupo: 'gluteo_medio' as const, lado: 'ambas' as const }],
+        motivo: 'citado pelo avaliador',
+        foco: '',
+        origem: 'avaliador' as const,
+      },
+    ];
+
+    it('grava melhorias_json na mesma transação e busca e lista devolvem a lista', async () => {
+      const nova = { ...novaAvaliacao(ana.id, 'cmj_bi', CMJ_BILATERAL), melhorias: PONTOS };
+      const salva = await salvar(nova);
+
+      expect((await buscarAvaliacao(db, salva.id))?.melhorias).toEqual(PONTOS);
+      expect((await listarAvaliacoesDoPaciente(db, ana.id))[0].melhorias).toEqual(PONTOS);
+    });
+
+    it('avaliação sem pontos revisados volta com melhorias nulas', async () => {
+      const salva = await salvar(novaAvaliacao(ana.id, 'cmj_bi', CMJ_BILATERAL));
+      expect((await buscarAvaliacao(db, salva.id))?.melhorias).toBeNull();
+    });
+
+    it('falha na gravação desfaz também os pontos', async () => {
+      const tentativas = CMJ_BILATERAL.map((t) =>
+        t.numero === 3 ? { ...t, quadroAterrissagem: t.quadroDecolagem } : t,
+      );
+      const nova = { ...novaAvaliacao(ana.id, 'cmj_bi', tentativas), melhorias: PONTOS };
+      await expect(
+        salvarAvaliacao(
+          db,
+          nova,
+          montarResumoSalto(novaAvaliacao(ana.id, 'cmj_bi', CMJ_BILATERAL)),
+          '',
+        ),
+      ).rejects.toThrow();
+      expect(await contar('avaliacao')).toBe(0);
+    });
+
+    it('melhorias_json em formato desconhecido sobe como erro', async () => {
+      const salva = await salvar(novaAvaliacao(ana.id, 'cmj_bi', CMJ_BILATERAL));
+      await db.runAsync(
+        'UPDATE avaliacao SET melhorias_json = ? WHERE id = ?',
+        '{"x":1}',
+        salva.id,
+      );
+      await expect(buscarAvaliacao(db, salva.id)).rejects.toThrow('formato desconhecido');
+    });
   });
 });
