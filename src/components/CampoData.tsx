@@ -28,8 +28,8 @@ export function CampoData({ rotulo, valor, aoMudar, erro, mostrarIdade = false }
       maxLength={10}
       complemento={
         idade !== null ? (
-          <View className="rounded-full bg-marca-fraca px-2 py-0.5">
-            <Text className="text-xs font-semibold text-marca-forte">{idade} anos</Text>
+          <View className="rounded-full bg-destaqueFundo px-2 py-0.5">
+            <Text className="text-xs font-semibold text-destaque">{idade} anos</Text>
           </View>
         ) : null
       }

@@ -91,13 +91,13 @@ export function FormularioPaciente({ gravar, aoSalvar, pacienteInicial }: Formul
           erro={erros.dataLesao}
         />
       </ScrollView>
-      <View className="border-t border-borda bg-superficie p-4">
+      <View className="border-t border-borda bg-cartao p-4">
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: salvando }}
           disabled={salvando}
           onPress={salvar}
-          className={`items-center rounded-2xl py-4 ${salvando ? 'bg-marca-fraca' : 'bg-marca'}`}
+          className={`items-center rounded-2xl py-4 ${salvando ? 'bg-destaqueFundo' : 'bg-destaque'}`}
         >
           <Text className="text-base font-semibold text-fundo">
             {salvando ? 'Salvando...' : 'Salvar'}

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import LayoutAbas from '@/app/(tabs)/_layout';
 import TelaPacientes from '@/app/(tabs)/index';
 import TelaEditarPaciente from '@/app/patient/[id]/edit';
 import TelaNovoPaciente from '@/app/patient/new';
@@ -32,7 +33,10 @@ export function abrirApp(caminhoInicial: string, historico: string[] = []) {
   return renderRouter(
     {
       _layout: () => <Stack />,
-      index: TelaPacientes,
+      '(tabs)/_layout': LayoutAbas,
+      '(tabs)/index': TelaPacientes,
+      // O perfil do paciente é da spec 003; aqui só confirma a navegação.
+      'patient/[id]/index': () => null,
       'patient/new': TelaNovoPaciente,
       'patient/[id]/edit': TelaEditarPaciente,
     },

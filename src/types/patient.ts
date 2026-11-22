@@ -28,3 +28,10 @@ export interface DadosPacienteFormulario {
 }
 
 export type ErrosPaciente = Partial<Record<keyof DadosPacienteFormulario, string>>;
+
+export interface PacienteNaLista extends Patient {
+  /** AAAA-MM-DDTHH:MM local; null = "Sem avaliações" */
+  ultimaAvaliacaoEm: string | null;
+}
+
+export type FiltroPerfil = 'todos' | Perfil;

@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { Alert } from 'react-native';
 
-import { listarPacientes } from '@/database/pacientes';
+import { listarPacientesComUltimaAvaliacao } from '@/database/pacientes';
 import { calcularIdade, hojeIso, paraBr } from '@/utils/datas';
 
 import { abrirApp, bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
@@ -50,8 +50,10 @@ describe('tela de cadastro de paciente', () => {
     expect(await screen.findByText('Ana Souza')).toBeOnTheScreen();
     expect(screen).toHavePathname('/');
     const idade = calcularIdade('1995-03-15', hojeIso());
-    expect(screen.getByText(`Pós-LCA · ${idade} anos`)).toBeOnTheScreen();
-    expect(await listarPacientes(bancoDaTela())).toHaveLength(1);
+    expect(
+      screen.getByText(`Pós-LCA · ${idade} anos · perna lesionada: direita`),
+    ).toBeOnTheScreen();
+    expect(await listarPacientesComUltimaAvaliacao(bancoDaTela())).toHaveLength(1);
   });
 
   it('mostra a idade ao digitar a data de nascimento', async () => {
@@ -68,7 +70,7 @@ describe('tela de cadastro de paciente', () => {
     await fireEvent.press(screen.getByText('Salvar'));
 
     expect(await screen.findByText('Informe o nome (mínimo 2 letras).')).toBeOnTheScreen();
-    expect(await listarPacientes(bancoDaTela())).toHaveLength(0);
+    expect(await listarPacientesComUltimaAvaliacao(bancoDaTela())).toHaveLength(0);
   });
 
   it('Pós-LCA com perna Nenhuma pede Direita ou Esquerda', async () => {
@@ -79,7 +81,7 @@ describe('tela de cadastro de paciente', () => {
     await fireEvent.press(screen.getByText('Salvar'));
 
     expect(await screen.findByText('Para Pós-LCA, escolha Direita ou Esquerda.')).toBeOnTheScreen();
-    expect(await listarPacientes(bancoDaTela())).toHaveLength(0);
+    expect(await listarPacientesComUltimaAvaliacao(bancoDaTela())).toHaveLength(0);
   });
 
   it('recusa data da cirurgia futura', async () => {
@@ -90,7 +92,7 @@ describe('tela de cadastro de paciente', () => {
     await fireEvent.press(screen.getByText('Salvar'));
 
     expect(await screen.findByText('A data não pode ser futura.')).toBeOnTheScreen();
-    expect(await listarPacientes(bancoDaTela())).toHaveLength(0);
+    expect(await listarPacientesComUltimaAvaliacao(bancoDaTela())).toHaveLength(0);
   });
 
   it('sair com dados digitados pede confirmação', async () => {

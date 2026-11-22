@@ -1,4 +1,11 @@
-import { calcularIdade, hojeIso, mascararData, paraBr, paraIso } from '@/utils/datas';
+import {
+  calcularIdade,
+  dataHoraParaBr,
+  hojeIso,
+  mascararData,
+  paraBr,
+  paraIso,
+} from '@/utils/datas';
 
 describe('mascararData', () => {
   it('insere as barras enquanto o avaliador digita', () => {
@@ -61,5 +68,12 @@ describe('hojeIso', () => {
       String(agora.getDate()).padStart(2, '0'),
     ].join('-');
     expect(hojeIso()).toBe(esperado);
+  });
+});
+
+describe('dataHoraParaBr', () => {
+  it('mostra só a data, em dd/mm/aaaa', () => {
+    expect(dataHoraParaBr('2026-11-22T22:30')).toBe('22/11/2026');
+    expect(dataHoraParaBr('2026-01-05T08:00')).toBe('05/01/2026');
   });
 });

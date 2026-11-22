@@ -28,6 +28,11 @@ export function paraBr(iso: string): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+/** "2026-11-22T22:30" (hora local) -> "22/11/2026" */
+export function dataHoraParaBr(dataHora: string): string {
+  return paraBr(dataHora.slice(0, 10));
+}
+
 /** Anos completos entre o nascimento e hoje; datas em AAAA-MM-DD. */
 export function calcularIdade(nascimentoIso: string, hojeIsoValor: string): number {
   const [anoNasc, mesNasc, diaNasc] = nascimentoIso.split('-').map(Number);

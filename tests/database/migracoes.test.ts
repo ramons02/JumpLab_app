@@ -1,4 +1,4 @@
-import { aplicarMigracoes } from '@/database/migracoes';
+import { aplicarMigracoes, VERSAO_ATUAL } from '@/database/migracoes';
 
 import { criarBancoEmMemoria, type BancoDeTeste } from '../helpers/bancoEmMemoria';
 
@@ -20,10 +20,10 @@ describe('aplicarMigracoes', () => {
 
   afterEach(() => db.fechar());
 
-  it('leva um banco novo à versão 1 com a tabela paciente e o índice por nome', async () => {
+  it('leva um banco novo à versão atual com a tabela paciente e o índice por nome', async () => {
     await aplicarMigracoes(db);
 
-    expect(await versao(db)).toBe(1);
+    expect(await versao(db)).toBe(VERSAO_ATUAL);
     const tabela = await db.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'paciente'",
     );
@@ -50,7 +50,7 @@ describe('aplicarMigracoes', () => {
 
     await aplicarMigracoes(db);
 
-    expect(await versao(db)).toBe(1);
+    expect(await versao(db)).toBe(VERSAO_ATUAL);
     const total = await db.getFirstAsync<{ total: number }>(
       'SELECT COUNT(*) AS total FROM paciente',
     );
