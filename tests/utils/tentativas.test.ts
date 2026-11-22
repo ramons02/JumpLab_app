@@ -2,6 +2,7 @@ import type { TentativaEmAndamento, TentativasPorPerna, VideoSelecionado } from 
 import {
   confirmarFps,
   marcarNaTentativa,
+  paraAttempt,
   tentativasConcluidas,
   usarVideoDaAnterior,
   criarTentativasVazias,
@@ -222,5 +223,33 @@ describe('tentativasConcluidas', () => {
       ],
     };
     expect(() => tentativasConcluidas(tentativas, 'cmj_bi')).toThrow(Error);
+  });
+});
+
+describe('paraAttempt', () => {
+  const completa: TentativaEmAndamento = {
+    video: video('a', 240),
+    fpsSelecionado: 240,
+    fpsConfirmado: 240,
+    marcas: { decolagem: 1000, aterrissagem: 1120 },
+  };
+
+  it('converte a tentativa completa com a perna e o número dados', () => {
+    expect(paraAttempt(completa, 'direita', 2, 'cmj_uni')).toEqual({
+      perna: 'direita',
+      numero: 2,
+      fps: 240,
+      quadroToque: null,
+      quadroDecolagem: 1000,
+      quadroAterrissagem: 1120,
+    });
+  });
+
+  it('devolve null com evento faltando ou sem FPS confirmado', () => {
+    expect(
+      paraAttempt({ ...completa, marcas: { decolagem: 1000 } }, 'unica', 1, 'cmj_bi'),
+    ).toBeNull();
+    expect(paraAttempt({ ...completa, fpsConfirmado: null }, 'unica', 1, 'cmj_bi')).toBeNull();
+    expect(paraAttempt(completa, 'unica', 1, 'dj')).toBeNull();
   });
 });

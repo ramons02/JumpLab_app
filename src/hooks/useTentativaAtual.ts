@@ -2,11 +2,13 @@ import { useCallback, useState } from 'react';
 
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import type {
+  EventoSalto,
   NumeroTentativa,
   PernaTentativa,
   TentativaEmAndamento,
   VideoSelecionado,
 } from '@/types/attempt';
+import { aplicarMarcacao, validarMarcacao } from '@/utils/marcacoes';
 import * as regras from '@/utils/tentativas';
 import { videoParaApagarAoSubstituir } from '@/utils/videoSubstituido';
 import { apagarArquivoDeGravacao } from '@/video/gravacoesTemporarias';
@@ -64,11 +66,32 @@ export function useTentativaAtual(perna: PernaTentativa, numero: NumeroTentativa
   /** Entrega à tentativa o vídeo gravado pela câmera do app (spec 011), como se fosse importado. */
   const usarVideoGravado = trocarVideo;
 
+  /** Marca o evento no quadro, se a ordem permitir; senão devolve a mensagem de recusa (spec 007). */
+  const marcar = useCallback(
+    (evento: EventoSalto, quadro: number): string | null => {
+      const recusa = validarMarcacao(tentativa.marcas, evento, quadro);
+      if (recusa) return recusa;
+      alterar((t) => regras.marcarNaTentativa(t, aplicarMarcacao(t.marcas, evento, quadro)));
+      return null;
+    },
+    [tentativa.marcas, alterar],
+  );
+
+  /** `Mesmo vídeo da tentativa anterior`: vídeo e FPS confirmado da anterior, sem as marcações. */
+  const usarVideoDaAnterior = useCallback(() => {
+    const anterior = indice > 0 ? tentativas?.[perna]?.[indice - 1] : undefined;
+    if (!anterior?.video) return;
+    setMensagem(null);
+    alterar((t) => regras.usarVideoDaAnterior(anterior, t));
+  }, [tentativas, perna, indice, alterar]);
+
   return {
     tentativa,
     mensagem,
     escolherVideo,
     usarVideoGravado,
+    marcar,
+    usarVideoDaAnterior,
     selecionarFps: (fps: number) => alterar((t) => regras.selecionarFps(t, fps)),
     confirmarFps: () => alterar(regras.confirmarFps),
     trocarFps: () => alterar(regras.trocarFps),
