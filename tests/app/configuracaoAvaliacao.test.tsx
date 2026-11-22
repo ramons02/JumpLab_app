@@ -7,6 +7,7 @@ import TelaConfiguracao from '@/app/assessment/setup';
 import { inserirPaciente } from '@/database/pacientes';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import type { Patient } from '@/types/patient';
+import { criarTentativasVazias } from '@/utils/tentativas';
 
 import { bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 
@@ -125,6 +126,7 @@ describe('tela de configuração da avaliação', () => {
       cargaKg: null,
       dataHora: '2026-11-22T10:30',
       pernaLesionada: 'direita',
+      tentativas: criarTentativasVazias('cmj_bi'),
     });
   });
 
