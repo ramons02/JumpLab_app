@@ -68,6 +68,14 @@ const MIGRACOES: readonly string[] = [
      PRIMARY KEY (avaliacao_id, numero),
      CHECK (inicio_quadro < fundo_quadro AND fundo_quadro < fim_quadro)
    );`,
+
+  // 3. avaliador (spec 010): linha única com o cabeçalho do laudo, sem logotipo (HU010 RN08).
+  `CREATE TABLE avaliador (
+     id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+     nome TEXT NOT NULL,
+     registro TEXT NOT NULL,
+     atualizado_em TEXT NOT NULL
+   );`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */
