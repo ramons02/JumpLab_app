@@ -1,4 +1,7 @@
 import type {
+  Attempt,
+  MarcasSalto,
+  NumeroTentativa,
   PernaTentativa,
   TentativaEmAndamento,
   TentativasPorPerna,
@@ -6,6 +9,7 @@ import type {
 } from '@/types/attempt';
 import type { Protocol } from '@/types/protocol';
 import { podeConfirmarFps } from '@/utils/fps';
+import { tentativaCompleta } from '@/utils/marcacoes';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
 /** Tentativas obrigatórias por perna (D11). */
@@ -67,4 +71,52 @@ export function videosTemporarios(tentativas: TentativasPorPerna): string[] {
     }
   }
   return [...uris];
+}
+
+export function marcarNaTentativa(
+  tentativa: TentativaEmAndamento,
+  marcas: MarcasSalto,
+): TentativaEmAndamento {
+  return { ...tentativa, marcas };
+}
+
+/** `Mesmo vídeo da tentativa anterior`: vídeo e FPS confirmado da anterior, sem as marcações. */
+export function usarVideoDaAnterior(
+  anterior: TentativaEmAndamento,
+  _atual: TentativaEmAndamento,
+): TentativaEmAndamento {
+  return {
+    video: anterior.video,
+    fpsSelecionado: anterior.fpsSelecionado,
+    fpsConfirmado: anterior.fpsConfirmado,
+    marcas: {},
+  };
+}
+
+/** Tentativas completas no formato gravado pela spec 008; lança erro se alguma estiver incompleta. */
+export function tentativasConcluidas(
+  tentativas: TentativasPorPerna,
+  protocolo: Protocol,
+): Attempt[] {
+  return pernasDoProtocolo(protocolo).flatMap((perna) =>
+    (tentativas[perna] ?? []).map((tentativa, indice): Attempt => {
+      const { fpsConfirmado, marcas } = tentativa;
+      if (
+        !tentativaCompleta(tentativa, protocolo) ||
+        fpsConfirmado === null ||
+        marcas.decolagem === undefined ||
+        marcas.aterrissagem === undefined
+      ) {
+        throw new Error(`A tentativa ${indice + 1} (${perna}) ainda não está completa.`);
+      }
+      return {
+        perna,
+        numero: (indice + 1) as NumeroTentativa,
+        fps: fpsConfirmado,
+        quadroToque: marcas.toque ?? null,
+        quadroDecolagem: marcas.decolagem,
+        quadroAterrissagem: marcas.aterrissagem,
+      };
+    }),
+  );
 }
