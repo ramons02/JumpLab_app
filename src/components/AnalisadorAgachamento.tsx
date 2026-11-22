@@ -8,6 +8,7 @@ import { PainelAgachamento } from '@/components/PainelAgachamento';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
 import { SeletorFps } from '@/components/SeletorFps';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
+import { useAbrirCamera } from '@/hooks/useAbrirCamera';
 import { useMarcacaoAgachamento, type AlvoMarcacao } from '@/hooks/useMarcacaoAgachamento';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
@@ -64,6 +65,7 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
   const { descartarRascunho } = useRascunhoAvaliacao();
   const { paciente } = usePerfilPaciente(rascunho.pacienteId);
   const atual = useTentativaAtual('unica', 1);
+  const gravar = useAbrirCamera('unica', 1);
   const { tentativa } = atual;
   const uri = tentativa.video?.uri ?? null;
   const [estadoQuadro, setEstadoQuadro] = useState({ uri, quadro: 0 });
@@ -106,11 +108,20 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
           >
             <Text className="text-sm font-semibold text-fundo">Escolher vídeo da galeria</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={gravar}
+            className="items-center rounded-2xl border border-destaque py-4"
+          >
+            <Text className="text-sm font-semibold text-destaque">Gravar com a câmera</Text>
+          </Pressable>
           {atual.mensagem ? <Text className="text-xs text-erro">{atual.mensagem}</Text> : null}
         </View>
       ) : (
         <>
           <VideoDaTentativa
+            perna="unica"
+            numero={1}
             video={tentativa.video}
             fpsConfirmado={fpsConfirmado}
             aoTrocarFps={atual.trocarFps}

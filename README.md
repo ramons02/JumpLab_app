@@ -6,17 +6,18 @@ projeto na constituição do [JumpLab_documentacao](https://github.com/ramons02/
 
 ## Stack
 
-| Peça      | Versão                                                                                                                      |
-| --------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Expo SDK  | 58 (React Native 0.88, React 19.3)                                                                                          |
-| Node      | 24 (o SDK 58 exige 22.13 ou mais novo; ver `.nvmrc`)                                                                        |
-| Navegação | Expo Router, rotas em `src/app/`                                                                                            |
-| Estilos   | NativeWind 4 (Tailwind 3), cores do tema em `tailwind.config.js`                                                            |
-| Banco     | `expo-sqlite`, migrações por `PRAGMA user_version` em `src/database/migracoes.ts`                                           |
-| Testes    | Jest (`jest-expo`), Testing Library, SQLite real em memória (`better-sqlite3`)                                              |
-| Desenho   | `react-native-svg` (símbolo e personagem do topo; também exigida pelos gráficos)                                            |
-| Fonte     | Bebas Neue nos títulos, empacotada pelo `expo-font` (licença SIL OFL, em `assets/fonts/`)                                   |
-| Vídeo     | `expo-image-picker` e `expo-video`; `expo-file-system` só para apagar a cópia temporária do vídeo ao fim da avaliação (D14) |
+| Peça      | Versão                                                                                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Expo SDK  | 58 (React Native 0.88, React 19.3)                                                                                                                              |
+| Node      | 24 (o SDK 58 exige 22.13 ou mais novo; ver `.nvmrc`)                                                                                                            |
+| Navegação | Expo Router, rotas em `src/app/`                                                                                                                                |
+| Estilos   | NativeWind 4 (Tailwind 3), cores do tema em `tailwind.config.js`                                                                                                |
+| Banco     | `expo-sqlite`, migrações por `PRAGMA user_version` em `src/database/migracoes.ts`                                                                               |
+| Testes    | Jest (`jest-expo`), Testing Library, SQLite real em memória (`better-sqlite3`)                                                                                  |
+| Desenho   | `react-native-svg` (símbolo e personagem do topo; também exigida pelos gráficos)                                                                                |
+| Fonte     | Bebas Neue nos títulos, empacotada pelo `expo-font` (licença SIL OFL, em `assets/fonts/`)                                                                       |
+| Vídeo     | `expo-image-picker` e `expo-video`; `expo-file-system` só para apagar a cópia temporária do vídeo ao fim da avaliação (D14)                                     |
+| Câmera    | `react-native-vision-camera` 5 (com `react-native-nitro-modules` e `react-native-nitro-image`, exigidas por ela), gravação a 120 e 240 fps sem áudio (spec 011) |
 
 ## Estrutura
 
@@ -51,6 +52,20 @@ nativo (como `react-native-svg` ou `expo-font`), gere o build de novo:
 ```bash
 npm run android                       # npx expo run:android
 ```
+
+## Gravação em alta velocidade (spec 011)
+
+A câmera do app grava a 120 ou 240 fps, sem áudio, e o vídeo fica só em `cache/gravacoes/` até o fim da
+avaliação (D14). O `react-native-vision-camera` tem código nativo: depois de instalar as dependências,
+gere um Development Build novo (`npm run android`).
+
+- A permissão `CAMERA` vem do `app.json` (`android.permissions`); o microfone fica bloqueado
+  (`blockedPermissions`), porque a gravação é sem áudio. O `expo-image-picker` não pode ter
+  `cameraPermission: false`: essa opção bloqueia a câmera do app inteiro.
+- A taxa só é liberada depois que a câmera confirma, na configuração da sessão, que gravará nela. Se ela
+  escolher uma taxa menor, o app avisa e bloqueia o botão de gravar.
+
+Aparelhos testados a 240 e a 120 fps: a registrar na validação em aparelho (quickstart da spec 011).
 
 ## Verificações
 

@@ -1,8 +1,11 @@
 import { Pressable, Text, View } from 'react-native';
 
-import type { VideoSelecionado } from '@/types/attempt';
+import { useAbrirCamera } from '@/hooks/useAbrirCamera';
+import type { NumeroTentativa, PernaTentativa, VideoSelecionado } from '@/types/attempt';
 
 interface VideoDaTentativaProps {
+  perna: PernaTentativa;
+  numero: NumeroTentativa;
   video: VideoSelecionado;
   fpsConfirmado: number | null;
   aoTrocarFps: () => void;
@@ -17,13 +20,19 @@ function Link({ rotulo, aoTocar }: { rotulo: string; aoTocar: () => void }) {
   );
 }
 
-/** Linha do vídeo escolhido, com o FPS confirmado e as trocas de FPS e de vídeo. */
+/**
+ * Linha do vídeo escolhido, com o FPS confirmado e as trocas: FPS, vídeo da galeria ou gravar de novo
+ * pela câmera do app (spec 011).
+ */
 export function VideoDaTentativa({
+  perna,
+  numero,
   video,
   fpsConfirmado,
   aoTrocarFps,
   aoTrocarVideo,
 }: VideoDaTentativaProps) {
+  const gravarDeNovo = useAbrirCamera(perna, numero);
   const descricao =
     fpsConfirmado === null ? video.nome : `${video.nome} · ${fpsConfirmado} fps confirmado`;
   return (
@@ -33,6 +42,7 @@ export function VideoDaTentativa({
       </Text>
       {fpsConfirmado !== null ? <Link rotulo="Trocar FPS" aoTocar={aoTrocarFps} /> : null}
       <Link rotulo="Trocar vídeo" aoTocar={aoTrocarVideo} />
+      <Link rotulo="Gravar de novo" aoTocar={gravarDeNovo} />
     </View>
   );
 }

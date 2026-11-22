@@ -1,14 +1,19 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { useAbrirCamera } from '@/hooks/useAbrirCamera';
+import type { NumeroTentativa, PernaTentativa } from '@/types/attempt';
 import { TENTATIVAS_POR_PERNA } from '@/utils/tentativas';
 
 interface EscolherVideoProps {
-  numero: number;
+  perna: PernaTentativa;
+  numero: NumeroTentativa;
   mensagem: string | null;
   aoEscolher: () => void;
 }
 
-export function EscolherVideo({ numero, mensagem, aoEscolher }: EscolherVideoProps) {
+/** Estado sem vídeo da tentativa: escolher da galeria ou gravar pela câmera do app (spec 011). */
+export function EscolherVideo({ perna, numero, mensagem, aoEscolher }: EscolherVideoProps) {
+  const gravar = useAbrirCamera(perna, numero);
   return (
     <View className="gap-3 rounded-2xl border border-borda bg-cartao p-4">
       <Text className="text-sm font-semibold text-texto">
@@ -20,6 +25,13 @@ export function EscolherVideo({ numero, mensagem, aoEscolher }: EscolherVideoPro
         className="items-center rounded-2xl bg-destaque py-4"
       >
         <Text className="text-sm font-semibold text-fundo">Escolher vídeo da galeria</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={gravar}
+        className="items-center rounded-2xl border border-destaque py-4"
+      >
+        <Text className="text-sm font-semibold text-destaque">Gravar com a câmera</Text>
       </Pressable>
       {mensagem ? (
         <Text accessibilityRole="alert" className="text-xs text-erro">
