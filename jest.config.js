@@ -13,5 +13,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Desenha com SVG e gradiente nativos; nos testes, o mock expõe as props recebidas (spec 009).
+    '^react-native-gifted-charts$': '<rootDir>/tests/helpers/mockGiftedCharts.tsx',
   },
 };
