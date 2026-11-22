@@ -10,7 +10,7 @@ import {
 import { criarTentativasVazias } from '@/utils/tentativas';
 
 function tentativa(marcas: MarcasSalto, fpsConfirmado: number | null = 240): TentativaEmAndamento {
-  return { video: null, fpsSelecionado: fpsConfirmado, fpsConfirmado, marcas };
+  return { video: null, fpsSelecionado: fpsConfirmado, fpsConfirmado, marcas, sugestao: null };
 }
 
 const CMJ_COMPLETA = tentativa({ decolagem: 1000, aterrissagem: 1120 });

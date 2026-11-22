@@ -14,11 +14,19 @@ export interface VideoSelecionado {
   temporario: boolean; // cópia criada para a análise; apagada ao fim (D14)
 }
 
+/** Sugestão automática dos quadros de uma tentativa (spec 018); pertence ao vídeo (`uri`). */
+export type SugestaoQuadros =
+  | { estado: 'analisando'; uri: string }
+  | { estado: 'pronta'; uri: string; quadros: MarcasSalto }
+  | { estado: 'falhou'; uri: string; motivo: string };
+
 export interface TentativaEmAndamento {
   video: VideoSelecionado | null;
   fpsSelecionado: number | null;
   fpsConfirmado: number | null;
   marcas: MarcasSalto;
+  /** null: sugestão não pedida (spec 018). Nunca vira marcação. */
+  sugestao: SugestaoQuadros | null;
 }
 
 export type TentativasPorPerna = Partial<Record<PernaTentativa, TentativaEmAndamento[]>>;
@@ -33,4 +41,6 @@ export interface Attempt {
   quadroToque: number | null;
   quadroDecolagem: number;
   quadroAterrissagem: number;
+  /** Quadros sugeridos pela sugestão automática (spec 018); vazio sem sugestão. Fora das medidas. */
+  quadrosSugeridos: MarcasSalto;
 }

@@ -23,6 +23,7 @@ const TENTATIVA_VAZIA: TentativaEmAndamento = {
   fpsSelecionado: null,
   fpsConfirmado: null,
   marcas: {},
+  sugestao: null,
 };
 
 /** A tentativa em uso no analisador e as ações sobre ela, guardadas no rascunho da avaliação. */

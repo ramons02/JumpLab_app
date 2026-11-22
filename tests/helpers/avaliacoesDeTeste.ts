@@ -19,6 +19,7 @@ export function tresTentativas(
       quadroToque: contato === undefined ? null : decolagem - contato,
       quadroDecolagem: decolagem,
       quadroAterrissagem: decolagem + quadrosDeVoo[i],
+      quadrosSugeridos: {},
     };
   });
 }

@@ -6,6 +6,7 @@ import {
   tentativasConcluidas,
   usarVideoDaAnterior,
   criarTentativasVazias,
+  definirSugestao,
   definirVideo,
   marcacoesLiberadas,
   pernasDoProtocolo,
@@ -19,6 +20,7 @@ const VAZIA: TentativaEmAndamento = {
   fpsSelecionado: null,
   fpsConfirmado: null,
   marcas: {},
+  sugestao: null,
 };
 
 function video(uri: string, fpsLido: number | null, temporario = true): VideoSelecionado {
@@ -62,6 +64,7 @@ describe('transições da tentativa', () => {
       fpsSelecionado: 120,
       fpsConfirmado: 120,
       marcas: { decolagem: 10 },
+      sugestao: null,
     });
     const nova = definirVideo(anterior, video('b', 240));
     expect(nova).toEqual({
@@ -69,6 +72,7 @@ describe('transições da tentativa', () => {
       fpsSelecionado: 240,
       fpsConfirmado: null,
       marcas: {},
+      sugestao: null,
     });
   });
 
@@ -101,6 +105,7 @@ describe('transições da tentativa', () => {
       fpsSelecionado: 240,
       fpsConfirmado: 240,
       marcas: { decolagem: 300 },
+      sugestao: null,
     });
     const t = trocarFps(confirmada);
     expect(t).toEqual({ ...confirmada, fpsConfirmado: null });
@@ -144,6 +149,7 @@ describe('usarVideoDaAnterior', () => {
       fpsSelecionado: 240,
       fpsConfirmado: 240,
       marcas: { decolagem: 1000, aterrissagem: 1120 },
+      sugestao: null,
     });
     const atual = congelada({ ...VAZIA, marcas: { decolagem: 5 } });
     expect(usarVideoDaAnterior(anterior, atual)).toEqual({
@@ -151,13 +157,64 @@ describe('usarVideoDaAnterior', () => {
       fpsSelecionado: 240,
       fpsConfirmado: 240,
       marcas: {},
+      sugestao: null,
     });
+  });
+
+  it('copia a sugestão pronta da anterior, sem nova análise (spec 018, RN10)', () => {
+    const pronta = {
+      estado: 'pronta' as const,
+      uri: video('a', 240).uri,
+      quadros: { decolagem: 299, aterrissagem: 420 },
+    };
+    const anterior = congelada({
+      video: video('a', 240),
+      fpsSelecionado: 240,
+      fpsConfirmado: 240,
+      marcas: {},
+      sugestao: pronta,
+    });
+    expect(usarVideoDaAnterior(anterior, VAZIA).sugestao).toEqual(pronta);
+  });
+
+  it('não copia sugestão em análise nem falha', () => {
+    const base = { video: video('a', 240), fpsSelecionado: 240, fpsConfirmado: 240, marcas: {} };
+    const uri = video('a', 240).uri;
+    const analisando = congelada({ ...base, sugestao: { estado: 'analisando', uri } });
+    const falhou = congelada({ ...base, sugestao: { estado: 'falhou', uri, motivo: 'x' } });
+    expect(usarVideoDaAnterior(analisando, VAZIA).sugestao).toBeNull();
+    expect(usarVideoDaAnterior(falhou, VAZIA).sugestao).toBeNull();
+  });
+});
+
+describe('sugestão e vídeo (spec 018)', () => {
+  const pronta = {
+    estado: 'pronta' as const,
+    uri: 'x',
+    quadros: { decolagem: 299, aterrissagem: 420 },
+  };
+
+  it('definirVideo apaga a sugestão do vídeo anterior', () => {
+    const comSugestao = congelada({ ...VAZIA, video: video('a', 240), sugestao: pronta });
+    expect(definirVideo(comSugestao, video('b', 240)).sugestao).toBeNull();
+  });
+
+  it('definirSugestao troca só a sugestão', () => {
+    const t = congelada({ ...VAZIA, marcas: { decolagem: 5 } });
+    expect(definirSugestao(t, pronta)).toEqual({ ...t, sugestao: pronta });
+    expect(t.sugestao).toBeNull();
   });
 });
 
 describe('tentativasConcluidas', () => {
   function completa(marcas: TentativaEmAndamento['marcas'], fps = 240): TentativaEmAndamento {
-    return { video: video('a', fps), fpsSelecionado: fps, fpsConfirmado: fps, marcas };
+    return {
+      video: video('a', fps),
+      fpsSelecionado: fps,
+      fpsConfirmado: fps,
+      marcas,
+      sugestao: null,
+    };
   }
 
   it('bilateral: três Attempt numeradas de 1 a 3, sem toque fora do Drop Jump', () => {
@@ -176,6 +233,7 @@ describe('tentativasConcluidas', () => {
         quadroToque: null,
         quadroDecolagem: 1000,
         quadroAterrissagem: 1120,
+        quadrosSugeridos: {},
       },
       {
         perna: 'unica',
@@ -184,6 +242,7 @@ describe('tentativasConcluidas', () => {
         quadroToque: null,
         quadroDecolagem: 2000,
         quadroAterrissagem: 2110,
+        quadrosSugeridos: {},
       },
       {
         perna: 'unica',
@@ -192,6 +251,7 @@ describe('tentativasConcluidas', () => {
         quadroToque: null,
         quadroDecolagem: 3000,
         quadroAterrissagem: 3100,
+        quadrosSugeridos: {},
       },
     ]);
   });
@@ -232,6 +292,7 @@ describe('paraAttempt', () => {
     fpsSelecionado: 240,
     fpsConfirmado: 240,
     marcas: { decolagem: 1000, aterrissagem: 1120 },
+    sugestao: null,
   };
 
   it('converte a tentativa completa com a perna e o número dados', () => {
@@ -242,7 +303,32 @@ describe('paraAttempt', () => {
       quadroToque: null,
       quadroDecolagem: 1000,
       quadroAterrissagem: 1120,
+      quadrosSugeridos: {},
     });
+  });
+
+  it('leva os quadros da sugestão pronta, só dos eventos do protocolo (spec 018, RN11)', () => {
+    const comSugestao: TentativaEmAndamento = {
+      ...completa,
+      sugestao: {
+        estado: 'pronta',
+        uri: 'x',
+        quadros: { toque: 50, decolagem: 999, aterrissagem: 1121 },
+      },
+    };
+    expect(paraAttempt(comSugestao, 'unica', 1, 'cmj_bi')?.quadrosSugeridos).toEqual({
+      decolagem: 999,
+      aterrissagem: 1121,
+    });
+    expect(paraAttempt(comSugestao, 'unica', 1, 'dj')).toBeNull();
+  });
+
+  it('sem sugestão pronta, quadrosSugeridos fica vazio', () => {
+    const falhou: TentativaEmAndamento = {
+      ...completa,
+      sugestao: { estado: 'falhou', uri: 'x', motivo: 'm' },
+    };
+    expect(paraAttempt(falhou, 'unica', 1, 'cmj_bi')?.quadrosSugeridos).toEqual({});
   });
 
   it('devolve null com evento faltando ou sem FPS confirmado', () => {

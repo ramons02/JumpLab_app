@@ -22,6 +22,7 @@ function tentativa(dados: Partial<Attempt>): Attempt {
     quadroToque: null,
     quadroDecolagem: 1000,
     quadroAterrissagem: 1120,
+    quadrosSugeridos: {},
     ...dados,
   };
 }

@@ -94,6 +94,15 @@ const MIGRACOES: readonly string[] = [
    );
    INSERT INTO estado_sync (id, usuario_email, cursor_servidor, ultima_sincronizacao, ultimo_resultado, ultimo_erro)
      VALUES (1, NULL, 0, NULL, NULL, NULL);`,
+
+  // 6. sugestao (spec 018): quadro sugerido ao lado do marcado; preferências do aparelho (chave em teste).
+  `ALTER TABLE tentativa ADD COLUMN quadro_sugerido_toque INTEGER;
+   ALTER TABLE tentativa ADD COLUMN quadro_sugerido_decolagem INTEGER;
+   ALTER TABLE tentativa ADD COLUMN quadro_sugerido_aterrissagem INTEGER;
+   CREATE TABLE preferencia (
+     chave TEXT PRIMARY KEY NOT NULL,
+     valor TEXT NOT NULL
+   );`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */

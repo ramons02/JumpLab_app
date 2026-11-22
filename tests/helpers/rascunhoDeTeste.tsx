@@ -29,6 +29,7 @@ export function tentativasEmAndamento(tentativas: Attempt[]): TentativasPorPerna
           decolagem: t.quadroDecolagem,
           aterrissagem: t.quadroAterrissagem,
         },
+        sugestao: null,
       },
     ];
   }
@@ -112,6 +113,7 @@ export function SerieAgachamentoPronta({ pacienteId, cargaKg, serie }: SeriePron
           fpsSelecionado: serie.fps,
           fpsConfirmado: serie.fps,
           marcas: {},
+          sugestao: null,
         },
       ],
     }));
