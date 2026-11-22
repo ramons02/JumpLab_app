@@ -15,7 +15,7 @@ import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunh
 import { useTentativaAtual } from '@/hooks/useTentativaAtual';
 import type { SerieEmAndamento } from '@/types/squat';
 import { avisoDoFps } from '@/utils/fps';
-import { CASAS_CARGA, formatarDecimal } from '@/utils/formatacao';
+import { formatarCarga } from '@/utils/formatacao';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { descartarVideos } from '@/video/descartarVideos';
 
@@ -95,7 +95,7 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
     <ScrollView className="flex-1 bg-fundo" contentContainerClassName="gap-4 p-4 pb-8">
       <Text className="text-xs text-textoSecundario">
         {PROTOCOLOS.agach.nome}
-        {rascunho.cargaKg ? ` · ${formatarDecimal(rascunho.cargaKg, CASAS_CARGA)} kg` : ''}
+        {rascunho.cargaKg ? ` · ${formatarCarga(rascunho.cargaKg)} kg` : ''}
         {paciente ? ` · ${paciente.nome}` : ''}
       </Text>
       {tentativa.video === null ? (

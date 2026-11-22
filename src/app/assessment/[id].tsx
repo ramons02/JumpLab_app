@@ -82,7 +82,7 @@ function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
           {avaliacao.observacoes || 'Sem observações.'}
         </Text>
       </View>
-      {avaliacao.resumo.tipo === 'salto' ? <CompartilharPdf avaliacaoId={avaliacao.id} /> : null}
+      <CompartilharPdf avaliacaoId={avaliacao.id} />
       <View style={{ height: ESPACO_FINAL_PX }} />
     </ScrollView>
   );

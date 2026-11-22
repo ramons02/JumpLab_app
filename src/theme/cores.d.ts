@@ -33,6 +33,7 @@ interface CoresPapel {
   marca: string;
   marcaLinha: string;
   lsi: { verde: CorDoPapel; amarelo: CorDoPapel; vermelho: CorDoPapel; neutro: CorDoPapel };
+  mapa: CoresMapa;
 }
 
 interface CoresGrafico {

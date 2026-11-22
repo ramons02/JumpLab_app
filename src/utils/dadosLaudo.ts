@@ -1,14 +1,16 @@
-import type { Assessment, AvaliacaoDoHistorico, ResumoSalto } from '@/types/assessment';
+import type { Assessment, AvaliacaoDoHistorico, ResumoAvaliacao } from '@/types/assessment';
 import type { Avaliador } from '@/types/avaliador';
+import type { PontoMelhoria } from '@/types/melhoria';
 import type { Patient, PernaLesionada, Perfil } from '@/types/patient';
+import type { Protocol } from '@/types/protocol';
 import { calcularIdade } from '@/utils/datas';
 import {
   montarGraficoLsi,
   montarGraficoProtocolo,
   temPontosSuficientes,
   type GraficoEvolucao,
-  type ProtocoloSalto,
 } from '@/utils/evolucao';
+import { sugerirMelhorias } from '@/utils/melhorias';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
 const TAMANHO_DATA = 'AAAA-MM-DD'.length;
@@ -17,14 +19,18 @@ export interface DadosLaudo {
   avaliador: Avaliador;
   paciente: { nome: string; idadeNaAvaliacao: number; perfil: Perfil };
   avaliacao: {
-    protocolo: ProtocoloSalto;
+    protocolo: Protocol;
     dataHora: string;
     /** A gravada na avaliação */
     pernaLesionada: PernaLesionada;
     /** FPS distintos das tentativas */
     fps: number[];
     observacoes: string;
-    resumo: ResumoSalto;
+    resumo: ResumoAvaliacao;
+    /** Só no agachamento */
+    cargaKg: number | null;
+    /** Os gravados ou, nas avaliações antigas, as sugestões calculadas na hora (spec 017) */
+    melhorias: PontoMelhoria[];
   };
   evolucao: {
     /** null com menos de duas avaliações do protocolo até a data (RN10) */
@@ -49,15 +55,15 @@ export function montarDadosLaudo(
   avaliador: Avaliador,
 ): DadosLaudo {
   const { resumo, protocolo } = avaliacao;
-  if (resumo.tipo !== 'salto' || protocolo === 'agach') {
-    throw new Error('O laudo do agachamento é montado pela spec 014.');
-  }
   const ate = historico.filter(
     (a) => a.pacienteId === avaliacao.pacienteId && a.dataHora <= avaliacao.dataHora,
   );
-  const fps = [...new Set(Object.values(resumo.pernas).flatMap((p) => p?.fps ?? []))].sort(
-    (a, b) => a - b,
-  );
+  const fps =
+    resumo.tipo === 'agach'
+      ? [resumo.fps]
+      : [...new Set(Object.values(resumo.pernas).flatMap((p) => p?.fps ?? []))].sort(
+          (a, b) => a - b,
+        );
   return {
     avaliador,
     paciente: {
@@ -75,6 +81,8 @@ export function montarDadosLaudo(
       fps,
       observacoes: avaliacao.observacoes,
       resumo,
+      cargaKg: avaliacao.cargaKg,
+      melhorias: avaliacao.melhorias ?? sugerirMelhorias(resumo, avaliacao.pernaLesionada),
     },
     evolucao: {
       protocolo: suficiente(montarGraficoProtocolo(protocolo, ate, paciente.pernaLesionada)),

@@ -29,3 +29,8 @@ export function formatarDecimal(valor: number, casas: number): string {
   }
   return formato.format(valor);
 }
+
+/** Carga com até 1 casa (research R7 da spec 014): 60 dá "60"; 62,5 dá "62,5". */
+export function formatarCarga(kg: number): string {
+  return formatarDecimal(kg, Number.isInteger(kg) ? 0 : CASAS_CARGA);
+}
