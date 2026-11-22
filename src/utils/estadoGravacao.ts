@@ -13,10 +13,11 @@ export type EstadoGravacao =
 export interface SituacaoCamera {
   temPermissao: boolean;
   podePedirPermissao: boolean;
+  /** Taxas lidas da câmera; null enquanto ela ainda responde. */
   erro: boolean;
   gravando: boolean;
   taxa: TaxaAlta | null;
-  suportadas: readonly TaxaAlta[];
+  suportadas: readonly TaxaAlta[] | null;
   /** Taxa que a câmera escolheu para a taxa pedida; ausente enquanto ela configura. */
   negociada: { pedida: TaxaAlta; fps: number | undefined } | null;
 }
@@ -26,6 +27,7 @@ export function estadoDaGravacao(s: SituacaoCamera): EstadoGravacao {
   if (!s.temPermissao) return s.podePedirPermissao ? 'sem_permissao' : 'permissao_negada';
   if (s.erro) return 'erro';
   if (s.gravando) return 'gravando';
+  if (s.suportadas === null) return 'preparando';
   if (s.taxa === null) return 'sem_alta_velocidade';
   if (!taxaEhSuportada(s.taxa, s.suportadas)) return 'taxa_nao_suportada';
   if (s.negociada === null || s.negociada.pedida !== s.taxa) return 'preparando';

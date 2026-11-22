@@ -1,7 +1,7 @@
+import { CameraAltaVelocidade } from 'camera-alta-velocidade';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Camera } from 'react-native-vision-camera';
 
 import { AvisoTaxaNaoSuportada } from '@/components/AvisoTaxaNaoSuportada';
 import { IndicadorGravacao } from '@/components/IndicadorGravacao';
@@ -19,7 +19,8 @@ export const MENSAGEM_MOTIVO_CAMERA =
 export const MENSAGEM_CAMERA_NEGADA =
   'Sem a câmera, o app não grava o salto. Permita o acesso nas configurações do aparelho ou escolha um vídeo da galeria.';
 export const MENSAGEM_SEM_ALTA_VELOCIDADE =
-  'Este aparelho não grava a 120 nem a 240 fps. Filme em câmera lenta com o app da câmera e escolha o vídeo da galeria.';
+  'Este aparelho não libera a câmera lenta (120 ou 240 fps) para outros apps. Filme no modo Câmera lenta da câmera do celular e escolha o vídeo da galeria.';
+export const MENSAGEM_PREPARANDO = 'Preparando a câmera em câmera lenta...';
 export const MENSAGEM_TENTATIVA_INVALIDA = 'Tentativa inválida. Volte ao analisador.';
 const NOTA_DESCARTE =
   'O vídeo serve só para esta avaliação: ao parar, abre no analisador com o FPS já preenchido e é descartado quando a avaliação termina.';
@@ -60,10 +61,17 @@ function Gravacao({ perna, numero }: { perna: PernaTentativa; numero: NumeroTent
       </Centro>
     );
   }
-  if (g.estado === 'sem_alta_velocidade' || !g.propsCamera) {
+  if (g.estado === 'sem_alta_velocidade') {
     return (
       <Centro>
         <Text className="text-center text-sm text-texto">{MENSAGEM_SEM_ALTA_VELOCIDADE}</Text>
+      </Centro>
+    );
+  }
+  if (!g.propsCamera) {
+    return (
+      <Centro>
+        <Text className="text-center text-sm text-textoSecundario">{MENSAGEM_PREPARANDO}</Text>
       </Centro>
     );
   }
@@ -81,7 +89,7 @@ function Gravacao({ perna, numero }: { perna: PernaTentativa; numero: NumeroTent
   return (
     <View className="flex-1 bg-fundo">
       <View className="flex-1">
-        <Camera {...g.propsCamera} style={{ flex: 1 }} />
+        <CameraAltaVelocidade {...g.propsCamera} testID="camera" style={{ flex: 1 }} />
         <LinhaGuia />
         {gravando && g.taxa ? <IndicadorGravacao segundos={g.segundos} taxa={g.taxa} /> : null}
       </View>

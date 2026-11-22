@@ -1,15 +1,14 @@
-import { useIsFocused } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Linking } from 'react-native';
 import {
-  useCameraDevice,
-  useCameraPermission,
-  useVideoOutput,
-  type CameraSessionConfig,
-  type Recorder,
-} from 'react-native-vision-camera';
+  taxasAltaVelocidade,
+  type CameraAltaVelocidadeRef,
+  type CodigoErroCamera,
+} from 'camera-alta-velocidade';
+import { useIsFocused } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Linking } from 'react-native';
 
 import { useAppEmPrimeiroPlano } from '@/hooks/useAppEmPrimeiroPlano';
+import { usePermissaoCamera } from '@/hooks/usePermissaoCamera';
 import type { VideoSelecionado } from '@/types/attempt';
 import { estadoDaGravacao } from '@/utils/estadoGravacao';
 import {
@@ -18,7 +17,7 @@ import {
   taxasAltaSuportadas,
   type TaxaAlta,
 } from '@/utils/taxaGravacao';
-import { apagarArquivoDeGravacao, guardarGravacao } from '@/video/gravacoesTemporarias';
+import { guardarGravacao } from '@/video/gravacoesTemporarias';
 import { lerTaxaDoVideo } from '@/video/importarVideo';
 
 export const MENSAGEM_ERRO_GRAVACAO = 'Não foi possível gravar o vídeo. Tente de novo.';
@@ -26,21 +25,33 @@ export const MENSAGEM_GRAVACAO_CANCELADA =
   'A gravação foi cancelada porque o app saiu da tela. Grave de novo.';
 const UM_SEGUNDO_MS = 1000;
 
-interface GravacaoEmAndamento {
-  gravador: Recorder;
-  terminou: Promise<string>;
+/** Taxas que a câmera libera, lidas uma vez por abertura da tela com a permissão concedida. */
+function useTaxasDaCamera(permitida: boolean) {
+  const [suportadas, setSuportadas] = useState<TaxaAlta[] | null>(null);
+  useEffect(() => {
+    if (!permitida) return;
+    let ativo = true;
+    taxasAltaVelocidade()
+      .then(
+        (maximos) => ativo && setSuportadas(taxasAltaSuportadas(maximos.map((max) => ({ max })))),
+      )
+      .catch(() => ativo && setSuportadas([]));
+    return () => {
+      ativo = false;
+    };
+  }, [permitida]);
+  return [suportadas, setSuportadas] as const;
 }
 
 /**
- * Câmera traseira travada em 120 ou 240 fps, sem áudio (research R1 a R6). A taxa só é aceita depois
- * que a câmera confirma, na configuração da sessão, que gravará nela: nunca grava em taxa menor.
+ * Câmera traseira na sessão de alta velocidade, sem áudio (spec 011, D21). Abre na maior taxa que o
+ * aparelho libera e só deixa gravar depois que a câmera confirma a taxa: nunca grava em taxa menor.
  */
 export function useGravacaoAltaVelocidade() {
-  const permissao = useCameraPermission();
-  const device = useCameraDevice('back');
-  const suportadas = useMemo(() => taxasAltaSuportadas(device?.supportedFPSRanges ?? []), [device]);
+  const permissao = usePermissaoCamera();
+  const [suportadas, setSuportadas] = useTaxasDaCamera(permissao.status === 'concedida');
   const [escolhida, setEscolhida] = useState<TaxaAlta | null>(null);
-  const taxa = escolhida ?? taxaInicial(suportadas);
+  const taxa = escolhida ?? taxaInicial(suportadas ?? []);
   const [negociada, setNegociada] = useState<{ pedida: TaxaAlta; fps: number | undefined } | null>(
     null,
   );
@@ -51,12 +62,13 @@ export function useGravacaoAltaVelocidade() {
   const focada = useIsFocused();
   const emPrimeiroPlano = useAppEmPrimeiroPlano();
   const emUso = focada && emPrimeiroPlano;
-  const saidaVideo = useVideoOutput({ enableAudio: false });
-  const atual = useRef<GravacaoEmAndamento | null>(null);
+  const ref = useRef<CameraAltaVelocidadeRef>(null);
+  /** A câmera que está gravando; sobrevive à saída da tela, quando o React já soltou a `ref`. */
+  const gravandoCom = useRef<CameraAltaVelocidadeRef | null>(null);
 
   const estado = estadoDaGravacao({
-    temPermissao: permissao.hasPermission,
-    podePedirPermissao: permissao.canRequestPermission,
+    temPermissao: permissao.status === 'concedida',
+    podePedirPermissao: permissao.status !== 'bloqueada',
     erro,
     gravando,
     taxa,
@@ -65,17 +77,15 @@ export function useGravacaoAltaVelocidade() {
   });
 
   const cancelar = useCallback(async () => {
-    const gravacao = atual.current;
-    if (!gravacao) return;
-    atual.current = null;
+    const camera = gravandoCom.current;
+    if (!camera) return;
+    gravandoCom.current = null;
     setGravando(false);
-    gravacao.terminou.catch(() => undefined);
-    await gravacao.gravador.cancelRecording().catch(() => undefined);
-    apagarArquivoDeGravacao(gravacao.gravador.filePath);
+    await camera.cancelarGravacao().catch(() => undefined);
   }, []);
 
   useEffect(() => {
-    if (emUso || !atual.current) return;
+    if (emUso || !gravandoCom.current) return;
     void cancelar();
     setAviso(MENSAGEM_GRAVACAO_CANCELADA);
   }, [emUso, cancelar]);
@@ -89,73 +99,72 @@ export function useGravacaoAltaVelocidade() {
   }, [gravando]);
 
   const gravar = useCallback(async () => {
-    if (estado !== 'pronta') return;
+    const camera = ref.current;
+    if (estado !== 'pronta' || !camera) return;
     setAviso(null);
     try {
-      const gravador = await saidaVideo.createRecorder({});
-      const terminou = new Promise<string>((resolver, rejeitar) =>
-        gravador.startRecording(resolver, rejeitar).catch(rejeitar),
-      );
-      const gravacao = { gravador, terminou };
-      atual.current = gravacao;
-      terminou.catch(() => {
-        if (atual.current !== gravacao) return;
-        void cancelar();
-        setErro(true);
-      });
+      await camera.iniciarGravacao();
+      gravandoCom.current = camera;
       setSegundos(0);
       setGravando(true);
     } catch {
       setErro(true);
     }
-  }, [estado, saidaVideo, cancelar]);
+  }, [estado]);
 
   const parar = useCallback(async (): Promise<VideoSelecionado | null> => {
-    const gravacao = atual.current;
-    if (!gravacao || taxa === null) return null;
-    atual.current = null;
-    const duracaoS = gravacao.gravador.recordedDuration;
+    const camera = gravandoCom.current;
+    if (!camera || taxa === null) return null;
+    gravandoCom.current = null;
     setGravando(false);
     try {
-      await gravacao.gravador.stopRecording();
-      const uri = await guardarGravacao(await gravacao.terminou);
+      const { caminho, duracaoS } = await camera.pararGravacao();
+      const uri = await guardarGravacao(caminho);
       return montarVideoGravado(uri, taxa, duracaoS, await lerTaxaDoVideo(uri));
     } catch {
-      apagarArquivoDeGravacao(gravacao.gravador.filePath);
       setErro(true);
       return null;
     }
   }, [taxa]);
 
-  const aoConfigurar = useCallback(
-    (config: CameraSessionConfig) =>
-      taxa !== null && setNegociada({ pedida: taxa, fps: config.selectedFPS }),
-    [taxa],
+  const aoErroDaCamera = useCallback(
+    (codigo: CodigoErroCamera) => {
+      if (codigo === 'SEM_ALTA_VELOCIDADE') return setSuportadas([]);
+      if (codigo === 'TAXA_NAO_SUPORTADA') {
+        return taxa !== null && setNegociada({ pedida: taxa, fps: undefined });
+      }
+      gravandoCom.current = null;
+      setGravando(false);
+      setErro(true);
+    },
+    [taxa, setSuportadas],
   );
-  const restricoes = useMemo(() => (taxa === null ? [] : [{ fps: taxa }]), [taxa]);
 
   return {
     estado,
     taxa,
-    suportadas,
+    suportadas: suportadas ?? [],
     segundos,
     aviso,
     mensagemErro: estado === 'erro' ? MENSAGEM_ERRO_GRAVACAO : null,
     escolherTaxa: (nova: TaxaAlta) => !gravando && setEscolhida(nova),
     tentarDeNovo: () => setErro(false),
-    pedirPermissao: permissao.requestPermission,
+    pedirPermissao: permissao.pedir,
     abrirConfiguracoes: () => Linking.openSettings(),
     gravar,
     parar,
     cancelar,
-    propsCamera: device
-      ? {
-          device,
-          isActive: emUso && permissao.hasPermission,
-          outputs: [saidaVideo],
-          constraints: restricoes,
-          onSessionConfigSelected: aoConfigurar,
-        }
-      : null,
+    propsCamera:
+      taxa === null
+        ? null
+        : {
+            ref,
+            fps: taxa,
+            ativo: emUso,
+            onPronta: (e: { nativeEvent: { fps: number } }) =>
+              setNegociada({ pedida: taxa, fps: e.nativeEvent.fps }),
+            onErro: (e: { nativeEvent: { codigo: CodigoErroCamera } }) =>
+              aoErroDaCamera(e.nativeEvent.codigo),
+          },
   };
 }

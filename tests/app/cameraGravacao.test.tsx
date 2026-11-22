@@ -15,16 +15,12 @@ import { lerTaxaDoVideo } from '@/video/importarVideo';
 
 import { abrirAnalisador, abrirCamera, botaoGravar, botaoParar } from '../helpers/fluxoCamera';
 import { arquivosFalsos, limparSistemaArquivos } from '../helpers/mockSistemaArquivos';
-import { camera, reiniciarCamera } from '../helpers/mockVisionCamera';
+import { camera, reiniciarCamera } from '../helpers/mockCameraAltaVelocidade';
 import { fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => jest.requireActual('../helpers/telas').bancoDaTela(),
 }));
-jest.mock(
-  'react-native-vision-camera',
-  () => jest.requireActual('../helpers/mockVisionCamera').moduloFalso,
-);
 jest.mock(
   'expo-file-system',
   () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso,
@@ -61,24 +57,25 @@ describe('tela de gravação em alta velocidade', () => {
     expect(await screen.findByTestId('camera')).toBeOnTheScreen();
   });
 
-  it('permissão negada explica e oferece abrir as configurações', async () => {
-    camera.permissao = 'denied';
+  it('permissão negada de vez explica e oferece abrir as configurações', async () => {
+    camera.permissao = 'not-determined';
+    camera.respostaAoPedido = 'denied';
     const abrirConfiguracoes = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
     await abrirAnalisador();
     await abrirCamera();
 
+    await fireEvent.press(await screen.findByRole('button', { name: 'Permitir câmera' }));
     expect(await screen.findByText(MENSAGEM_CAMERA_NEGADA)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir configurações' }));
     expect(abrirConfiguracoes).toHaveBeenCalled();
   });
 
-  it('câmera sem áudio, com a linha guia e 240 pré-escolhido', async () => {
+  it('câmera com a linha guia e 240 pré-escolhido', async () => {
     await abrirAnalisador();
     await abrirCamera();
 
     await screen.findByTestId('camera');
-    const props = camera.ultimasProps as { outputs: unknown[]; constraints: { fps: number }[] };
-    expect(props.constraints).toEqual([{ fps: 240 }]);
+    expect(camera.ultimasProps?.fps).toBe(240);
     expect(screen.getByTestId('linha-guia')).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: '240 fps' })).toBeChecked();
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
@@ -179,7 +176,7 @@ describe('tela de gravação em alta velocidade', () => {
     await fireEvent.press(botaoGravar());
     await screen.findByText('REC 00:00 · 240 fps');
 
-    await act(async () => camera.aoFalhar?.(new Error('sem espaço')));
+    await act(async () => camera.aoFalhar?.());
 
     expect(await screen.findByText(MENSAGEM_ERRO_GRAVACAO)).toBeOnTheScreen();
     expect(arquivosFalsos.size).toBe(0);

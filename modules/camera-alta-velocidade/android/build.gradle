@@ -1,0 +1,31 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'br.com.jumplab'
+version = '1.0.0'
+
+expoModule {
+  v2 true
+}
+
+android {
+  namespace "br.com.jumplab.cameraaltavelocidade"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+// Sessão de alta velocidade do CameraX (HighSpeedVideoSessionConfig, 1.5 ou mais novo): é ela que
+// grava a 120/240 fps no Android (decisão D21, spec 011).
+def versaoCameraX = "1.7.0-alpha03"
+
+dependencies {
+  implementation "androidx.camera:camera-core:${versaoCameraX}"
+  implementation "androidx.camera:camera-camera2:${versaoCameraX}"
+  implementation "androidx.camera:camera-lifecycle:${versaoCameraX}"
+  implementation "androidx.camera:camera-video:${versaoCameraX}"
+  implementation "androidx.camera:camera-view:${versaoCameraX}"
+}

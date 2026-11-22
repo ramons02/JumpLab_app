@@ -14,16 +14,12 @@ import {
   limparSistemaArquivos,
   pastasFalsas,
 } from '../helpers/mockSistemaArquivos';
-import { reiniciarCamera } from '../helpers/mockVisionCamera';
+import { reiniciarCamera } from '../helpers/mockCameraAltaVelocidade';
 import { bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => jest.requireActual('../helpers/telas').bancoDaTela(),
 }));
-jest.mock(
-  'react-native-vision-camera',
-  () => jest.requireActual('../helpers/mockVisionCamera').moduloFalso,
-);
 jest.mock(
   'expo-file-system',
   () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso,

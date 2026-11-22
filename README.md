@@ -18,7 +18,7 @@ projeto na constituição do [JumpLab_documentacao](https://github.com/ramons02/
 | Gráficos  | `react-native-gifted-charts` (stack) nos gráficos de evolução do perfil (spec 009); exige o `expo-linear-gradient`, que entra só por isso, e o `react-native-svg`, que já estava no app |
 | Fonte     | Bebas Neue nos títulos, empacotada pelo `expo-font` (licença SIL OFL, em `assets/fonts/`)                                                                                               |
 | Vídeo     | `expo-image-picker` e `expo-video`; `expo-file-system` só para apagar a cópia temporária do vídeo ao fim da avaliação (D14)                                                             |
-| Câmera    | `react-native-vision-camera` 5 (com `react-native-nitro-modules` e `react-native-nitro-image`, exigidas por ela), gravação a 120 e 240 fps sem áudio (spec 011)                         |
+| Câmera    | módulo nativo próprio `modules/camera-alta-velocidade` (CameraX, sessão de alta velocidade), gravação a 120 e 240 fps sem áudio (spec 011, D21)                                         |
 
 ## Estrutura
 
@@ -56,15 +56,16 @@ npm run android                       # npx expo run:android
 
 ## Gravação em alta velocidade (spec 011)
 
-A câmera do app grava a 120 ou 240 fps, sem áudio, e o vídeo fica só em `cache/gravacoes/` até o fim da
-avaliação (D14). O `react-native-vision-camera` tem código nativo: depois de instalar as dependências,
-gere um Development Build novo (`npm run android`).
+A câmera do app grava a 120 ou 240 fps, sem áudio, pela sessão de alta velocidade do CameraX
+(`HighSpeedVideoSessionConfig`), num módulo nativo próprio em `modules/camera-alta-velocidade/` (D21). A
+biblioteca de câmera usada antes só abria a sessão comum, que no Samsung vai até 30 ou 60 fps. O vídeo
+fica só em `cache/gravacoes/` até o fim da avaliação (D14). Depois de mexer no módulo, gere um
+Development Build novo (`npm run android`).
 
-- A permissão `CAMERA` vem do `app.json` (`android.permissions`); o microfone fica bloqueado
-  (`blockedPermissions`), porque a gravação é sem áudio. O `expo-image-picker` não pode ter
-  `cameraPermission: false`: essa opção bloqueia a câmera do app inteiro.
-- A taxa só é liberada depois que a câmera confirma, na configuração da sessão, que gravará nela. Se ela
-  escolher uma taxa menor, o app avisa e bloqueia o botão de gravar.
+- Ao abrir a tela, o app pergunta à câmera traseira as taxas de alta velocidade que ela libera e abre na
+  maior. Se o aparelho não libera nenhuma, a tela orienta filmar na câmera lenta do próprio celular e
+  importar pela galeria.
+- A permissão `CAMERA` vem do `app.json`; o microfone fica bloqueado, porque a gravação é sem áudio.
 
 Aparelhos testados a 240 e a 120 fps: a registrar na validação em aparelho (quickstart da spec 011).
 
