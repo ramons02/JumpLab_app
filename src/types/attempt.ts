@@ -22,3 +22,15 @@ export interface TentativaEmAndamento {
 }
 
 export type TentativasPorPerna = Partial<Record<PernaTentativa, TentativaEmAndamento[]>>;
+
+/** Tentativa concluída: espelho da tabela `tentativa` (gravada pela spec 008). */
+export interface Attempt {
+  perna: PernaTentativa;
+  numero: NumeroTentativa;
+  /** FPS confirmado */
+  fps: number;
+  /** Só no Drop Jump */
+  quadroToque: number | null;
+  quadroDecolagem: number;
+  quadroAterrissagem: number;
+}
