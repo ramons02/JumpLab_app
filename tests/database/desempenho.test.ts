@@ -1,5 +1,5 @@
 import { aplicarMigracoes } from '@/database/migracoes';
-import { inserirPaciente, listarPacientes } from '@/database/pacientes';
+import { inserirPaciente, listarPacientesComUltimaAvaliacao } from '@/database/pacientes';
 import type { DadosPaciente } from '@/types/patient';
 
 import { criarBancoEmMemoria, type BancoDeTeste } from '../helpers/bancoEmMemoria';
@@ -32,7 +32,7 @@ describe('desempenho do banco com 500 pacientes', () => {
 
   it('lista em menos de 500 ms', async () => {
     const inicio = performance.now();
-    const lista = await listarPacientes(db);
+    const lista = await listarPacientesComUltimaAvaliacao(db);
     expect(performance.now() - inicio).toBeLessThan(LIMITE_LISTAR_MS);
     expect(lista).toHaveLength(TOTAL_PACIENTES);
   });
