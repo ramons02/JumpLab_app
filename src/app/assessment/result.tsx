@@ -2,8 +2,8 @@ import { Redirect, Stack, usePreventRemove, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, ToastAndroid, View } from 'react-native';
 
-import { BlocoSalto } from '@/components/BlocoSalto';
-import { TopoResultado } from '@/components/TopoResultado';
+import { BlocoResultado } from '@/components/BlocoResultado';
+import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
@@ -12,7 +12,7 @@ import cores from '@/theme/cores';
 import { paraBr } from '@/utils/datas';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
 import { PROTOCOLOS } from '@/utils/protocolos';
-import { alturaDoTopo, montarResumoSalto } from '@/utils/resumoAvaliacao';
+import { montarResumo } from '@/utils/resumoAvaliacao';
 import { descartarVideos } from '@/video/descartarVideos';
 
 /** Resultado da avaliação em andamento, ainda não salva (HU008). */
@@ -36,9 +36,9 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
   const [destino, setDestino] = useState<string | null>(null);
   const resumo = useMemo(() => {
     const nova = avaliacaoDoRascunho(rascunho);
-    return nova ? montarResumoSalto(nova) : null;
+    return nova ? montarResumo(nova) : null;
   }, [rascunho]);
-  const topo = resumo ? alturaDoTopo(resumo, rascunho.pernaLesionada) : null;
+  const topo = resumo ? conteudoDoTopo(resumo, rascunho.pernaLesionada) : null;
   const parallax = useParallaxSalto(saltoDoDesenhoPx(topo?.alturaCm ?? null));
   const info = PROTOCOLOS[rascunho.protocolo];
 
@@ -88,7 +88,7 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
           {info.nome}
           {paciente ? ` · ${paciente.nome}` : ''} · {paraBr(rascunho.dataHora.slice(0, 10))}
         </Text>
-        <BlocoSalto
+        <BlocoResultado
           protocolo={rascunho.protocolo}
           pernaLesionada={rascunho.pernaLesionada}
           resumo={resumo}
@@ -100,7 +100,11 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
             multiline
             value={observacoes}
             onChangeText={setObservacoes}
-            placeholder="Controle de tronco, padrão de aterrissagem..."
+            placeholder={
+              info.agachamento
+                ? 'Profundidade, valgo, controle da descida...'
+                : 'Controle de tronco, padrão de aterrissagem...'
+            }
             placeholderTextColor={cores.textoSecundario}
             className="min-h-20 rounded-2xl border border-borda bg-cartao p-3 text-sm text-texto"
           />

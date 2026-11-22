@@ -10,6 +10,8 @@ import type {
 import type { Attempt, NumeroTentativa, PernaTentativa } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
+import type { MarcasRepeticao, SquatSeries } from '@/types/squat';
+import { repeticaoCompleta } from '@/utils/marcacaoAgachamento';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { pernasDoProtocolo, TENTATIVAS_POR_PERNA } from '@/utils/tentativas';
 
@@ -39,11 +41,15 @@ interface LinhaTentativa {
 const COLUNAS_AVALIACAO =
   'id, paciente_id, protocolo, data_hora, perna_lesionada, carga_kg, observacoes, resultado_json, criado_em, atualizado_em, pendente_sync';
 
-/** Confere, antes de gravar, o que o banco não enxerga: as tentativas batem com o protocolo. */
-function conferirTentativas(nova: NovaAvaliacao) {
+/** Confere, antes de gravar, o que o banco não enxerga: tentativas e série batem com o protocolo. */
+function conferirAvaliacao(nova: NovaAvaliacao) {
   const info = PROTOCOLOS[nova.protocolo];
   if (info.agachamento) {
-    throw new Error('A gravação do agachamento com barra chega com a HU014.');
+    conferirSerie(nova);
+    return;
+  }
+  if (nova.serie !== null) {
+    throw new Error('Só o agachamento com barra tem série de repetições.');
   }
   for (const perna of pernasDoProtocolo(nova.protocolo)) {
     const numeros = nova.tentativas
@@ -69,6 +75,51 @@ function conferirTentativas(nova: NovaAvaliacao) {
   }
 }
 
+/** Agachamento: série com repetições completas, cada uma depois do fim da anterior. */
+function conferirSerie(nova: NovaAvaliacao) {
+  const { serie } = nova;
+  if (!serie || nova.cargaKg === null) {
+    throw new Error('O agachamento precisa da série marcada e da carga.');
+  }
+  if (nova.tentativas.length > 0) {
+    throw new Error('O agachamento não tem tentativas de salto.');
+  }
+  if (serie.repeticoes.length === 0 || !serie.repeticoes.every(repeticaoCompleta)) {
+    throw new Error('A série precisa de repetições completas.');
+  }
+  serie.repeticoes.forEach((r, i) => {
+    const anterior = serie.repeticoes[i - 1];
+    if (anterior?.fim && r.inicio && r.inicio.quadro <= anterior.fim.quadro) {
+      throw new Error('Cada repetição precisa começar depois do fim da anterior.');
+    }
+  });
+}
+
+async function gravarSerie(db: ConexaoBanco, avaliacaoId: string, serie: SquatSeries) {
+  await db.runAsync(
+    'INSERT INTO serie_agachamento (avaliacao_id, fps, calib_topo_y, calib_base_y) VALUES (?, ?, ?, ?)',
+    avaliacaoId,
+    serie.fps,
+    serie.calibracao.topoY,
+    serie.calibracao.baseY,
+  );
+  for (const [indice, { inicio, fundo, fim }] of serie.repeticoes.entries()) {
+    if (!inicio || !fundo || !fim) continue;
+    await db.runAsync(
+      `INSERT INTO repeticao (avaliacao_id, numero, inicio_quadro, inicio_y, fundo_quadro, fundo_y,
+         fim_quadro, fim_y) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      avaliacaoId,
+      indice + 1,
+      inicio.quadro,
+      inicio.y,
+      fundo.quadro,
+      fundo.y,
+      fim.quadro,
+      fim.y,
+    );
+  }
+}
+
 /** Grava a avaliação e as tentativas numa única transação. */
 export async function salvarAvaliacao(
   db: ConexaoBanco,
@@ -76,7 +127,7 @@ export async function salvarAvaliacao(
   resumo: ResumoAvaliacao,
   observacoes: string,
 ): Promise<Assessment> {
-  conferirTentativas(nova);
+  conferirAvaliacao(nova);
   const agora = new Date().toISOString();
   const avaliacao: Assessment = {
     ...nova,
@@ -115,6 +166,7 @@ export async function salvarAvaliacao(
         t.quadroAterrissagem,
       );
     }
+    if (avaliacao.serie) await gravarSerie(db, avaliacao.id, avaliacao.serie);
   });
   return avaliacao;
 }
@@ -131,14 +183,23 @@ export function lerResumo(texto: string): ResumoAvaliacao {
   } catch {
     throw new Error('Resumo da avaliação ilegível.');
   }
-  if (
-    !ehObjeto(valor) ||
-    valor.versao !== 1 ||
-    valor.tipo !== 'salto' ||
-    !ehObjeto(valor.pernas) ||
-    typeof valor.baixaPrecisao !== 'boolean' ||
-    !(valor.lsi === null || ehObjeto(valor.lsi))
-  ) {
+  if (!ehObjeto(valor) || valor.versao !== 1) {
+    throw new Error('Resumo da avaliação em formato desconhecido.');
+  }
+  const salto =
+    valor.tipo === 'salto' &&
+    ehObjeto(valor.pernas) &&
+    typeof valor.baixaPrecisao === 'boolean' &&
+    (valor.lsi === null || ehObjeto(valor.lsi));
+  const agachamento =
+    valor.tipo === 'agach' &&
+    Array.isArray(valor.repeticoes) &&
+    typeof valor.cargaKg === 'number' &&
+    typeof valor.fps === 'number' &&
+    typeof valor.melhorVelocidadeMs === 'number' &&
+    typeof valor.melhorPotenciaW === 'number' &&
+    (valor.perdaVelocidadePct === null || typeof valor.perdaVelocidadePct === 'number');
+  if (!salto && !agachamento) {
     throw new Error('Resumo da avaliação em formato desconhecido.');
   }
   return valor as unknown as ResumoAvaliacao;
@@ -179,7 +240,44 @@ export async function buscarAvaliacao(db: ConexaoBanco, id: string): Promise<Ass
     atualizadoEm: linha.atualizado_em,
     pendenteSync: linha.pendente_sync === 1,
     tentativas: tentativas.map(paraTentativa),
-    serie: null,
+    serie: linha.protocolo === 'agach' ? await lerSerie(db, id) : null,
+  };
+}
+
+interface LinhaSerie {
+  fps: number;
+  calib_topo_y: number;
+  calib_base_y: number;
+}
+
+interface LinhaRepeticao {
+  inicio_quadro: number;
+  inicio_y: number;
+  fundo_quadro: number;
+  fundo_y: number;
+  fim_quadro: number;
+  fim_y: number;
+}
+
+async function lerSerie(db: ConexaoBanco, avaliacaoId: string): Promise<SquatSeries | null> {
+  const serie = await db.getFirstAsync<LinhaSerie>(
+    'SELECT fps, calib_topo_y, calib_base_y FROM serie_agachamento WHERE avaliacao_id = ?',
+    avaliacaoId,
+  );
+  if (!serie) return null;
+  const repeticoes = await db.getAllAsync<LinhaRepeticao>(
+    `SELECT inicio_quadro, inicio_y, fundo_quadro, fundo_y, fim_quadro, fim_y
+       FROM repeticao WHERE avaliacao_id = ? ORDER BY numero`,
+    avaliacaoId,
+  );
+  return {
+    fps: serie.fps,
+    calibracao: { topoY: serie.calib_topo_y, baseY: serie.calib_base_y },
+    repeticoes: repeticoes.map((r): MarcasRepeticao => ({
+      inicio: { quadro: r.inicio_quadro, y: r.inicio_y },
+      fundo: { quadro: r.fundo_quadro, y: r.fundo_y },
+      fim: { quadro: r.fim_quadro, y: r.fim_y },
+    })),
   };
 }
 

@@ -143,3 +143,27 @@ export function poseDesenho(estado: EstadoPersonagem, segundos: number): PoseDes
 
 /** Raio da cabeça, usado pelo desenho. */
 export const RAIO_CABECA = CABECA;
+
+// Agachamento com barra em loop no topo do resultado (HU014, FR-020); valores do protótipo validado.
+/** Duração de um ciclo, em segundos. */
+export const PERIODO_AGACHAMENTO_S = 3.2;
+/** Fração do ciclo em que termina a descida (agachamento máximo). */
+export const FIM_DESCIDA_AGACH = 0.45;
+/** Fração do ciclo em que termina a subida; depois, parado em pé até o fim. */
+export const FIM_SUBIDA_AGACH = 0.7;
+
+/** Curva suave de 0 a 1 entre a e b (smoothstep). */
+function suave(a: number, b: number, x: number): number {
+  const t = limitar((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+/** Personagem com a barra nas costas descendo e subindo em loop; só ilustração. */
+export function cicloAgachamento(segundos: number): EstadoPersonagem {
+  const fase = (segundos % PERIODO_AGACHAMENTO_S) / PERIODO_AGACHAMENTO_S;
+  let agachamento = 0;
+  if (fase < FIM_DESCIDA_AGACH) agachamento = suave(0, FIM_DESCIDA_AGACH, fase);
+  else if (fase < FIM_SUBIDA_AGACH)
+    agachamento = 1 - suave(FIM_DESCIDA_AGACH, FIM_SUBIDA_AGACH, fase);
+  return { agachamento, subidaPx: 0, bracos: 0, barra: true };
+}

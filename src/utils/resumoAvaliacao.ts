@@ -1,14 +1,15 @@
 import type { NovaAvaliacao, ResumoSalto } from '@/types/assessment';
+import type { ResumoAgachamento } from '@/types/squat';
 import type { PernaTentativa } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
-import { calcularResultadoSalto } from '@/utils/biomechanics';
+import { calcularResultadoSalto, medirAgachamento } from '@/utils/biomechanics';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
 /** Resumo gravado em resultado_json: só embrulha o resultado da spec 007, sem regra própria. */
 export function montarResumoSalto(nova: NovaAvaliacao): ResumoSalto {
   const info = PROTOCOLOS[nova.protocolo];
   if (info.agachamento) {
-    throw new Error('O resumo do agachamento com barra chega com a HU014.');
+    throw new Error('O agachamento com barra usa montarResumoAgachamento.');
   }
   return {
     versao: 1,
@@ -42,4 +43,19 @@ export function alturaDoTopo(resumo: ResumoSalto, pernaLesionada: PernaLesionada
   }
   const perna = resumo.lsi?.pernaMaisFraca ?? 'direita';
   return { alturaCm: pernas[perna]?.alturaCm ?? 0, perna, motivo: 'mais_fraca' };
+}
+
+/** Resumo do agachamento: só embrulha medirAgachamento, sem conta própria (princípio III). */
+export function montarResumoAgachamento(nova: NovaAvaliacao): ResumoAgachamento {
+  if (!nova.serie || nova.cargaKg === null) {
+    throw new Error('O agachamento precisa da série marcada e da carga.');
+  }
+  return { versao: 1, tipo: 'agach', ...medirAgachamento(nova.serie, nova.cargaKg) };
+}
+
+/** Resumo conforme o protocolo: salto ou agachamento. */
+export function montarResumo(nova: NovaAvaliacao): ResumoSalto | ResumoAgachamento {
+  return PROTOCOLOS[nova.protocolo].agachamento
+    ? montarResumoAgachamento(nova)
+    : montarResumoSalto(nova);
 }

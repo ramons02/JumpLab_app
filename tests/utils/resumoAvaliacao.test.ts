@@ -43,9 +43,9 @@ describe('montarResumoSalto', () => {
     });
   });
 
-  it('agachamento lança erro nesta entrega', () => {
+  it('agachamento não passa por aqui', () => {
     expect(() => montarResumoSalto(novaAvaliacao(PACIENTE, 'agach', [], { cargaKg: 60 }))).toThrow(
-      'HU014',
+      'montarResumoAgachamento',
     );
   });
 });

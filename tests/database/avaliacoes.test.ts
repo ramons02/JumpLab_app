@@ -88,19 +88,6 @@ describe('repositório de avaliações', () => {
     expect(await contar('avaliacao')).toBe(0);
   });
 
-  it('recusa o agachamento nesta entrega', async () => {
-    const nova = novaAvaliacao(ana.id, 'agach', [], { cargaKg: 60 });
-    await expect(
-      salvarAvaliacao(
-        db,
-        nova,
-        montarResumoSalto(novaAvaliacao(ana.id, 'cmj_bi', CMJ_BILATERAL)),
-        '',
-      ),
-    ).rejects.toThrow('HU014');
-    expect(await contar('avaliacao')).toBe(0);
-  });
-
   it('falha no CHECK da terceira tentativa desfaz a avaliação inteira', async () => {
     const tentativas = CMJ_BILATERAL.map((t) =>
       t.numero === 3 ? { ...t, quadroAterrissagem: t.quadroDecolagem } : t,

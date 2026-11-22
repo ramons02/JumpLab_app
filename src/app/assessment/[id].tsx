@@ -1,16 +1,15 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { BlocoSalto } from '@/components/BlocoSalto';
-import { TopoResultado } from '@/components/TopoResultado';
+import { BlocoResultado } from '@/components/BlocoResultado';
+import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
 import { useAvaliacaoSalva } from '@/hooks/useAvaliacaoSalva';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
-import type { Assessment, ResumoSalto } from '@/types/assessment';
+import type { Assessment } from '@/types/assessment';
 import { paraBr } from '@/utils/datas';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
 import { PROTOCOLOS } from '@/utils/protocolos';
-import { alturaDoTopo } from '@/utils/resumoAvaliacao';
 
 /** Avaliação salva, só leitura: mostra os números guardados, sem recalcular. */
 export default function TelaAvaliacaoSalva() {
@@ -34,15 +33,12 @@ export default function TelaAvaliacaoSalva() {
       </View>
     );
   }
-  if (avaliacao.resumo.tipo === 'salto') {
-    return <AvaliacaoSalva avaliacao={avaliacao} resumo={avaliacao.resumo} />;
-  }
-  return null;
+  return <AvaliacaoSalva avaliacao={avaliacao} />;
 }
 
-function AvaliacaoSalva({ avaliacao, resumo }: { avaliacao: Assessment; resumo: ResumoSalto }) {
+function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
   const { paciente } = usePerfilPaciente(avaliacao.pacienteId);
-  const topo = alturaDoTopo(resumo, avaliacao.pernaLesionada);
+  const topo = conteudoDoTopo(avaliacao.resumo, avaliacao.pernaLesionada);
   const parallax = useParallaxSalto(saltoDoDesenhoPx(topo.alturaCm));
 
   return (
@@ -64,10 +60,10 @@ function AvaliacaoSalva({ avaliacao, resumo }: { avaliacao: Assessment; resumo: 
           <Text className="text-xs font-semibold text-textoSecundario">Somente leitura</Text>
         </View>
       </View>
-      <BlocoSalto
+      <BlocoResultado
         protocolo={avaliacao.protocolo}
         pernaLesionada={avaliacao.pernaLesionada}
-        resumo={resumo}
+        resumo={avaliacao.resumo}
       />
       <View className="gap-2">
         <Text className="text-sm font-semibold text-texto">Observações</Text>
