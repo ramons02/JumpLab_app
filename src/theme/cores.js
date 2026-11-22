@@ -35,4 +35,14 @@ module.exports = {
     barra: '#cbd5e1',
   },
   marca: { fundoIcone: '#1b1b1b' },
+  // linhas dos gráficos de evolução (spec 009), valores do protótipo
+  grafico: {
+    unica: '#2ee58a',
+    direita: '#2ee58a',
+    esquerda: '#94a3b8',
+    lsiAltura: '#2ee58a',
+    lsiRsi: '#9333ea',
+    referencia: '#16a34a',
+    eixo: '#93a29b',
+  },
 };
