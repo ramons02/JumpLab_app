@@ -4,7 +4,9 @@
 #   d1_240_nativo.mp4  5 s a 240 fps, faixa a 240 fps (1200 quadros)
 #   d1_240_em_30.mp4   os mesmos 1200 quadros com a faixa a 30 fps (40 s), como gravam alguns
 #                      aparelhos em câmera lenta
-# GOP longo (-g 240) para forçar a decodificação entre quadros-chave.
+# GOP longo (-g 240) para forçar a decodificação entre quadros-chave. Sem B-frames (-bf 0), como grava
+# a câmera de um celular: B-frames criam uma lista de edição no MP4 que o ffmpeg e o tocador do
+# Android tratam de formas diferentes.
 # Usa o filtro drawtext; se o ffmpeg não o tiver (builds estáticos sem freetype), imprime o número
 # com legendas ASS (libass), gerando a 25 fps e reposicionando cada quadro em N/240 s.
 # Uso: scripts/gerar-videos-d1.sh [pasta de saída]   (padrão: videos-d1/)
@@ -18,7 +20,7 @@ command -v ffmpeg >/dev/null || { echo "ffmpeg não encontrado no PATH." >&2; ex
 
 nativo="$saida/d1_240_nativo.mp4"
 em30="$saida/d1_240_em_30.mp4"
-codificacao=(-c:v libx264 -pix_fmt yuv420p -g 240 -an)
+codificacao=(-c:v libx264 -pix_fmt yuv420p -g 240 -bf 0 -an)
 
 if ffmpeg -hide_banner -filters 2>/dev/null | grep -qw drawtext; then
   ffmpeg -y -loglevel error \

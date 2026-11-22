@@ -185,7 +185,7 @@ describe('PlayerQuadros: tempo e linha guia', () => {
     expect(aoMudar).toHaveBeenCalledTimes(100);
     expect(aoMudar).toHaveBeenLastCalledWith(100);
     expect(screen.getByText('Quadro 100 / 719')).toBeOnTheScreen();
-    const quadrosPosicionados = new Set(posicoes.map((s) => Math.round(s * 240 - 0.5)));
+    const quadrosPosicionados = new Set(posicoes.map((s) => Math.round(s * 240)));
     expect([...quadrosPosicionados].sort((a, b) => a - b)).toEqual(
       Array.from({ length: 100 }, (_, i) => i + 1),
     );
