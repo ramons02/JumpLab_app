@@ -15,14 +15,21 @@ export function responder(caminho: string, ...respostas: Resposta[]) {
   filas.set(caminho, [...(filas.get(caminho) ?? []), ...respostas]);
 }
 
-export function sessaoDto(sufixo = '1', email = 'ana@exemplo.com') {
+export function sessaoDto(
+  sufixo = '1',
+  email = 'ana@exemplo.com',
+  extra: { admin?: boolean; trocaSenhaObrigatoria?: boolean } = {},
+) {
   return {
     sucesso: true,
     dados: {
       tokenAcesso: `acesso-${sufixo}`,
       tokenRenovacao: `renovacao-${sufixo}`,
       expiraEmSegundos: 900,
-      conta: { nome: 'Ana Souza', email, admin: false },
+      ...(extra.trocaSenhaObrigatoria === undefined
+        ? {}
+        : { trocaSenhaObrigatoria: extra.trocaSenhaObrigatoria }),
+      conta: { nome: 'Ana Souza', email, admin: extra.admin ?? false },
     },
   };
 }

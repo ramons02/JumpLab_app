@@ -7,7 +7,12 @@ import { cabecalho, chamadas, instalarApiFalsa, responder, sessaoDto } from '../
 const SESSAO = {
   tokenAcesso: 'acesso-0',
   tokenRenovacao: 'renovacao-0',
-  conta: { nome: 'Ana Souza', email: 'ana@exemplo.com', admin: false },
+  conta: {
+    nome: 'Ana Souza',
+    email: 'ana@exemplo.com',
+    admin: false,
+    trocaSenhaObrigatoria: false,
+  },
 };
 const lerTudo = (corpo: unknown) => corpo;
 

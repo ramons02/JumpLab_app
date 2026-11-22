@@ -9,6 +9,7 @@ import {
   marcarSincronizado,
 } from '@/database/sincronizacao';
 import { enviarLote, receberPagina } from '@/sync/apiSincronizacao';
+import { lerSessao } from '@/sync/armazenamentoSessao';
 import type { ResultadoHttp } from '@/sync/clienteHttp';
 import { contemChaveDeVideo } from '@/sync/serializacao';
 import { validarAvaliacaoRecebida, validarPacienteRecebido } from '@/sync/validacaoRespostas';
@@ -109,6 +110,8 @@ async function receberAlteracoes(
 
 async function rodada(db: ConexaoBanco, contaEmail: string): Promise<ResultadoSync> {
   const resultado: ResultadoSync = { enviados: 0, recebidos: 0, recusados: 0, erro: null };
+  // Sessão aberta pela senha temporária: a API recusaria; sincroniza depois da senha nova (spec 016).
+  if ((await lerSessao())?.conta.trocaSenhaObrigatoria) return resultado;
   const estado = await lerEstadoSync(db);
   if (estado.usuarioEmail !== null && estado.usuarioEmail !== contaEmail) {
     await gravarEstadoSync(db, { ultimoResultado: 'erro', ultimoErro: MENSAGEM_OUTRA_CONTA });

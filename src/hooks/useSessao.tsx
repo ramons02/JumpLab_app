@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import * as autenticacao from '@/sync/autenticacao';
+import * as recuperacao from '@/sync/recuperacao';
 import { lerSessao } from '@/sync/armazenamentoSessao';
 import { aoEncerrarSessao, type ResultadoHttp } from '@/sync/clienteHttp';
 import type { Conta, DadosCriarConta, Sessao } from '@/types/conta';
@@ -21,6 +22,10 @@ interface ContextoSessao {
   entrar(email: string, senha: string): Promise<ResultadoHttp<Sessao>>;
   criarConta(dados: DadosCriarConta): Promise<ResultadoHttp<Sessao>>;
   sair(): Promise<void>;
+  /** Pedido de recuperação de senha ao administrador (spec 016). */
+  pedirRecuperacao(email: string): Promise<ResultadoHttp<null>>;
+  /** Senha nova depois da temporária; a conta volta sem troca pendente. */
+  criarSenhaNova(senhaNova: string): Promise<ResultadoHttp<Sessao>>;
 }
 
 const Contexto = createContext<ContextoSessao | null>(null);
@@ -69,6 +74,11 @@ export function ProvedorSessao({ children }: { children: ReactNode }) {
     [aposEntrar],
   );
 
+  const criarSenhaNova = useCallback(
+    async (senhaNova: string) => aposEntrar(await recuperacao.criarSenhaNova(senhaNova)),
+    [aposEntrar],
+  );
+
   const sair = useCallback(async () => {
     await autenticacao.sair();
     setConta(null);
@@ -76,8 +86,17 @@ export function ProvedorSessao({ children }: { children: ReactNode }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ carregando, conta, expirou, entrar, criarConta, sair }),
-    [carregando, conta, expirou, entrar, criarConta, sair],
+    () => ({
+      carregando,
+      conta,
+      expirou,
+      entrar,
+      criarConta,
+      sair,
+      pedirRecuperacao: recuperacao.pedirRecuperacao,
+      criarSenhaNova,
+    }),
+    [carregando, conta, expirou, entrar, criarConta, sair, criarSenhaNova],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

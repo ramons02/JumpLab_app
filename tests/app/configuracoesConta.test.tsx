@@ -16,7 +16,12 @@ jest.mock('expo-sqlite', () => ({
 const SESSAO = {
   tokenAcesso: 'acesso-0',
   tokenRenovacao: 'renovacao-0',
-  conta: { nome: 'Ana Souza', email: 'ana@exemplo.com', admin: false },
+  conta: {
+    nome: 'Ana Souza',
+    email: 'ana@exemplo.com',
+    admin: false,
+    trocaSenhaObrigatoria: false,
+  },
 };
 
 async function abrirConfiguracoes() {
