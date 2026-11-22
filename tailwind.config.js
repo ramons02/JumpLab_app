@@ -16,6 +16,7 @@ module.exports = {
         destaqueFundo: cores.destaqueFundo,
         aviso: cores.aviso,
         erro: cores.erro,
+        guia: cores.guia,
       },
       fontFamily: {
         titulo: ['BebasNeue-Regular'],
