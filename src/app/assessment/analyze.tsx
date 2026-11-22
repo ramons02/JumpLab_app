@@ -1,7 +1,8 @@
 import { Redirect, usePreventRemove } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text } from 'react-native';
 
+import { AnalisadorAgachamento } from '@/components/AnalisadorAgachamento';
 import { AvisoFps } from '@/components/AvisoFps';
 import { EscolherVideo } from '@/components/EscolherVideo';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
@@ -23,18 +24,8 @@ export default function TelaAnalisador() {
   const { rascunho } = useRascunhoAvaliacao();
   if (!rascunho) return <Redirect href="/" />;
   const [perna] = pernasDoProtocolo(rascunho.protocolo);
-  if (!perna) return <AnalisadorDoAgachamento />;
+  if (!perna) return <AnalisadorAgachamento rascunho={rascunho} />;
   return <Analisador rascunho={rascunho} perna={perna} />;
-}
-
-function AnalisadorDoAgachamento() {
-  return (
-    <View className="flex-1 items-center justify-center bg-fundo p-6">
-      <Text className="text-center text-sm text-textoSecundario">
-        A análise do agachamento com barra chega com a HU014.
-      </Text>
-    </View>
-  );
 }
 
 interface AnalisadorProps {
