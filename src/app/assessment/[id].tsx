@@ -6,7 +6,7 @@ import { TopoResultado } from '@/components/TopoResultado';
 import { useAvaliacaoSalva } from '@/hooks/useAvaliacaoSalva';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
-import type { Assessment } from '@/types/assessment';
+import type { Assessment, ResumoSalto } from '@/types/assessment';
 import { paraBr } from '@/utils/datas';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
 import { PROTOCOLOS } from '@/utils/protocolos';
@@ -34,12 +34,15 @@ export default function TelaAvaliacaoSalva() {
       </View>
     );
   }
-  return <AvaliacaoSalva avaliacao={avaliacao} />;
+  if (avaliacao.resumo.tipo === 'salto') {
+    return <AvaliacaoSalva avaliacao={avaliacao} resumo={avaliacao.resumo} />;
+  }
+  return null;
 }
 
-function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
+function AvaliacaoSalva({ avaliacao, resumo }: { avaliacao: Assessment; resumo: ResumoSalto }) {
   const { paciente } = usePerfilPaciente(avaliacao.pacienteId);
-  const topo = alturaDoTopo(avaliacao.resumo, avaliacao.pernaLesionada);
+  const topo = alturaDoTopo(resumo, avaliacao.pernaLesionada);
   const parallax = useParallaxSalto(saltoDoDesenhoPx(topo.alturaCm));
 
   return (
@@ -64,7 +67,7 @@ function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
       <BlocoSalto
         protocolo={avaliacao.protocolo}
         pernaLesionada={avaliacao.pernaLesionada}
-        resumo={avaliacao.resumo}
+        resumo={resumo}
       />
       <View className="gap-2">
         <Text className="text-sm font-semibold text-texto">Observações</Text>

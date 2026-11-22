@@ -20,6 +20,7 @@ export function avaliacaoDoRascunho(
     pernaLesionada: rascunho.pernaLesionada,
     cargaKg: rascunho.cargaKg,
     tentativas: tentativasConcluidas(rascunho.tentativas, rascunho.protocolo),
+    serie: null,
   };
 }
 

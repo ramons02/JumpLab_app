@@ -43,9 +43,9 @@ describe('pernasDoProtocolo e criarTentativasVazias', () => {
     expect(tentativas.unica).toBeUndefined();
   });
 
-  it('agachamento fica fora (série única da spec 014)', () => {
+  it('agachamento não tem pernas e usa uma tentativa única para o vídeo da série (spec 014)', () => {
     expect(pernasDoProtocolo('agach')).toEqual([]);
-    expect(criarTentativasVazias('agach')).toEqual({});
+    expect(criarTentativasVazias('agach')).toEqual({ unica: [VAZIA] });
   });
 
   it('as tentativas são objetos independentes', () => {

@@ -179,6 +179,7 @@ export async function buscarAvaliacao(db: ConexaoBanco, id: string): Promise<Ass
     atualizadoEm: linha.atualizado_em,
     pendenteSync: linha.pendente_sync === 1,
     tentativas: tentativas.map(paraTentativa),
+    serie: null,
   };
 }
 
