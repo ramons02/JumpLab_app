@@ -1,7 +1,9 @@
 import type { AvaliacaoDoHistorico, ResumoSalto } from '@/types/assessment';
+import type { PernaTentativa } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import type { ResumoLsi, ResumoPerna } from '@/types/resultadoSalto';
+import type { ResumoAgachamento } from '@/types/squat';
 
 let contador = 0;
 
@@ -92,4 +94,58 @@ export async function gravarNoHistorico(
     '2026-11-22T12:00:00.000Z',
     '2026-11-22T12:00:00.000Z',
   );
+}
+
+// Construtores dos testes dos gráficos de evolução (spec 009): resumo direto, sem tentativas.
+
+/** Perna do resumo com a altura pedida e os campos extras dados (ex.: rsi, baixaPrecisao). */
+export function pernaResumo(alturaCm: number, extra: Partial<ResumoPerna> = {}): ResumoPerna {
+  return {
+    alturaCm,
+    tempoVooMs: 500,
+    tempoContatoMs: null,
+    rsi: null,
+    margemCm: 0.5,
+    baixaPrecisao: false,
+    fps: [240],
+    tentativas: [],
+    ...extra,
+  };
+}
+
+/** Avaliação de salto no histórico, com o resumo já gravado (spec 008). */
+export function salto(
+  protocolo: Protocol,
+  dataHora: string,
+  pernas: Partial<Record<PernaTentativa, ResumoPerna>>,
+  extra: Partial<ResumoSalto> = {},
+): AvaliacaoDoHistorico {
+  contador += 1;
+  return {
+    id: `av-${contador}`,
+    protocolo,
+    dataHora,
+    pernaLesionada: 'direita',
+    resumo: { versao: 1, tipo: 'salto', pernas, lsi: null, baixaPrecisao: false, ...extra },
+    melhorias: null,
+  };
+}
+
+export function agachamento(dataHora: string, melhorVelocidadeMs: number): AvaliacaoDoHistorico {
+  contador += 1;
+  const resumo = {
+    versao: 1,
+    tipo: 'agach',
+    melhorVelocidadeMs,
+    melhorPotenciaW: 800,
+    perdaVelocidadePct: 10,
+  } as unknown as ResumoAgachamento;
+  return {
+    id: `av-${contador}`,
+    protocolo: 'agach',
+    dataHora,
+    pernaLesionada: 'nenhuma',
+    resumo,
+    melhorias: null,
+  };
 }
