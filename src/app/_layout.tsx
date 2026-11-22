@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { aplicarMigracoes } from '@/database/migracoes';
 import cores from '@/theme/cores';
 import { FONTE_TITULO } from '@/theme/fontes';
+import { apagarGravacoesOrfas } from '@/video/gravacoesTemporarias';
 
 const NOME_BANCO = 'jumplab.db';
 
@@ -22,9 +23,14 @@ const TEMA_ESCURO = {
   },
 };
 
-async function prepararBanco(db: SQLiteDatabase) {
+/**
+ * Abertura do app: banco migrado e, sem esperar, as gravações de uma execução interrompida apagadas
+ * (spec 011, D14). Falha na limpeza não impede o app de abrir.
+ */
+export async function prepararBanco(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
   await aplicarMigracoes(db);
+  apagarGravacoesOrfas().catch(() => undefined);
 }
 
 export default function LayoutRaiz() {

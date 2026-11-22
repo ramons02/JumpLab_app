@@ -76,6 +76,7 @@ function Analisador({ rascunho, perna }: AnalisadorProps) {
       </Text>
       {tentativa.video === null ? (
         <EscolherVideo
+          perna={perna}
           numero={NUMERO_TENTATIVA}
           mensagem={atual.mensagem}
           aoEscolher={atual.escolherVideo}

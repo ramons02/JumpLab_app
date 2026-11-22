@@ -1,7 +1,12 @@
 import { useCallback, useState } from 'react';
 
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
-import type { NumeroTentativa, PernaTentativa, TentativaEmAndamento } from '@/types/attempt';
+import type {
+  NumeroTentativa,
+  PernaTentativa,
+  TentativaEmAndamento,
+  VideoSelecionado,
+} from '@/types/attempt';
 import * as regras from '@/utils/tentativas';
 import { importarVideoDaGaleria } from '@/video/importarVideo';
 
@@ -42,10 +47,20 @@ export function useTentativaAtual(perna: PernaTentativa, numero: NumeroTentativa
     alterar((t) => regras.definirVideo(t, resultado.video));
   }, [alterar]);
 
+  /** Entrega à tentativa o vídeo gravado pela câmera do app (spec 011), como se fosse importado. */
+  const usarVideoGravado = useCallback(
+    (video: VideoSelecionado) => {
+      setMensagem(null);
+      alterar((t) => regras.definirVideo(t, video));
+    },
+    [alterar],
+  );
+
   return {
     tentativa,
     mensagem,
     escolherVideo,
+    usarVideoGravado,
     selecionarFps: (fps: number) => alterar((t) => regras.selecionarFps(t, fps)),
     confirmarFps: () => alterar(regras.confirmarFps),
     trocarFps: () => alterar(regras.trocarFps),
