@@ -6,18 +6,19 @@ projeto na constituição do [JumpLab_documentacao](https://github.com/ramons02/
 
 ## Stack
 
-| Peça      | Versão                                                                                                                                                          |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Expo SDK  | 58 (React Native 0.88, React 19.3)                                                                                                                              |
-| Node      | 24 (o SDK 58 exige 22.13 ou mais novo; ver `.nvmrc`)                                                                                                            |
-| Navegação | Expo Router, rotas em `src/app/`                                                                                                                                |
-| Estilos   | NativeWind 4 (Tailwind 3), cores do tema em `tailwind.config.js`                                                                                                |
-| Banco     | `expo-sqlite`, migrações por `PRAGMA user_version` em `src/database/migracoes.ts`                                                                               |
-| Testes    | Jest (`jest-expo`), Testing Library, SQLite real em memória (`better-sqlite3`)                                                                                  |
-| Desenho   | `react-native-svg` (símbolo e personagem do topo; também exigida pelos gráficos)                                                                                |
-| Fonte     | Bebas Neue nos títulos, empacotada pelo `expo-font` (licença SIL OFL, em `assets/fonts/`)                                                                       |
-| Vídeo     | `expo-image-picker` e `expo-video`; `expo-file-system` só para apagar a cópia temporária do vídeo ao fim da avaliação (D14)                                     |
-| Câmera    | `react-native-vision-camera` 5 (com `react-native-nitro-modules` e `react-native-nitro-image`, exigidas por ela), gravação a 120 e 240 fps sem áudio (spec 011) |
+| Peça      | Versão                                                                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Expo SDK  | 58 (React Native 0.88, React 19.3)                                                                                                                                                      |
+| Node      | 24 (o SDK 58 exige 22.13 ou mais novo; ver `.nvmrc`)                                                                                                                                    |
+| Navegação | Expo Router, rotas em `src/app/`                                                                                                                                                        |
+| Estilos   | NativeWind 4 (Tailwind 3), cores do tema em `tailwind.config.js`                                                                                                                        |
+| Banco     | `expo-sqlite`, migrações por `PRAGMA user_version` em `src/database/migracoes.ts`                                                                                                       |
+| Testes    | Jest (`jest-expo`), Testing Library, SQLite real em memória (`better-sqlite3`)                                                                                                          |
+| Desenho   | `react-native-svg` (símbolo e personagem do topo; também exigida pelos gráficos)                                                                                                        |
+| Gráficos  | `react-native-gifted-charts` (stack) nos gráficos de evolução do perfil (spec 009); exige o `expo-linear-gradient`, que entra só por isso, e o `react-native-svg`, que já estava no app |
+| Fonte     | Bebas Neue nos títulos, empacotada pelo `expo-font` (licença SIL OFL, em `assets/fonts/`)                                                                                               |
+| Vídeo     | `expo-image-picker` e `expo-video`; `expo-file-system` só para apagar a cópia temporária do vídeo ao fim da avaliação (D14)                                                             |
+| Câmera    | `react-native-vision-camera` 5 (com `react-native-nitro-modules` e `react-native-nitro-image`, exigidas por ela), gravação a 120 e 240 fps sem áudio (spec 011)                         |
 
 ## Estrutura
 
