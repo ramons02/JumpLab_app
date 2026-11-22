@@ -1,7 +1,9 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
+import type { TentativasPorPerna } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
+import { criarTentativasVazias } from '@/utils/tentativas';
 
 /** Avaliação em andamento, em memória, até ser gravada (spec 008) ou descartada. */
 export interface RascunhoAvaliacao {
@@ -13,11 +15,17 @@ export interface RascunhoAvaliacao {
   dataHora: string;
   /** Cópia da perna lesionada do paciente naquele momento. */
   pernaLesionada: PernaLesionada;
+  /** Vídeo, FPS e marcas de cada tentativa (spec 005); criadas vazias ao iniciar o rascunho. */
+  tentativas: TentativasPorPerna;
 }
+
+/** Dados da configuração; as tentativas nascem vazias conforme o protocolo. */
+export type DadosRascunho = Omit<RascunhoAvaliacao, 'tentativas'>;
 
 interface ContextoRascunho {
   rascunho: RascunhoAvaliacao | null;
-  iniciarRascunho: (dados: RascunhoAvaliacao) => void;
+  iniciarRascunho: (dados: DadosRascunho) => void;
+  atualizarTentativas: (alterar: (atual: TentativasPorPerna) => TentativasPorPerna) => void;
   descartarRascunho: () => void;
 }
 
@@ -28,7 +36,12 @@ export function RascunhoAvaliacaoProvider({ children }: { children: ReactNode })
   const valor = useMemo(
     () => ({
       rascunho,
-      iniciarRascunho: (dados: RascunhoAvaliacao) => setRascunho(dados),
+      iniciarRascunho: (dados: DadosRascunho) =>
+        setRascunho({ ...dados, tentativas: criarTentativasVazias(dados.protocolo) }),
+      atualizarTentativas: (alterar: (atual: TentativasPorPerna) => TentativasPorPerna) =>
+        setRascunho((atual) =>
+          atual ? { ...atual, tentativas: alterar(atual.tentativas) } : atual,
+        ),
       descartarRascunho: () => setRascunho(null),
     }),
     [rascunho],
