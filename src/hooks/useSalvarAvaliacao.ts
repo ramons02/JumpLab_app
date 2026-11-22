@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { salvarAvaliacao } from '@/database/avaliacoes';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
+import { useSincronizacao } from '@/hooks/useSincronizacao';
 import type { Assessment, NovaAvaliacao } from '@/types/assessment';
 import type { PontoMelhoria } from '@/types/melhoria';
 import { paraSerie } from '@/utils/marcacaoAgachamento';
@@ -50,6 +51,7 @@ export function avaliacaoDoRascunho(
 export function useSalvarAvaliacao() {
   const db = useSQLiteContext();
   const { rascunho, descartarRascunho } = useRascunhoAvaliacao();
+  const { aoSalvarAvaliacao } = useSincronizacao();
   const [salvando, setSalvando] = useState(false);
   const emAndamento = useRef(false);
 
@@ -64,13 +66,15 @@ export function useSalvarAvaliacao() {
         const salva = await salvarAvaliacao(db, nova, montarResumo(nova), observacoes);
         await descartarVideos(rascunho.tentativas).catch(() => undefined);
         descartarRascunho();
+        // Sobe logo depois de gravar, quando houver conta e internet (spec 013).
+        aoSalvarAvaliacao();
         return salva;
       } finally {
         emAndamento.current = false;
         setSalvando(false);
       }
     },
-    [db, rascunho, descartarRascunho],
+    [db, rascunho, descartarRascunho, aoSalvarAvaliacao],
   );
 
   return { salvando, salvar };

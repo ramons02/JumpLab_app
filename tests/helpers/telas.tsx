@@ -8,6 +8,7 @@ import TelaEditarPaciente from '@/app/patient/[id]/edit';
 import TelaNovoPaciente from '@/app/patient/new';
 import { aplicarMigracoes } from '@/database/migracoes';
 import { ProvedorSessao } from '@/hooks/useSessao';
+import { ProvedorSincronizacao } from '@/hooks/useSincronizacao';
 
 import { criarBancoEmMemoria, type BancoDeTeste } from './bancoEmMemoria';
 
@@ -34,10 +35,12 @@ export function fecharBanco() {
 export function abrirApp(caminhoInicial: string, historico: string[] = []) {
   return renderRouter(
     {
-      // Como no app: a sessão envolve a navegação (spec 012).
+      // Como no app: a sessão e a sincronização envolvem a navegação (specs 012 e 013).
       _layout: () => (
         <ProvedorSessao>
-          <Stack />
+          <ProvedorSincronizacao>
+            <Stack />
+          </ProvedorSincronizacao>
         </ProvedorSessao>
       ),
       '(tabs)/_layout': LayoutAbas,
