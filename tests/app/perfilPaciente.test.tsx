@@ -6,6 +6,8 @@ import TelaPerfilPaciente from '@/app/patient/[id]/index';
 import { atualizarPaciente, inserirPaciente } from '@/database/pacientes';
 import type { Patient } from '@/types/patient';
 
+import { ESPACO_FINAL_PX, FATOR_PARALLAX } from '@/utils/poseDesenho';
+
 import { bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
@@ -72,7 +74,8 @@ describe('tela de perfil do paciente (entrega 1)', () => {
     expect(screen.getByText('20/05/2026')).toBeOnTheScreen();
     expect(screen.getByText('Último LSI')).toBeOnTheScreen();
     expect(screen.getByText('Último RSI')).toBeOnTheScreen();
-    expect(screen.getAllByText('Sem avaliações')).toHaveLength(2);
+    // dois cards e o topo
+    expect(screen.getAllByText('Sem avaliações')).toHaveLength(3);
     expect(screen.getByRole('button', { name: '+ Nova Avaliação' })).toBeOnTheScreen();
   });
 
@@ -149,5 +152,35 @@ describe('tela de perfil do paciente (entrega 1)', () => {
     await abrirPerfil('nao-e-uuid');
 
     expect(await screen.findByText('Paciente não encontrado.')).toBeOnTheScreen();
+  });
+
+  describe('topo ilustrado', () => {
+    it('mostra "Último salto" com "Sem avaliações" antes dos dados, e o espaço final', async () => {
+      const ana = await cadastrarAna();
+      await abrirPerfil(ana.id);
+
+      const topo = await screen.findByTestId('topo-parallax');
+      expect(screen.getByText('Último salto')).toBeOnTheScreen();
+      expect(topo).toContainElement(screen.getByText('Último salto'));
+      expect(screen.getByTestId('espaco-final')).toHaveStyle({ height: ESPACO_FINAL_PX });
+    });
+
+    it('rolar o perfil desce o topo mais devagar que a lista', async () => {
+      const ana = await cadastrarAna();
+      await abrirPerfil(ana.id);
+      const ROLAGEM = 40;
+
+      await fireEvent.scroll((await screen.findByTestId('topo-parallax')).parent!.parent!, {
+        nativeEvent: {
+          contentOffset: { x: 0, y: ROLAGEM },
+          contentSize: { width: 400, height: 1400 },
+          layoutMeasurement: { width: 400, height: 800 },
+        },
+      });
+
+      expect(screen.getByTestId('topo-parallax').children[0]).toHaveStyle({
+        transform: [{ translateY: ROLAGEM * FATOR_PARALLAX }],
+      });
+    });
   });
 });
