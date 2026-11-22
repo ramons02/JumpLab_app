@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { BarraDeQuadros } from '@/components/BarraDeQuadros';
+import { LinhaGuia } from '@/components/LinhaGuia';
 import { useTocadorQuadros } from '@/hooks/useTocadorQuadros';
 import type { VideoSelecionado } from '@/types/attempt';
 import { tempoS } from '@/utils/biomechanics';
@@ -64,18 +65,7 @@ export function PlayerQuadros({ video, fpsConfirmado, quadro, onMudarQuadro }: P
           contentFit="contain"
           style={{ flex: 1 }}
         />
-        <View
-          testID="linha-guia"
-          accessibilityLabel="linha guia"
-          pointerEvents="none"
-          className="absolute bottom-0 left-1/2 top-0 w-0.5 bg-guia opacity-90"
-        />
-        <View
-          pointerEvents="none"
-          className="absolute left-2 top-2 rounded bg-fundo/70 px-1.5 py-0.5"
-        >
-          <Text className="text-[10px] text-texto">linha guia</Text>
-        </View>
+        <LinhaGuia />
       </View>
 
       <View className="flex-row items-baseline justify-center gap-3">
