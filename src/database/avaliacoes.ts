@@ -325,8 +325,7 @@ export async function listarAvaliacoesDoPaciente(
       | 'melhorias_json'
     >
   >(
-    `SELECT id, paciente_id, protocolo, data_hora, perna_lesionada, resultado_json, melhorias_json
-       FROM avaliacao
+    `SELECT id, paciente_id, protocolo, data_hora, perna_lesionada, resultado_json, melhorias_json FROM avaliacao
       WHERE paciente_id = ? ORDER BY data_hora ASC, criado_em ASC`,
     pacienteId,
   );

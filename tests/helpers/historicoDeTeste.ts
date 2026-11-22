@@ -1,9 +1,13 @@
 import type { AvaliacaoDoHistorico, ResumoSalto } from '@/types/assessment';
+import type { PernaTentativa } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import type { ResumoLsi, ResumoPerna } from '@/types/resultadoSalto';
+import type { ResumoAgachamento } from '@/types/squat';
 
 let contador = 0;
+/** Todas as avaliações destes construtores são do mesmo paciente. */
+export const PACIENTE_DO_HISTORICO = 'paciente-1';
 
 /** Perna do resumo com a altura e o RSI pedidos (os demais campos não importam ao perfil). */
 export function perna(
@@ -34,7 +38,7 @@ export function avaliacaoSalto(
   contador += 1;
   return {
     id: `00000000-0000-4000-8000-${String(contador).padStart(12, '0')}`,
-    pacienteId: '11111111-1111-4111-8111-111111111111',
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo,
     dataHora,
     pernaLesionada: extra.pernaLesionada ?? 'direita',
@@ -56,7 +60,7 @@ export function avaliacaoAgachamento(
   contador += 1;
   return {
     id: `00000000-0000-4000-8000-${String(contador).padStart(12, '0')}`,
-    pacienteId: '11111111-1111-4111-8111-111111111111',
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo: 'agach',
     dataHora,
     pernaLesionada: 'nenhuma',
@@ -94,4 +98,60 @@ export async function gravarNoHistorico(
     '2026-11-22T12:00:00.000Z',
     '2026-11-22T12:00:00.000Z',
   );
+}
+
+// Construtores dos testes dos gráficos de evolução (spec 009): resumo direto, sem tentativas.
+
+/** Perna do resumo com a altura pedida e os campos extras dados (ex.: rsi, baixaPrecisao). */
+export function pernaResumo(alturaCm: number, extra: Partial<ResumoPerna> = {}): ResumoPerna {
+  return {
+    alturaCm,
+    tempoVooMs: 500,
+    tempoContatoMs: null,
+    rsi: null,
+    margemCm: 0.5,
+    baixaPrecisao: false,
+    fps: [240],
+    tentativas: [],
+    ...extra,
+  };
+}
+
+/** Avaliação de salto no histórico, com o resumo já gravado (spec 008). */
+export function salto(
+  protocolo: Protocol,
+  dataHora: string,
+  pernas: Partial<Record<PernaTentativa, ResumoPerna>>,
+  extra: Partial<ResumoSalto> = {},
+): AvaliacaoDoHistorico {
+  contador += 1;
+  return {
+    id: `av-${contador}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
+    protocolo,
+    dataHora,
+    pernaLesionada: 'direita',
+    resumo: { versao: 1, tipo: 'salto', pernas, lsi: null, baixaPrecisao: false, ...extra },
+    melhorias: null,
+  };
+}
+
+export function agachamento(dataHora: string, melhorVelocidadeMs: number): AvaliacaoDoHistorico {
+  contador += 1;
+  const resumo = {
+    versao: 1,
+    tipo: 'agach',
+    melhorVelocidadeMs,
+    melhorPotenciaW: 800,
+    perdaVelocidadePct: 10,
+  } as unknown as ResumoAgachamento;
+  return {
+    id: `av-${contador}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
+    protocolo: 'agach',
+    dataHora,
+    pernaLesionada: 'nenhuma',
+    resumo,
+    melhorias: null,
+  };
 }

@@ -1,7 +1,10 @@
-import { aplicarMigracoes, VERSAO_ATUAL } from '@/database/migracoes';
+import { aplicarMigracoes } from '@/database/migracoes';
 import { inserirPaciente } from '@/database/pacientes';
 
 import { criarBancoEmMemoria, type BancoDeTeste } from '../helpers/bancoEmMemoria';
+
+/** Versão do esquema logo antes da migração melhorias (a 3); a avaliador (4) vem depois. */
+const VERSAO_ANTES_DE_MELHORIAS = 2;
 
 describe('migração melhorias (spec 017)', () => {
   let db: BancoDeTeste;
@@ -21,12 +24,13 @@ describe('migração melhorias (spec 017)', () => {
   });
 
   it('linhas gravadas antes da migração ficam com melhorias_json nulo', async () => {
-    // Aplica tudo menos a última migração (melhorias), grava uma avaliação e então migra.
+    // Volta o banco para antes da migração melhorias (a 3), desfazendo ela e as seguintes,
+    // grava uma avaliação e então migra de novo.
     await db.runAsync(`PRAGMA user_version = 0`);
-    const todas = VERSAO_ATUAL;
     await aplicarMigracoes(db);
+    await db.runAsync('DROP TABLE avaliador');
     await db.runAsync('ALTER TABLE avaliacao DROP COLUMN melhorias_json');
-    await db.runAsync(`PRAGMA user_version = ${todas - 1}`);
+    await db.runAsync(`PRAGMA user_version = ${VERSAO_ANTES_DE_MELHORIAS}`);
     const paciente = await inserirPaciente(db, {
       nome: 'Ana Souza',
       dataNascimento: '1995-03-15',

@@ -9,7 +9,7 @@ type AoFalhar = (erro: Error) => void;
 
 /**
  * Câmera simulada do `react-native-vision-camera` (v5). Cada teste ajusta `camera` antes de abrir a
- * tela. Uso: `jest.mock('react-native-vision-camera', () => require('../helpers/mockVisionCamera').moduloFalso)`.
+ * tela. Uso: `jest.mock('react-native-vision-camera', () => jest.requireActual('../helpers/mockVisionCamera').moduloFalso)`.
  */
 export const camera = {
   permissao: 'authorized' as StatusPermissao,
@@ -68,7 +68,9 @@ const gravador = {
 };
 
 function CameraFalsa(props: Record<string, unknown>) {
-  camera.ultimasProps = props;
+  useEffect(() => {
+    camera.ultimasProps = props;
+  });
   const restricoes = props.constraints as { fps?: number }[];
   const pedida = restricoes.find((r) => r.fps !== undefined)?.fps;
   const aoConfigurar = props.onSessionConfigSelected as (config: { selectedFPS?: number }) => void;

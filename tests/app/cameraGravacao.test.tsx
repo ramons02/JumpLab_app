@@ -21,8 +21,14 @@ import { fecharBanco, prepararBanco } from '../helpers/telas';
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => jest.requireActual('../helpers/telas').bancoDaTela(),
 }));
-jest.mock('react-native-vision-camera', () => require('../helpers/mockVisionCamera').moduloFalso);
-jest.mock('expo-file-system', () => require('../helpers/mockSistemaArquivos').moduloFalso);
+jest.mock(
+  'react-native-vision-camera',
+  () => jest.requireActual('../helpers/mockVisionCamera').moduloFalso,
+);
+jest.mock(
+  'expo-file-system',
+  () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso,
+);
 jest.mock('expo-video', () => jest.requireActual('../helpers/mockExpoVideo').moduloExpoVideo);
 jest.mock('@/video/importarVideo', () => ({
   importarVideoDaGaleria: jest.fn(),

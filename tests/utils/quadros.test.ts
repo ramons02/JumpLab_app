@@ -64,12 +64,23 @@ describe('totalDeQuadros', () => {
 });
 
 describe('posicaoNoArquivoS', () => {
-  it('quadro 120 a 240 fps fica no meio do quadro', () => {
-    expect(posicaoNoArquivoS(120, 240)).toBeCloseTo(0.502083, 6);
+  it('quadro 120 a 240 fps fica no começo do quadro', () => {
+    expect(posicaoNoArquivoS(120, 240)).toBe(0.5);
   });
 
   it('quadro 120 a 30 fps', () => {
-    expect(posicaoNoArquivoS(120, 30)).toBeCloseTo(4.016667, 6);
+    expect(posicaoNoArquivoS(120, 30)).toBe(4);
+  });
+
+  it('cortada para milissegundos, como o expo-video aplica, continua dentro do quadro', () => {
+    for (const fps of [30, 60, 120, 240]) {
+      for (let quadro = 1; quadro < 2000; quadro++) {
+        const aplicada = Math.floor(posicaoNoArquivoS(quadro, fps) * 1000) / 1000;
+        // O tocador mostra o primeiro quadro que começa na posição ou depois: tem que ser o pedido.
+        expect(aplicada).toBeLessThanOrEqual(quadro / fps);
+        expect(aplicada).toBeGreaterThan((quadro - 1) / fps);
+      }
+    }
   });
 });
 

@@ -1,6 +1,6 @@
 /**
  * Sistema de arquivos em memória para o `expo-file-system` (API File/Directory). Usar com
- * `jest.mock('expo-file-system', () => require('../helpers/mockSistemaArquivos').moduloFalso)`.
+ * `jest.mock('expo-file-system', () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso)`.
  */
 export const arquivosFalsos = new Set<string>();
 export const pastasFalsas = new Set<string>();
