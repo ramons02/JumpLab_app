@@ -3,6 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { RodapeFixo } from '@/components/RodapeFixo';
 import { CampoTexto } from '@/components/CampoTexto';
 import { OpcaoProtocolo } from '@/components/OpcaoProtocolo';
 import { buscarPaciente } from '@/database/pacientes';
@@ -102,7 +103,7 @@ export default function TelaConfiguracao() {
         ) : null}
         {erro ? <Text className="text-sm font-medium text-erro">{erro}</Text> : null}
       </ScrollView>
-      <View className="flex-row gap-2 border-t border-borda bg-fundo p-4">
+      <RodapeFixo className="flex-row gap-2">
         <Pressable
           accessibilityRole="button"
           onPress={() => seguir('/assessment/how-to')}
@@ -117,7 +118,7 @@ export default function TelaConfiguracao() {
         >
           <Text className="text-sm font-semibold text-fundo">Ir para o vídeo</Text>
         </Pressable>
-      </View>
+      </RodapeFixo>
     </View>
   );
 }

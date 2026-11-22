@@ -247,4 +247,10 @@ describe('tela de lista de pacientes', () => {
       expect(screen.queryByLabelText('Pendente de sincronização')).toBeNull();
     });
   });
+
+  it('as abas têm ícone desenhado (sem caractere ausente)', async () => {
+    await abrirApp('/');
+    expect((await screen.findAllByTestId('icone-aba-pacientes')).length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('icone-aba-configuracoes').length).toBeGreaterThan(0);
+  });
 });

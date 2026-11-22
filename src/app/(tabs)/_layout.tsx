@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
 import { View } from 'react-native';
 
+import { IconeAba } from '@/components/IconeAba';
 import { SimboloJumpLab } from '@/components/SimboloJumpLab';
 import cores from '@/theme/cores';
 import { FONTE_TITULO } from '@/theme/fontes';
@@ -26,11 +27,20 @@ export default function LayoutAbas() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'PACIENTES', tabBarLabel: 'Pacientes', headerRight: SimboloCabecalho }}
+        options={{
+          title: 'PACIENTES',
+          tabBarLabel: 'Pacientes',
+          headerRight: SimboloCabecalho,
+          tabBarIcon: ({ color }) => <IconeAba nome="pacientes" cor={color} />,
+        }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: 'CONFIGURAÇÕES', tabBarLabel: 'Configurações' }}
+        options={{
+          title: 'CONFIGURAÇÕES',
+          tabBarLabel: 'Configurações',
+          tabBarIcon: ({ color }) => <IconeAba nome="configuracoes" cor={color} />,
+        }}
       />
     </Tabs>
   );

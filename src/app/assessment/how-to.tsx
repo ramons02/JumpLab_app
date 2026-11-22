@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { RodapeFixo } from '@/components/RodapeFixo';
 import { VideoDemonstrativo } from '@/components/VideoDemonstrativo';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import { COMO_FAZER } from '@/utils/comoFazer';
@@ -64,7 +65,7 @@ export default function TelaComoFazer() {
         </Secao>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 border-t border-borda bg-fundo p-4">
+      <RodapeFixo sobreposto>
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push('/assessment/analyze')}
@@ -72,7 +73,7 @@ export default function TelaComoFazer() {
         >
           <Text className="text-sm font-semibold text-fundo">Entendi, ir para o vídeo</Text>
         </Pressable>
-      </View>
+      </RodapeFixo>
     </View>
   );
 }

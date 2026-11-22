@@ -4,6 +4,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import { CartaoMedida, type CorCartao } from '@/components/CartaoMedida';
 import { DadosPaciente } from '@/components/DadosPaciente';
 import { ItemAvaliacao } from '@/components/ItemAvaliacao';
+import { RodapeFixo } from '@/components/RodapeFixo';
 import { SecaoGraficos } from '@/components/SecaoGraficos';
 import { TopoParallax } from '@/components/TopoParallax';
 import { useParallaxSalto, type ParallaxSalto } from '@/hooks/useParallaxSalto';
@@ -72,7 +73,7 @@ export default function TelaPerfilPaciente() {
           </Text>
         }
       />
-      <View className="absolute inset-x-0 bottom-0 border-t border-borda bg-fundo p-4">
+      <RodapeFixo sobreposto>
         <Pressable
           accessibilityRole="button"
           onPress={() =>
@@ -82,7 +83,7 @@ export default function TelaPerfilPaciente() {
         >
           <Text className="text-sm font-semibold text-fundo">+ Nova Avaliação</Text>
         </Pressable>
-      </View>
+      </RodapeFixo>
     </View>
   );
 }
@@ -110,7 +111,7 @@ function CabecalhoPerfil({
         <Text className="text-[11px] font-semibold uppercase tracking-wider text-destaque">
           Último salto
         </Text>
-        <Text className="font-titulo text-4xl uppercase text-texto">
+        <Text className="font-titulo text-4xl uppercase leading-[46px] text-texto">
           {alturaUltimoSalto === null
             ? 'Sem avaliações'
             : `${formatarDecimal(alturaUltimoSalto, CASAS_ALTURA)} cm`}
