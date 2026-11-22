@@ -107,7 +107,7 @@ describe('tela de resultado', () => {
 
     expect(screen.getByText('Perna direita (lesionada)')).toBeOnTheScreen();
     expect(screen.getByText('Perna esquerda')).toBeOnTheScreen();
-    expect(screen.getByText('84,0%')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('cartao-lsi')).getByText('84,0%')).toBeOnTheScreen();
     expect(
       screen.getByText(/Perna direita \(lesionada\) ÷ perna sadia, pela altura\./),
     ).toBeOnTheScreen();
@@ -240,6 +240,37 @@ describe('tela de resultado', () => {
       expect(screen.getByTestId('topo-parallax').children[0]).toHaveStyle({
         transform: [{ translateY: ROLAGEM * FATOR_PARALLAX }],
       });
+    });
+  });
+
+  describe('o que melhorar (spec 017)', () => {
+    it('sugere pelo LSI, o avaliador revisa e a lista revisada é gravada', async () => {
+      jest.spyOn(ToastAndroid, 'show').mockImplementation(() => {});
+      await abrirResultado('cmj_uni', CMJ_UNILATERAL, 'direita');
+
+      expect(screen.getByText('Força e potência da perna direita (lesionada)')).toBeOnTheScreen();
+      await fireEvent.press(
+        screen.getByRole('button', {
+          name: 'Remover ponto Força e potência da perna direita (lesionada)',
+        }),
+      );
+      await fireEvent.changeText(screen.getByLabelText('Acrescentar ponto'), 'Glúteo médio');
+      await fireEvent.press(screen.getByRole('button', { name: 'Incluir' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Só salvar' }));
+
+      await screen.findByText('Perfil do paciente');
+      const linha = await bancoDaTela().getFirstAsync<{ melhorias_json: string }>(
+        'SELECT melhorias_json FROM avaliacao',
+      );
+      expect(JSON.parse(linha!.melhorias_json)).toEqual([
+        {
+          titulo: 'Glúteo médio',
+          grupos: [{ grupo: 'gluteo_medio', lado: 'ambas' }],
+          motivo: 'citado pelo avaliador',
+          foco: '',
+          origem: 'avaliador',
+        },
+      ]);
     });
   });
 });

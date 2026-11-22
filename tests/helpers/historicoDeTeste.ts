@@ -44,6 +44,7 @@ export function avaliacaoSalto(
       lsi: extra.lsi ?? null,
       baixaPrecisao: extra.baixaPrecisao ?? false,
     },
+    melhorias: null,
   };
 }
 
@@ -67,6 +68,7 @@ export function avaliacaoAgachamento(
       melhorPotenciaW: 500,
       perdaVelocidadePct: null,
     },
+    melhorias: null,
   };
 }
 
