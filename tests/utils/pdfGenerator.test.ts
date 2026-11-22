@@ -53,6 +53,7 @@ function noHistorico(a: Assessment): AvaliacaoDoHistorico {
     dataHora: a.dataHora,
     pernaLesionada: a.pernaLesionada,
     resumo: a.resumo,
+    melhorias: a.melhorias,
   };
 }
 

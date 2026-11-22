@@ -86,7 +86,7 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
 
   /** Salva pelo mesmo caminho de Só salvar e já gera o laudo; falha no PDF não desfaz a gravação. */
   async function salvarEExportar() {
-    const avaliacao = await salvar(observacoes);
+    const avaliacao = await salvar(observacoes, melhorias);
     if (!avaliacao) return;
     setSalvo(true);
     const resultado = await gerarECompartilhar(avaliacao.id);
