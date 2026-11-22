@@ -132,4 +132,26 @@ describe('repositório de pacientes', () => {
       );
     });
   });
+
+  describe('pendente de sincronização (spec 013)', () => {
+    const pendente = async (id: string) =>
+      (
+        await db.getFirstAsync<{ pendente_sync: number }>(
+          'SELECT pendente_sync FROM paciente WHERE id = ?',
+          id,
+        )
+      )?.pendente_sync;
+
+    it('inserir grava pendente_sync = 1', async () => {
+      const ana = await inserirPaciente(db, anaSouza);
+      expect(await pendente(ana.id)).toBe(1);
+    });
+
+    it('atualizar volta a ficar pendente', async () => {
+      const ana = await inserirPaciente(db, anaSouza);
+      await db.runAsync('UPDATE paciente SET pendente_sync = 0 WHERE id = ?', ana.id);
+      await atualizarPaciente(db, ana.id, { ...anaSouza, nome: 'Ana Souza Lima' });
+      expect(await pendente(ana.id)).toBe(1);
+    });
+  });
 });

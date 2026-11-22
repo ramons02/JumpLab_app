@@ -8,6 +8,8 @@ interface ItemPacienteProps {
   paciente: PacienteNaLista;
   hoje: string;
   aoTocar: () => void;
+  /** Algo deste paciente ainda não subiu para a conta (spec 013). */
+  pendente?: boolean;
 }
 
 function iniciais(nome: string): string {
@@ -19,7 +21,7 @@ function iniciais(nome: string): string {
     .join('');
 }
 
-export function ItemPaciente({ paciente, hoje, aoTocar }: ItemPacienteProps) {
+export function ItemPaciente({ paciente, hoje, aoTocar, pendente = false }: ItemPacienteProps) {
   const idade = calcularIdade(paciente.dataNascimento, hoje);
   const perna = ROTULO_PERNA[paciente.pernaLesionada].toLowerCase();
   const ultima = paciente.ultimaAvaliacaoEm
@@ -44,6 +46,13 @@ export function ItemPaciente({ paciente, hoje, aoTocar }: ItemPacienteProps) {
         </Text>
         <Text className="mt-0.5 text-xs text-textoSecundario">{ultima}</Text>
       </View>
+      {pendente ? (
+        <View
+          accessibilityLabel="Pendente de sincronização"
+          testID="marca-pendente"
+          className="h-2.5 w-2.5 rounded-full bg-aviso"
+        />
+      ) : null}
     </Pressable>
   );
 }

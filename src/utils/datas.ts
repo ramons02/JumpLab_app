@@ -56,3 +56,9 @@ export function hojeIso(): string {
   const dia = String(agora.getDate()).padStart(2, '0');
   return `${agora.getFullYear()}-${mes}-${dia}`;
 }
+
+/** Instante ISO 8601 (UTC) na hora local do aparelho: "22/11/2026 às 14:05". */
+export function instanteParaBr(iso: string): string {
+  const d = new Date(iso);
+  return `${doisDigitos(d.getDate())}/${doisDigitos(d.getMonth() + 1)}/${d.getFullYear()} às ${doisDigitos(d.getHours())}:${doisDigitos(d.getMinutes())}`;
+}

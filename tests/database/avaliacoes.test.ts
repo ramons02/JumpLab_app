@@ -57,6 +57,10 @@ describe('repositório de avaliações', () => {
       salva.id,
     );
     expect(linha).toEqual({ pendente_sync: 1, observacoes: 'Boa execução.' });
+    // A sincronização (spec 013) usa atualizado_em para saber se o enviado ainda é o atual.
+    expect(
+      await db.getFirstAsync('SELECT atualizado_em FROM avaliacao WHERE id = ?', salva.id),
+    ).toEqual({ atualizado_em: salva.atualizadoEm });
     expect(await contar('tentativa')).toBe(3);
   });
 

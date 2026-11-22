@@ -2,6 +2,7 @@ import { ScrollView } from 'react-native';
 
 import { SecaoAvaliador } from '@/components/SecaoAvaliador';
 import { SecaoConta } from '@/components/SecaoConta';
+import { SecaoSincronizacao } from '@/components/SecaoSincronizacao';
 import { useAvaliador } from '@/hooks/useAvaliador';
 
 /** Configurações do aparelho. As specs 012, 013 e 016 acrescentam as seções de conta e sincronização. */
@@ -13,6 +14,7 @@ export default function TelaConfiguracoes() {
         <SecaoAvaliador avaliador={avaliador} aoGravar={(campos) => void atualizar(campos)} />
       ) : null}
       <SecaoConta />
+      <SecaoSincronizacao />
     </ScrollView>
   );
 }

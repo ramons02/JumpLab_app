@@ -5,6 +5,8 @@ import type { DadosPaciente, Patient } from '@/types/patient';
 import { calcularIdade, hojeIso } from '@/utils/datas';
 import { ESPACO_FINAL_PX, FATOR_PARALLAX } from '@/utils/poseDesenho';
 
+import { limparArmazenamentoSeguro } from '../helpers/armazenamentoSeguroFalso';
+import { criarServidorSync, entrarComo } from '../helpers/servidorSyncFalso';
 import { abrirApp, bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
@@ -209,6 +211,40 @@ describe('tela de lista de pacientes', () => {
       expect(topo.children[0]).toHaveStyle({
         transform: [{ translateY: ROLAGEM * FATOR_PARALLAX }],
       });
+    });
+  });
+
+  describe('marca de pendente de sincronização (spec 013)', () => {
+    const DADOS = {
+      nome: 'Ana Souza',
+      dataNascimento: '1995-03-15',
+      perfil: 'pos_lca' as const,
+      pernaLesionada: 'direita' as const,
+      dataLesao: '2026-05-20',
+    };
+
+    beforeEach(() => {
+      limparArmazenamentoSeguro();
+    });
+
+    it('com sessão, paciente pendente aparece com a marca', async () => {
+      const servidor = criarServidorSync();
+      servidor.instalar();
+      // A rodada da abertura falha sem conexão: o paciente continua pendente.
+      servidor.falhar('enviar', 'rede');
+      await inserirPaciente(bancoDaTela(), DADOS);
+      await entrarComo('ana@exemplo.com');
+
+      await abrirApp('/');
+
+      expect(await screen.findByLabelText('Pendente de sincronização')).toBeOnTheScreen();
+    });
+
+    it('sem sessão, nenhuma marca', async () => {
+      await inserirPaciente(bancoDaTela(), DADOS);
+      await abrirApp('/');
+      await screen.findByText('Ana Souza');
+      expect(screen.queryByLabelText('Pendente de sincronização')).toBeNull();
     });
   });
 });

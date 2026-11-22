@@ -79,16 +79,35 @@ const MIGRACOES: readonly string[] = [
      registro TEXT NOT NULL,
      atualizado_em TEXT NOT NULL
    );`,
+
+  // 5. sincronizacao (spec 013): pacientes existentes nascem pendentes; estado da troca com a API.
+  `ALTER TABLE paciente ADD COLUMN pendente_sync INTEGER NOT NULL DEFAULT 1 CHECK (pendente_sync IN (0, 1));
+   CREATE INDEX idx_paciente_pendente ON paciente (id) WHERE pendente_sync = 1;
+   CREATE INDEX idx_avaliacao_pendente ON avaliacao (id) WHERE pendente_sync = 1;
+   CREATE TABLE estado_sync (
+     id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+     usuario_email TEXT,
+     cursor_servidor INTEGER NOT NULL,
+     ultima_sincronizacao TEXT,
+     ultimo_resultado TEXT CHECK (ultimo_resultado IN ('ok', 'erro')),
+     ultimo_erro TEXT
+   );
+   INSERT INTO estado_sync (id, usuario_email, cursor_servidor, ultima_sincronizacao, ultimo_resultado, ultimo_erro)
+     VALUES (1, NULL, 0, NULL, NULL, NULL);`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */
 export const VERSAO_ATUAL = MIGRACOES.length;
 
-export async function aplicarMigracoes(db: ConexaoBanco): Promise<void> {
+/** Aplica as migrações pendentes; `ate` limita a versão final (testes de uma migração específica). */
+export async function aplicarMigracoes(
+  db: ConexaoBanco,
+  ate: number = MIGRACOES.length,
+): Promise<void> {
   const linha = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const versaoAtual = linha?.user_version ?? 0;
 
-  for (let versao = versaoAtual + 1; versao <= MIGRACOES.length; versao++) {
+  for (let versao = versaoAtual + 1; versao <= Math.min(ate, MIGRACOES.length); versao++) {
     const comandos = separarComandos(MIGRACOES[versao - 1]);
     await db.withTransactionAsync(async () => {
       for (const comando of comandos) await db.runAsync(comando);

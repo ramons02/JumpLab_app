@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
 import { BotaoNovoPaciente } from '@/components/BotaoNovoPaciente';
@@ -10,6 +10,7 @@ import { ListaPacientesVazia } from '@/components/ListaPacientesVazia';
 import { TopoParallax } from '@/components/TopoParallax';
 import { useListaPacientes } from '@/hooks/useListaPacientes';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
+import { useSincronizacao } from '@/hooks/useSincronizacao';
 import type { FiltroPerfil as Filtro } from '@/types/patient';
 import { hojeIso } from '@/utils/datas';
 import { filtrarPacientes } from '@/utils/filtroPacientes';
@@ -22,6 +23,12 @@ const INTERVALO_ROLAGEM_MS = 16;
 export default function TelaPacientes() {
   const router = useRouter();
   const { pacientes, carregando } = useListaPacientes();
+  const { pacientesPendentes, atualizarPendentes } = useSincronizacao();
+  useFocusEffect(
+    useCallback(() => {
+      void atualizarPendentes();
+    }, [atualizarPendentes]),
+  );
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [busca, setBusca] = useState('');
   const parallax = useParallaxSalto(SUBIDA_LISTA_PX);
@@ -46,6 +53,7 @@ export default function TelaPacientes() {
             paciente={item}
             hoje={hoje}
             aoTocar={() => router.push(`/patient/${item.id}`)}
+            pendente={pacientesPendentes.has(item.id)}
           />
         )}
         onScroll={parallax.aoRolar}

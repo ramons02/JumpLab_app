@@ -47,7 +47,8 @@ export async function inserirPaciente(db: ConexaoBanco, dados: DadosPaciente): P
     atualizadoEm: agora,
   };
   await db.runAsync(
-    `INSERT INTO paciente (${COLUNAS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    // Pendente de sincronização até a API confirmar (spec 013).
+    `INSERT INTO paciente (${COLUNAS}, pendente_sync) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     paciente.id,
     paciente.nome,
     paciente.dataNascimento,
@@ -77,7 +78,8 @@ export async function atualizarPaciente(
   };
   await db.runAsync(
     `UPDATE paciente
-        SET nome = ?, data_nascimento = ?, perfil = ?, perna_lesionada = ?, data_lesao = ?, atualizado_em = ?
+        SET nome = ?, data_nascimento = ?, perfil = ?, perna_lesionada = ?, data_lesao = ?, atualizado_em = ?,
+            pendente_sync = 1
       WHERE id = ?`,
     atualizado.nome,
     atualizado.dataNascimento,
