@@ -252,7 +252,16 @@ describe('banco da sincronização', () => {
     });
 
     it('conteúdo antigo, sem as chaves de sugestão, grava o sugerido nulo', async () => {
-      const salva = await salvarCmj();
+      const comSugestao = CMJ_BILATERAL.map((t) => ({
+        ...t,
+        quadrosSugeridos: { decolagem: t.quadroDecolagem, aterrissagem: t.quadroAterrissagem },
+      }));
+      const nova = novaAvaliacao(ana.id, 'cmj_bi', comSugestao);
+      const salva = await salvarAvaliacao(db, nova, montarResumoSalto(nova), '');
+      const antes = await db.getAllAsync<{ quadro_sugerido_decolagem: number | null }>(
+        'SELECT quadro_sugerido_decolagem FROM tentativa',
+      );
+      expect(antes.every((l) => l.quadro_sugerido_decolagem !== null)).toBe(true);
       const [enviada] = await listarAvaliacoesPendentes(db, 1);
       const conteudo = enviada.conteudo as {
         avaliacao: Record<string, unknown>;
@@ -278,8 +287,18 @@ describe('banco da sincronização', () => {
           },
         }),
       ).toBe('gravado');
-      const linha = await db.getFirstAsync('SELECT quadro_sugerido_decolagem FROM tentativa');
-      expect(linha).toEqual({ quadro_sugerido_decolagem: null });
+      const linhas = await db.getAllAsync(
+        `SELECT quadro_sugerido_toque, quadro_sugerido_decolagem, quadro_sugerido_aterrissagem
+           FROM tentativa`,
+      );
+      expect(linhas).toHaveLength(3);
+      for (const linha of linhas) {
+        expect(linha).toEqual({
+          quadro_sugerido_toque: null,
+          quadro_sugerido_decolagem: null,
+          quadro_sugerido_aterrissagem: null,
+        });
+      }
     });
 
     it('falha no meio desfaz a avaliação inteira (paciente inexistente)', async () => {
