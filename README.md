@@ -91,3 +91,20 @@ desenvolvimento.
    procedimento do `quickstart.md` da spec 006: 100 toques em `+1 Frame`, 100 em `-1 Frame`, 20
    posições na barra e 10 sequências de 5 toques rápidos, comparando o número da imagem com o
    "Quadro N / último" da tela.
+
+## Vídeos demonstrativos do "Como fazer" (spec 015)
+
+Os seis MP4 de `assets/videos/como-fazer/` são a animação do boneco do protótipo validado, já em
+0,5x, sem som. Para regenerar (por exemplo, depois de mudar a animação no protótipo):
+
+1. Abra `ferramentas/videos-demonstrativos/exportar.html` no Chrome ou no Edge, toque em `Exportar` e
+   escolha uma pasta vazia: a página grava os PNG de cada protocolo (600 x 800, 30 quadros por
+   segundo).
+2. Monte os vídeos:
+
+   ```bash
+   ferramentas/videos-demonstrativos/montar.sh <pasta-dos-png>
+   ```
+
+O `ffmpeg` e o navegador são ferramentas só da máquina de desenvolvimento; não entram no app. A soma dos
+seis arquivos precisa ficar abaixo de 6 MB (testado em `tests/utils/comoFazer.test.ts`).

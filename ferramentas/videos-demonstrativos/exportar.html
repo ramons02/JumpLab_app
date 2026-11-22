@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>JumpLab: exportar vídeos demonstrativos</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0b0f0e; color: #f1f5f3; margin: 24px; }
+  button { background: #2ee58a; color: #0b0f0e; border: 0; border-radius: 12px; padding: 12px 20px; font-weight: 600; cursor: pointer; }
+  canvas { display: block; margin-top: 16px; width: 300px; height: 400px; border-radius: 12px; }
+  #estado { margin-top: 12px; color: #93a29b; }
+</style>
+</head>
+<body>
+<h1>Vídeos demonstrativos do "Como fazer"</h1>
+<p>
+  Desenha a animação do boneco de cada protocolo, quadro a quadro, e grava os PNG em
+  <code>&lt;pasta&gt;/&lt;protocolo&gt;/0000.png</code>, 600 x 800, a 30 quadros por segundo, já em 0,5x.
+  Depois, monte os MP4 com <code>montar.sh &lt;pasta&gt;</code>. Precisa do Chrome ou do Edge
+  (<code>showDirectoryPicker</code>).
+</p>
+<button id="exportar" type="button">Exportar</button>
+<p id="estado"></p>
+<canvas id="tela" width="600" height="800"></canvas>
+<script>
+/*
+ * Origem: JumpLab_documentacao/prototipo/index.html (protótipo validado, tela "Como fazer").
+ * Trechos copiados sem alteração: GRAVIDADE, alturaCm, DIAMETRO_DISCO_CM, gerarRepsAgachamento,
+ * videoAgachamento, DEMOS, GALERIA_BASE, PX_POR_CM, rampa, estadoNoQuadro, PX_POR_CM_AGACH,
+ * agachNoQuadro, geometriaAgachamento, barraYNoQuadro, desenharAgachamento e desenharQuadro.
+ * Ao mudar a animação no protótipo, copie de novo e regenere os vídeos.
+ */
+const GRAVIDADE = 9.81;
+const alturaCm = (tempoVooS) => (GRAVIDADE * tempoVooS * tempoVooS / 8) * 100;
+const DIAMETRO_DISCO_CM = 45;
+
+function gerarRepsAgachamento(fps, subidas, descida = 0.9, pausa = 0.7, inicio = 0.8) {
+  let t = inicio;
+  return subidas.map((s) => { const r = { inicio: Math.round(t * fps), fundo: Math.round((t + descida) * fps), fim: Math.round((t + descida + s) * fps) }; t += descida + s + pausa; return r; });
+}
+function videoAgachamento(id, nome, fps, subidas) {
+  const reps = gerarRepsAgachamento(fps, subidas);
+  return { id, nome, tipo: 'agach', fpsReal: fps, fpsMetadado: fps, reps, totalQuadros: reps[reps.length - 1].fim + Math.round(0.8 * fps), perna: null, rotulo: `Agachamento com barra, ${reps.length} repetições`, eventos: {} };
+}
+const DEMOS = {
+  cmj_bi: GALERIA_BASE('cmj', 240, { decolagem: 300, aterrissagem: 420 }, null),
+  cmj_uni: GALERIA_BASE('cmj', 240, { decolagem: 300, aterrissagem: 410 }, 'direita'),
+  sj: GALERIA_BASE('sj', 240, { decolagem: 500, aterrissagem: 620 }, null, 820),
+  dj: GALERIA_BASE('dj', 240, { toque: 300, decolagem: 348, aterrissagem: 444 }, null),
+  dj_uni: GALERIA_BASE('dj', 240, { toque: 300, decolagem: 356, aterrissagem: 440 }, 'direita'),
+  agach: videoAgachamento('demo', 'demo', 60, [0.7, 0.7, 0.7]),
+};
+function GALERIA_BASE(tipo, fps, eventos, perna, total = 720) { return { id: 'demo', nome: 'demo', tipo, fpsReal: fps, fpsMetadado: fps, totalQuadros: total, eventos, perna }; }
+
+const PX_POR_CM = 3;
+const rampa = (a, b, x) => Math.min(1, Math.max(0, (x - a) / (b - a)));
+
+function estadoNoQuadro(v, f) {
+  const { decolagem: dec, aterrissagem: at, toque } = v.eventos;
+  const fps = v.fpsReal;
+  const tVoo = (at - dec) / fps;
+  const picoPx = alturaCm(tVoo) * PX_POR_CM;
+  const caixaPx = 40 * PX_POR_CM;
+  let y = 0, agach = 0;
+  const pouso = Math.round(0.25 * fps);
+  if (f >= dec && f <= at) { const p = (f - dec) / (at - dec); y = 4 * picoPx * p * (1 - p); }
+  else if (f > at) { agach = f < at + pouso ? 0.8 * Math.sin(Math.PI * rampa(at, at + pouso, f)) : 0; }
+  else if (v.tipo === 'sj') {
+    const desce = dec - Math.round(1.6 * fps), segura = dec - Math.round(1.2 * fps), sobe = dec - Math.round(0.12 * fps);
+    agach = f < desce ? 0 : f < segura ? 0.9 * rampa(desce, segura, f) : f < sobe ? 0.9 : 0.9 * (1 - rampa(sobe, dec, f));
+  }
+  else if (v.tipo === 'cmj') {
+    const prep = Math.round(0.4 * fps);
+    agach = f >= dec - prep ? 0.9 * Math.sin(Math.PI * rampa(dec - prep, dec, f)) : 0;
+  } else {
+    const queda = Math.round(Math.sqrt((2 * 0.4) / GRAVIDADE) * fps);
+    if (f < toque - queda) y = caixaPx;
+    else if (f < toque) { const p = rampa(toque - queda, toque, f); y = caixaPx * (1 - p * p); }
+    else agach = 0.9 * Math.sin(Math.PI * rampa(toque, dec, f));
+  }
+  return { y, agach, emPouso: f > at && f < at + pouso };
+}
+
+const PX_POR_CM_AGACH = 1.3;
+function agachNoQuadro(v, f) {
+  for (const r of v.reps) {
+    if (f >= r.inicio && f <= r.fundo) return (1 - Math.cos(Math.PI * rampa(r.inicio, r.fundo, f))) / 2;
+    if (f > r.fundo && f <= r.fim) return 1 - (1 - Math.cos(Math.PI * rampa(r.fundo, r.fim, f))) / 2;
+  }
+  return 0;
+}
+function geometriaAgachamento(a, A) {
+  const chao = A - 50;
+  const quadril = chao - 120 * (1 - 0.55 * a);
+  const ombro = quadril - 82 * (1 - 0.12 * a);
+  return { chao, quadril, ombro, barra: ombro - 4 };
+}
+const barraYNoQuadro = (v, f) => geometriaAgachamento(agachNoQuadro(v, f), 400).barra;
+function desenharAgachamento(ctx, v, f, L, A) {
+  // vista de lado: o disco aparece redondo, centrado na barra
+  const a = agachNoQuadro(v, f);
+  const g = geometriaAgachamento(a, A);
+  const cx = L / 2;
+  const tornozelo = { x: cx + 6, y: g.chao - 4 };
+  const quadril = { x: cx - 8 - 46 * a, y: g.quadril };
+  const joelho = { x: cx + 12 + 34 * a, y: g.quadril + (g.chao - g.quadril) * 0.5 - 6 * a };
+  const ombro = { x: cx - 2, y: g.ombro };
+  const raio = (DIAMETRO_DISCO_CM * PX_POR_CM_AGACH) / 2;
+  ctx.fillStyle = '#111827'; ctx.beginPath(); ctx.arc(cx, g.barra, raio, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, g.barra, raio, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = '#f8fafc'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 9;
+  ctx.beginPath(); ctx.moveTo(tornozelo.x + 22, g.chao - 2); ctx.lineTo(tornozelo.x - 6, g.chao - 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tornozelo.x, tornozelo.y); ctx.lineTo(joelho.x, joelho.y); ctx.lineTo(quadril.x, quadril.y); ctx.lineTo(ombro.x, ombro.y); ctx.stroke();
+  ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(ombro.x + 14, ombro.y - 26, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(ombro.x, ombro.y + 6); ctx.lineTo(ombro.x + 18, ombro.y + 14); ctx.lineTo(cx + 6, g.barra + 2); ctx.stroke();
+  ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.arc(cx, g.barra, 4, 0, Math.PI * 2); ctx.fill();
+}
+
+function desenharQuadro(ctx, v, f, L, A) {
+  ctx.clearRect(0, 0, L, A);
+  const fundo = ctx.createLinearGradient(0, 0, 0, A);
+  fundo.addColorStop(0, '#2b3445'); fundo.addColorStop(1, '#4b5567');
+  ctx.fillStyle = fundo; ctx.fillRect(0, 0, L, A);
+  const chao = A - 50;
+  ctx.fillStyle = '#6b7280'; ctx.fillRect(0, chao, L, A - chao);
+  ctx.fillStyle = '#9ca3af'; ctx.fillRect(0, chao, L, 3);
+  if (v.tipo === 'agach') return desenharAgachamento(ctx, v, f, L, A);
+  const cx = L / 2;
+  if (v.tipo === 'dj') { ctx.fillStyle = '#8b5e34'; ctx.fillRect(cx - 70, chao - 120, 140, 120); ctx.fillStyle = '#a16207'; ctx.fillRect(cx - 70, chao - 120, 140, 6); }
+  const { y, agach, emPouso } = estadoNoQuadro(v, f);
+  const pes = chao - y;
+  const perna = 104 * (1 - 0.35 * agach);
+  const quadril = pes - perna;
+  ctx.strokeStyle = '#f8fafc'; ctx.lineCap = 'round'; ctx.lineWidth = 9;
+  const ladoX = { direita: cx - 15, esquerda: cx + 15 }; // vista frontal: perna direita à esquerda da tela
+  for (const lado of ['direita', 'esquerda']) {
+    const apoiada = !v.perna || v.perna === lado;
+    const px = ladoX[lado];
+    const sinal = lado === 'direita' ? -1 : 1;
+    let joelhoX = px + sinal * (6 + 16 * agach);
+    if (apoiada && v.valgo && v.perna === lado && emPouso) joelhoX = px - sinal * 14 * agach;
+    const joelhoY = quadril + (pes - quadril) / 2;
+    const peY = apoiada ? pes : pes - 46;
+    const peX = apoiada ? px + sinal * 4 : px + sinal * 2;
+    ctx.beginPath(); ctx.moveTo(px, quadril); ctx.lineTo(apoiada ? joelhoX : px + sinal * 10, apoiada ? joelhoY : joelhoY - 18); ctx.lineTo(peX, peY); ctx.stroke();
+  }
+  const ombro = quadril - 74 * (1 - 0.1 * agach);
+  ctx.beginPath(); ctx.moveTo(cx, quadril); ctx.lineTo(cx, ombro); ctx.stroke();
+  ctx.lineWidth = 7;
+  const braco = 0.4 + agach * 0.9;
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * 4, ombro + 4); ctx.lineTo(cx + s * (22 + 10 * braco), ombro + 40 - 24 * agach); ctx.lineTo(cx + s * (26 + 14 * braco), ombro + 76 - 50 * agach); ctx.stroke(); }
+  ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(cx, ombro - 20, 15, 0, Math.PI * 2); ctx.fill();
+}
+
+/* Exportação (research R2 da spec 015) */
+const PROTOCOLOS = ['cmj_bi', 'cmj_uni', 'sj', 'dj', 'dj_uni', 'agach'];
+const FPS_SAIDA = 30;
+const VELOCIDADE = 0.5;
+const LARGURA = 300;
+const ALTURA = 400;
+const ESCALA = 2;
+
+/** Quadro da animação mostrado no quadro de saída k: a 30 fps em 0,5x, avança FPS / 60 por quadro. */
+function quadroDaAnimacao(v, k) {
+  return Math.floor((k * v.fpsReal * VELOCIDADE) / FPS_SAIDA);
+}
+
+function totalDeSaida(protocolo) {
+  const v = DEMOS[protocolo];
+  let k = 0;
+  while (quadroDaAnimacao(v, k) < v.totalQuadros) k += 1;
+  return k;
+}
+
+const tela = document.getElementById('tela');
+const ctx = tela.getContext('2d');
+
+function desenharSaida(protocolo, k) {
+  const v = DEMOS[protocolo];
+  ctx.setTransform(ESCALA, 0, 0, ESCALA, 0, 0);
+  desenharQuadro(ctx, v, quadroDaAnimacao(v, k), LARGURA, ALTURA);
+}
+
+function pngDaTela() {
+  return new Promise((resolve) => tela.toBlob(resolve, 'image/png'));
+}
+
+async function exportar() {
+  const estado = document.getElementById('estado');
+  const raiz = await window.showDirectoryPicker({ mode: 'readwrite' });
+  for (const protocolo of PROTOCOLOS) {
+    const pasta = await raiz.getDirectoryHandle(protocolo, { create: true });
+    const total = totalDeSaida(protocolo);
+    for (let k = 0; k < total; k += 1) {
+      desenharSaida(protocolo, k);
+      const arquivo = await pasta.getFileHandle(String(k).padStart(4, '0') + '.png', { create: true });
+      const escrita = await arquivo.createWritable();
+      await escrita.write(await pngDaTela());
+      await escrita.close();
+      estado.textContent = protocolo + ': quadro ' + (k + 1) + ' de ' + total;
+    }
+  }
+  estado.textContent = 'Pronto. Rode montar.sh com a pasta escolhida.';
+}
+
+document.getElementById('exportar').addEventListener('click', () => {
+  exportar().catch((erro) => {
+    document.getElementById('estado').textContent = 'Falhou: ' + erro.message;
+  });
+});
+
+desenharSaida('cmj_bi', 0);
+</script>
+</body>
+</html>

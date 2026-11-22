@@ -1,4 +1,4 @@
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { Stack } from 'expo-router';
 import { Text } from 'react-native';
 
@@ -128,6 +128,22 @@ describe('tela de configuração da avaliação', () => {
       pernaLesionada: 'direita',
       tentativas: criarTentativasVazias('cmj_bi'),
     });
+  });
+
+  it('"Ir para o vídeo" vai direto ao analisador, sem passar pelo Como fazer (CA04 da spec 015)', async () => {
+    const ana = await cadastrar();
+    await abrirConfiguracao(ana.id);
+
+    await escolher('Squat Jump');
+    await tocar('Ir para o vídeo');
+    expect(await screen.findByText('Analisador')).toBeOnTheScreen();
+    expect(screen.queryByText('Como fazer')).toBeNull();
+
+    await act(async () => {
+      const { router } = jest.requireActual('expo-router');
+      router.back();
+    });
+    expect(screen).toHavePathname('/assessment/setup');
   });
 
   it('"Como fazer" abre a demonstração', async () => {

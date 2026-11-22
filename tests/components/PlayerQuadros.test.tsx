@@ -5,24 +5,9 @@ import { PlayerQuadros } from '@/components/PlayerQuadros';
 import type { VideoSelecionado } from '@/types/attempt';
 import { posicaoNoArquivoS } from '@/utils/quadros';
 
-const mockTocador = {
-  currentTime: 0,
-  muted: false,
-  loop: true,
-  pause: jest.fn(),
-  play: jest.fn(),
-};
+import { mockTocador, reiniciarTocador } from '../helpers/mockExpoVideo';
 
-jest.mock('expo-video', () => {
-  const { View } = jest.requireActual('react-native');
-  return {
-    useVideoPlayer: (_fonte: string, configurar?: (tocador: unknown) => void) => {
-      configurar?.(mockTocador);
-      return mockTocador;
-    },
-    VideoView: (props: object) => <View {...props} />,
-  };
-});
+jest.mock('expo-video', () => jest.requireActual('../helpers/mockExpoVideo').moduloExpoVideo);
 
 const VIDEO: VideoSelecionado = {
   uri: 'file:///d1_240_nativo.mp4',
@@ -64,8 +49,7 @@ const menos = () => screen.getByRole('button', { name: '-1 Frame' });
 describe('PlayerQuadros', () => {
   beforeEach(() => {
     aoMudar.mockClear();
-    mockTocador.currentTime = 0;
-    mockTocador.muted = false;
+    reiniciarTocador();
   });
 
   it('abre pausado, mudo, sem controles nativos e com a linha guia', async () => {

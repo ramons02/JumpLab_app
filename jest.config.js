@@ -2,6 +2,7 @@ module.exports = {
   preset: 'jest-expo',
   roots: ['<rootDir>/tests'],
   setupFiles: ['<rootDir>/tests/setup.ts'],
+  modulePathIgnorePatterns: ['<rootDir>/ferramentas/'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/tests/helpers/',
