@@ -44,6 +44,9 @@ export function PainelMarcacao({
         marcas={tentativa.marcas}
         liberadas={marcacoesLiberadas(tentativa)}
         aoMarcar={aoMarcar}
+        quadrosSugeridos={
+          tentativa.sugestao?.estado === 'pronta' ? tentativa.sugestao.quadros : undefined
+        }
       />
       {recusa ? (
         <Text accessibilityRole="alert" className="rounded-xl bg-erro-fundo p-3 text-xs text-erro">

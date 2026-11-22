@@ -10,6 +10,7 @@ import { EscolherVideo } from '@/components/EscolherVideo';
 import { PainelMarcacao } from '@/components/PainelMarcacao';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
 import { SeletorFps } from '@/components/SeletorFps';
+import { SugestaoDaTentativa } from '@/components/SugestaoDaTentativa';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
 import { useConfirmarSaida } from '@/hooks/useConfirmarSaida';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
@@ -137,6 +138,13 @@ function Analisador({ rascunho, pernas }: AnalisadorProps) {
           Confirme o FPS para liberar as marcações.
         </Text>
       ) : null}
+      <SugestaoDaTentativa
+        protocolo={protocolo}
+        perna={perna}
+        numero={numero}
+        tentativa={tentativa}
+        aoIrAoQuadro={setQuadro}
+      />
       {tentativa.video ? (
         <PainelMarcacao
           protocolo={protocolo}

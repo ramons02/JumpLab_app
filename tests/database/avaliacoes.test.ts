@@ -113,6 +113,24 @@ describe('repositório de avaliações', () => {
     expect(await buscarAvaliacao(db, '00000000-0000-4000-8000-000000000000')).toBeNull();
   });
 
+  it('grava e lê o quadro sugerido de cada evento; o resultado não muda (spec 018)', async () => {
+    const comSugestao = DROP_JUMP.map((t, i) =>
+      i === 0 ? { ...t, quadrosSugeridos: { toque: 1, decolagem: 999, aterrissagem: 1100 } } : t,
+    );
+    const sem = novaAvaliacao(ana.id, 'dj', DROP_JUMP);
+    const com = novaAvaliacao(ana.id, 'dj', comSugestao);
+    const salva = await salvar(com);
+
+    const lida = await buscarAvaliacao(db, salva.id);
+    expect(lida?.tentativas[0].quadrosSugeridos).toEqual({
+      toque: 1,
+      decolagem: 999,
+      aterrissagem: 1100,
+    });
+    expect(lida?.tentativas[1].quadrosSugeridos).toEqual({});
+    expect(montarResumoSalto(com)).toEqual(montarResumoSalto(sem));
+  });
+
   it('listarAvaliacoesDoPaciente traz só o paciente pedido, em ordem crescente de data', async () => {
     const bruno = await inserirPaciente(db, {
       nome: 'Bruno Lima',

@@ -160,7 +160,13 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
 
       expect(descartarVideos).toHaveBeenCalledWith({
         unica: [
-          { video: video(240), fpsSelecionado: 240, fpsConfirmado: null, marcas: {} },
+          {
+            video: video(240),
+            fpsSelecionado: 240,
+            fpsConfirmado: null,
+            marcas: {},
+            sugestao: null,
+          },
           expect.anything(),
           expect.anything(),
         ],

@@ -38,6 +38,9 @@ interface LinhaTentativa {
   quadro_toque: number | null;
   quadro_decolagem: number;
   quadro_aterrissagem: number;
+  quadro_sugerido_toque: number | null;
+  quadro_sugerido_decolagem: number | null;
+  quadro_sugerido_aterrissagem: number | null;
 }
 
 const COLUNAS_AVALIACAO =
@@ -159,7 +162,8 @@ export async function salvarAvaliacao(
     for (const t of avaliacao.tentativas) {
       await db.runAsync(
         `INSERT INTO tentativa (avaliacao_id, perna, numero, fps, quadro_toque, quadro_decolagem,
-           quadro_aterrissagem) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+           quadro_aterrissagem, quadro_sugerido_toque, quadro_sugerido_decolagem,
+           quadro_sugerido_aterrissagem) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         avaliacao.id,
         t.perna,
         t.numero,
@@ -167,6 +171,9 @@ export async function salvarAvaliacao(
         t.quadroToque,
         t.quadroDecolagem,
         t.quadroAterrissagem,
+        t.quadrosSugeridos.toque ?? null,
+        t.quadrosSugeridos.decolagem ?? null,
+        t.quadrosSugeridos.aterrissagem ?? null,
       );
     }
     if (avaliacao.serie) await gravarSerie(db, avaliacao.id, avaliacao.serie);
@@ -239,7 +246,19 @@ function paraTentativa(linha: LinhaTentativa): Attempt {
     quadroToque: linha.quadro_toque,
     quadroDecolagem: linha.quadro_decolagem,
     quadroAterrissagem: linha.quadro_aterrissagem,
+    quadrosSugeridos: quadrosSugeridosDaLinha(linha),
   };
+}
+
+/** Quadros sugeridos guardados na tentativa (spec 018); colunas nulas ficam de fora. */
+function quadrosSugeridosDaLinha(linha: LinhaTentativa): Attempt['quadrosSugeridos'] {
+  const quadros: Attempt['quadrosSugeridos'] = {};
+  if (linha.quadro_sugerido_toque !== null) quadros.toque = linha.quadro_sugerido_toque;
+  if (linha.quadro_sugerido_decolagem !== null) quadros.decolagem = linha.quadro_sugerido_decolagem;
+  if (linha.quadro_sugerido_aterrissagem !== null) {
+    quadros.aterrissagem = linha.quadro_sugerido_aterrissagem;
+  }
+  return quadros;
 }
 
 export async function buscarAvaliacao(db: ConexaoBanco, id: string): Promise<Assessment | null> {
@@ -249,7 +268,8 @@ export async function buscarAvaliacao(db: ConexaoBanco, id: string): Promise<Ass
   );
   if (!linha) return null;
   const tentativas = await db.getAllAsync<LinhaTentativa>(
-    `SELECT perna, numero, fps, quadro_toque, quadro_decolagem, quadro_aterrissagem
+    `SELECT perna, numero, fps, quadro_toque, quadro_decolagem, quadro_aterrissagem,
+            quadro_sugerido_toque, quadro_sugerido_decolagem, quadro_sugerido_aterrissagem
        FROM tentativa WHERE avaliacao_id = ? ORDER BY perna, numero`,
     id,
   );

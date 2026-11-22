@@ -15,5 +15,7 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Desenha com SVG e gradiente nativos; nos testes, o mock expõe as props recebidas (spec 009).
     '^react-native-gifted-charts$': '<rootDir>/tests/helpers/mockGiftedCharts.tsx',
+    // Módulo nativo do MediaPipe (spec 018); nos testes, o resultado é controlado pelo teste.
+    '^deteccao-pose$': '<rootDir>/tests/helpers/mockDeteccaoPose.ts',
   },
 };

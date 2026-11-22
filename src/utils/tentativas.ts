@@ -3,20 +3,21 @@ import type {
   MarcasSalto,
   NumeroTentativa,
   PernaTentativa,
+  SugestaoQuadros,
   TentativaEmAndamento,
   TentativasPorPerna,
   VideoSelecionado,
 } from '@/types/attempt';
 import type { Protocol } from '@/types/protocol';
 import { podeConfirmarFps } from '@/utils/fps';
-import { tentativaCompleta } from '@/utils/marcacoes';
+import { eventosDoProtocolo, tentativaCompleta } from '@/utils/marcacoes';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
 /** Tentativas obrigatórias por perna (D11). */
 export const TENTATIVAS_POR_PERNA = 3;
 
 function tentativaVazia(): TentativaEmAndamento {
-  return { video: null, fpsSelecionado: null, fpsConfirmado: null, marcas: {} };
+  return { video: null, fpsSelecionado: null, fpsConfirmado: null, marcas: {}, sugestao: null };
 }
 
 /** Pernas medidas no salto. O agachamento não tem pernas: é uma série única (spec 014). */
@@ -36,12 +37,23 @@ export function criarTentativasVazias(protocolo: Protocol): TentativasPorPerna {
   return tentativas;
 }
 
-/** Vídeo novo (escolhido ou trocado): FPS lido pré-selecionado, nada confirmado, marcas zeradas. */
+/**
+ * Vídeo novo (escolhido ou trocado): FPS lido pré-selecionado, nada confirmado, marcas zeradas e sem
+ * sugestão, porque a sugestão pertence ao vídeo (spec 018, RN10).
+ */
 export function definirVideo(
   _tentativa: TentativaEmAndamento,
   video: VideoSelecionado,
 ): TentativaEmAndamento {
-  return { video, fpsSelecionado: video.fpsLido, fpsConfirmado: null, marcas: {} };
+  return { video, fpsSelecionado: video.fpsLido, fpsConfirmado: null, marcas: {}, sugestao: null };
+}
+
+/** Troca a sugestão automática da tentativa, sem tocar em vídeo, FPS ou marcas (spec 018). */
+export function definirSugestao(
+  tentativa: TentativaEmAndamento,
+  sugestao: SugestaoQuadros | null,
+): TentativaEmAndamento {
+  return { ...tentativa, sugestao };
 }
 
 export function selecionarFps(tentativa: TentativaEmAndamento, fps: number): TentativaEmAndamento {
@@ -82,7 +94,10 @@ export function marcarNaTentativa(
   return { ...tentativa, marcas };
 }
 
-/** `Mesmo vídeo da tentativa anterior`: vídeo e FPS confirmado da anterior, sem as marcações. */
+/**
+ * `Mesmo vídeo da tentativa anterior`: vídeo e FPS confirmado da anterior, sem as marcações; a sugestão
+ * pronta daquele vídeo vem junto, sem nova análise (spec 018, RN10).
+ */
 export function usarVideoDaAnterior(
   anterior: TentativaEmAndamento,
   _atual: TentativaEmAndamento,
@@ -92,7 +107,23 @@ export function usarVideoDaAnterior(
     fpsSelecionado: anterior.fpsSelecionado,
     fpsConfirmado: anterior.fpsConfirmado,
     marcas: {},
+    sugestao: anterior.sugestao?.estado === 'pronta' ? anterior.sugestao : null,
   };
+}
+
+/** Quadros da sugestão pronta, só dos eventos do protocolo; vazio sem sugestão. */
+function quadrosSugeridosDaTentativa(
+  tentativa: TentativaEmAndamento,
+  protocolo: Protocol,
+): MarcasSalto {
+  const { sugestao } = tentativa;
+  if (sugestao?.estado !== 'pronta') return {};
+  const quadros: MarcasSalto = {};
+  for (const evento of eventosDoProtocolo(protocolo)) {
+    const quadro = sugestao.quadros[evento];
+    if (quadro !== undefined) quadros[evento] = quadro;
+  }
+  return quadros;
 }
 
 /** A tentativa como `Attempt` (para medir a prévia ou gravar); null se ainda não estiver completa. */
@@ -118,6 +149,7 @@ export function paraAttempt(
     quadroToque: marcas.toque ?? null,
     quadroDecolagem: marcas.decolagem,
     quadroAterrissagem: marcas.aterrissagem,
+    quadrosSugeridos: quadrosSugeridosDaTentativa(tentativa, protocolo),
   };
 }
 
