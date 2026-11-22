@@ -63,7 +63,7 @@ describe('autenticação', () => {
     await gravarSessao({
       tokenAcesso: 'a',
       tokenRenovacao: 'r',
-      conta: { nome: 'Ana', email: 'ana@exemplo.com', admin: false },
+      conta: { nome: 'Ana', email: 'ana@exemplo.com', admin: false, trocaSenhaObrigatoria: false },
     });
     await sair();
     expect(await lerSessao()).toBeNull();
@@ -75,7 +75,7 @@ describe('autenticação', () => {
     await gravarSessao({
       tokenAcesso: 'a',
       tokenRenovacao: 'r',
-      conta: { nome: 'Ana', email: 'ana@exemplo.com', admin: false },
+      conta: { nome: 'Ana', email: 'ana@exemplo.com', admin: false, trocaSenhaObrigatoria: false },
     });
     await sair();
     expect(await lerSessao()).toBeNull();

@@ -3,6 +3,7 @@ import {
   normalizarEmail,
   validarCriarConta,
   validarEntrar,
+  validarSenhaNova,
 } from '@/utils/validacaoConta';
 
 const VALIDOS = {
@@ -42,5 +43,17 @@ describe('validarEntrar e normalizarEmail', () => {
 
   it('normaliza o e-mail', () => {
     expect(normalizarEmail('  Ana@Exemplo.COM ')).toBe('ana@exemplo.com');
+  });
+});
+
+describe('validarSenhaNova (spec 016)', () => {
+  it('7 caracteres recusa, 8 aceita, confirmação diferente recusa', () => {
+    expect(validarSenhaNova('1234567', '1234567')).toEqual({
+      senha: 'A senha precisa ter pelo menos 8 caracteres.',
+    });
+    expect(validarSenhaNova('12345678', '12345678')).toEqual({});
+    expect(validarSenhaNova('12345678', '12345679')).toEqual({
+      confirmacao: 'As senhas não conferem.',
+    });
   });
 });

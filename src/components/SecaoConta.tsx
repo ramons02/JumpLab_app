@@ -33,7 +33,7 @@ function Alternar({ modo, aoMudar }: { modo: ModoConta; aoMudar: (m: ModoConta) 
 
 /** Seção Conta das Configurações (spec 012): opcional, só para sincronizar. */
 export function SecaoConta() {
-  const { carregando, conta, expirou, entrar, criarConta, sair } = useSessao();
+  const { carregando, conta, expirou, entrar, criarConta, sair, pedirRecuperacao } = useSessao();
   const [modo, setModo] = useState<ModoConta>('entrar');
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -88,6 +88,7 @@ export function SecaoConta() {
             modo={modo}
             aoEntrar={entrar}
             aoCriar={criarConta}
+            aoPedirRecuperacao={pedirRecuperacao}
             aoConcluir={setAviso}
           />
         </>

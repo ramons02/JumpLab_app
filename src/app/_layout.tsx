@@ -4,6 +4,7 @@ import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 
+import { CamadaTrocaSenha } from '@/components/TrocarSenhaObrigatoria';
 import { aplicarMigracoes } from '@/database/migracoes';
 import { ProvedorSessao } from '@/hooks/useSessao';
 import { ProvedorSincronizacao } from '@/hooks/useSincronizacao';
@@ -42,12 +43,16 @@ export default function LayoutRaiz() {
         <ProvedorSincronizacao>
           <ThemeProvider value={TEMA_ESCURO}>
             <StatusBar style="light" />
-            <Stack screenOptions={{ headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 26 } }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="patient/new" options={{ title: 'NOVO PACIENTE' }} />
-              <Stack.Screen name="patient/[id]/edit" options={{ title: 'EDITAR PACIENTE' }} />
-              <Stack.Screen name="assessment" options={{ headerShown: false }} />
-            </Stack>
+            <CamadaTrocaSenha>
+              <Stack
+                screenOptions={{ headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 26 } }}
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="patient/new" options={{ title: 'NOVO PACIENTE' }} />
+                <Stack.Screen name="patient/[id]/edit" options={{ title: 'EDITAR PACIENTE' }} />
+                <Stack.Screen name="assessment" options={{ headerShown: false }} />
+              </Stack>
+            </CamadaTrocaSenha>
           </ThemeProvider>
         </ProvedorSincronizacao>
       </ProvedorSessao>

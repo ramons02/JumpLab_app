@@ -7,7 +7,12 @@ import { limparArmazenamentoSeguro } from '../helpers/armazenamentoSeguroFalso';
 const SESSAO = {
   tokenAcesso: 'acesso',
   tokenRenovacao: 'renovacao',
-  conta: { nome: 'Ana Souza', email: 'ana@exemplo.com', admin: false },
+  conta: {
+    nome: 'Ana Souza',
+    email: 'ana@exemplo.com',
+    admin: false,
+    trocaSenhaObrigatoria: false,
+  },
 };
 
 describe('armazenamento da sessão', () => {

@@ -159,6 +159,6 @@ export async function entrarComo(email: string) {
   await gravarSessao({
     tokenAcesso: `token-${email}`,
     tokenRenovacao: `renovacao-${email}`,
-    conta: { nome: 'Teste', email, admin: false },
+    conta: { nome: 'Teste', email, admin: false, trocaSenhaObrigatoria: false },
   });
 }

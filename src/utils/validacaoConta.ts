@@ -47,6 +47,23 @@ export function validarCriarConta(dados: DadosCriarConta): ErrosConta {
   return erros;
 }
 
+/** Senha nova depois da senha temporária (spec 016): as mesmas regras do cadastro. */
+export function validarSenhaNova(
+  senha: string,
+  confirmacao: string,
+): { senha?: string; confirmacao?: string } {
+  const erros: { senha?: string; confirmacao?: string } = {};
+  if (senha.length < SENHA_MINIMA) erros.senha = MENSAGENS_CONTA.senhaCurta;
+  else if (bytes(senha) > SENHA_MAXIMA_BYTES) erros.senha = MENSAGENS_CONTA.senhaLonga;
+  if (confirmacao !== senha) erros.confirmacao = MENSAGENS_CONTA.confirmacao;
+  return erros;
+}
+
+/** E-mail que dá para usar no pedido de recuperação. */
+export function emailValido(email: string): boolean {
+  return erroDoEmail(email) === undefined;
+}
+
 /** No Entrar, só e-mail e senha preenchidos; o resto quem decide é a API. */
 export function validarEntrar(email: string, senha: string): ErrosConta {
   const erros: ErrosConta = {};

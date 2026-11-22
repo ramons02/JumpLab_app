@@ -1,4 +1,4 @@
-import type { Sessao } from '@/types/conta';
+import type { PedidoRecuperacao, SenhaTemporariaGerada, Sessao } from '@/types/conta';
 import type {
   PaginaRecebimento,
   RegistroSync,
@@ -40,7 +40,13 @@ export function lerRespostaSessao(corpo: unknown): Sessao {
   return {
     tokenAcesso: dados.tokenAcesso,
     tokenRenovacao: dados.tokenRenovacao,
-    conta: { nome: conta.nome, email: conta.email, admin: conta.admin },
+    conta: {
+      nome: conta.nome,
+      email: conta.email,
+      admin: conta.admin,
+      // Ausente (API antes da spec 016) vira falso.
+      trocaSenhaObrigatoria: dados.trocaSenhaObrigatoria === true,
+    },
   };
 }
 
@@ -168,4 +174,59 @@ export function validarAvaliacaoRecebida(conteudo: unknown): boolean {
     Array.isArray(c.repeticoes) &&
     c.repeticoes.every((r) => objeto(r) !== null)
   );
+}
+
+/* Recuperação de senha (spec 016) */
+
+const FORMATO_SENHA_TEMPORARIA = /^[A-Z2-9]{4}-[A-Z2-9]{4}$/;
+const STATUS_PEDIDO = new Set(['aberto', 'atendido']);
+
+function lerPedido(valor: unknown): PedidoRecuperacao {
+  const p = objeto(valor);
+  if (
+    !p ||
+    typeof p.id !== 'number' ||
+    !texto(p.email) ||
+    !texto(p.pedidoEm) ||
+    typeof p.status !== 'string' ||
+    !STATUS_PEDIDO.has(p.status) ||
+    (p.atendidoEm !== null && !texto(p.atendidoEm))
+  ) {
+    throw new RespostaInvalidaError();
+  }
+  return {
+    id: p.id,
+    email: p.email,
+    pedidoEm: p.pedidoEm,
+    status: p.status as PedidoRecuperacao['status'],
+    atendidoEm: (p.atendidoEm as string | null) ?? null,
+  };
+}
+
+/** `dados` com a lista de pedidos da caixa do administrador. */
+export function lerPedidos(corpo: unknown): PedidoRecuperacao[] {
+  const dados = objeto(corpo)?.dados;
+  if (!Array.isArray(dados)) throw new RespostaInvalidaError();
+  return dados.map(lerPedido);
+}
+
+/** `dados` com a senha gerada; recusa senha fora do formato XXXX-XXXX. */
+export function lerSenhaTemporariaGerada(corpo: unknown): SenhaTemporariaGerada {
+  const d = objeto(objeto(corpo)?.dados);
+  if (
+    !d ||
+    typeof d.pedidoId !== 'number' ||
+    !texto(d.email) ||
+    typeof d.senhaTemporaria !== 'string' ||
+    !FORMATO_SENHA_TEMPORARIA.test(d.senhaTemporaria) ||
+    !texto(d.validaAte)
+  ) {
+    throw new RespostaInvalidaError();
+  }
+  return {
+    pedidoId: d.pedidoId,
+    email: d.email,
+    senhaTemporaria: d.senhaTemporaria,
+    validaAte: d.validaAte,
+  };
 }

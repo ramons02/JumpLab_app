@@ -22,7 +22,11 @@ export async function lerSessao(): Promise<Sessao | null> {
   if (!tokenAcesso || !tokenRenovacao || !contaJson) return null;
   try {
     const conta: unknown = JSON.parse(contaJson);
-    return ehConta(conta) ? { tokenAcesso, tokenRenovacao, conta } : null;
+    if (!ehConta(conta)) return null;
+    // Contas gravadas antes da spec 016 não têm a marca: sem troca pendente.
+    const trocaSenhaObrigatoria =
+      (conta as { trocaSenhaObrigatoria?: unknown }).trocaSenhaObrigatoria === true;
+    return { tokenAcesso, tokenRenovacao, conta: { ...conta, trocaSenhaObrigatoria } };
   } catch {
     return null;
   }
@@ -37,6 +41,7 @@ export async function gravarSessao(sessao: Sessao): Promise<void> {
       nome: sessao.conta.nome,
       email: sessao.conta.email,
       admin: sessao.conta.admin,
+      trocaSenhaObrigatoria: sessao.conta.trocaSenhaObrigatoria,
     }),
   );
 }

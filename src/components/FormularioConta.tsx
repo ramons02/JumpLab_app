@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { CampoTexto } from '@/components/CampoTexto';
+import { EsqueciSenha } from '@/components/EsqueciSenha';
 import type { ResultadoHttp } from '@/sync/clienteHttp';
 import type { DadosCriarConta, ErrosConta, Sessao } from '@/types/conta';
 import { validarCriarConta, validarEntrar } from '@/utils/validacaoConta';
@@ -15,11 +16,18 @@ interface FormularioContaProps {
   modo: ModoConta;
   aoEntrar: (email: string, senha: string) => Promise<ResultadoHttp<Sessao>>;
   aoCriar: (dados: DadosCriarConta) => Promise<ResultadoHttp<Sessao>>;
+  aoPedirRecuperacao: (email: string) => Promise<ResultadoHttp<null>>;
   aoConcluir: (mensagem: string | null) => void;
 }
 
 /** Campos de entrar ou criar conta, com as mensagens e o botão travado durante a chamada. */
-export function FormularioConta({ modo, aoEntrar, aoCriar, aoConcluir }: FormularioContaProps) {
+export function FormularioConta({
+  modo,
+  aoEntrar,
+  aoCriar,
+  aoPedirRecuperacao,
+  aoConcluir,
+}: FormularioContaProps) {
   const [dados, setDados] = useState<DadosCriarConta>({
     nome: '',
     email: '',
@@ -116,6 +124,7 @@ export function FormularioConta({ modo, aoEntrar, aoCriar, aoConcluir }: Formula
       >
         <Text className="text-sm font-semibold text-fundo">{criar ? 'Criar conta' : 'Entrar'}</Text>
       </Pressable>
+      {criar ? null : <EsqueciSenha email={dados.email} aoPedir={aoPedirRecuperacao} />}
     </View>
   );
 }

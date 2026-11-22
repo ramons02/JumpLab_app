@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
 import LayoutAbas from '@/app/(tabs)/_layout';
+import { CamadaTrocaSenha } from '@/components/TrocarSenhaObrigatoria';
 import TelaPacientes from '@/app/(tabs)/index';
 import TelaConfiguracoes from '@/app/(tabs)/settings';
 import TelaEditarPaciente from '@/app/patient/[id]/edit';
@@ -35,11 +36,13 @@ export function fecharBanco() {
 export function abrirApp(caminhoInicial: string, historico: string[] = []) {
   return renderRouter(
     {
-      // Como no app: a sessão e a sincronização envolvem a navegação (specs 012 e 013).
+      // Como no app: sessão, sincronização e troca obrigatória de senha envolvem a navegação (012, 013, 016).
       _layout: () => (
         <ProvedorSessao>
           <ProvedorSincronizacao>
-            <Stack />
+            <CamadaTrocaSenha>
+              <Stack />
+            </CamadaTrocaSenha>
           </ProvedorSincronizacao>
         </ProvedorSessao>
       ),

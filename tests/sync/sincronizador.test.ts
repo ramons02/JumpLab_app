@@ -2,7 +2,7 @@ import { salvarAvaliacao } from '@/database/avaliacoes';
 import { aplicarMigracoes } from '@/database/migracoes';
 import { atualizarPaciente, buscarPaciente, inserirPaciente } from '@/database/pacientes';
 import { contarPendentes, gravarEstadoSync, lerEstadoSync } from '@/database/sincronizacao';
-import { lerSessao } from '@/sync/armazenamentoSessao';
+import { gravarSessao, lerSessao } from '@/sync/armazenamentoSessao';
 import {
   MENSAGEM_OUTRA_CONTA,
   MENSAGEM_RECEBIDO_INVALIDO,
@@ -51,6 +51,22 @@ describe('sincronizador', () => {
   });
 
   afterEach(() => db.fechar());
+
+  it('sessão com troca de senha pendente não chama a API (spec 016)', async () => {
+    await gravarSessao({
+      tokenAcesso: 'acesso-temp',
+      tokenRenovacao: 'renovacao-temp',
+      conta: { nome: 'Teste', email: ANA, admin: false, trocaSenhaObrigatoria: true },
+    });
+    await inserirPaciente(db, DADOS_PACIENTE);
+    const chamadasAntes = (global.fetch as jest.Mock).mock.calls.length;
+
+    const r = await sincronizar(db, ANA, 'manual');
+
+    expect(r).toEqual({ enviados: 0, recebidos: 0, recusados: 0, erro: null });
+    expect((global.fetch as jest.Mock).mock.calls.length).toBe(chamadasAntes);
+    expect(await contarPendentes(db)).toBe(1);
+  });
 
   describe('envio (US1)', () => {
     it('3 avaliações e 1 paciente sobem no mesmo lote, paciente antes, e deixam de estar pendentes', async () => {
