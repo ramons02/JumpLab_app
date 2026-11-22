@@ -18,6 +18,23 @@ interface CoresPersonagem {
   barra: string;
 }
 
+interface CorMusculo {
+  fundo: string;
+  fibra: string;
+}
+
+interface CoresMapa {
+  melhorar: CorMusculo;
+  ok: CorMusculo;
+  neutro: CorMusculo;
+  corpo: string;
+  contorno: string;
+  marcador: string;
+  numero: string;
+  texto: string;
+  alerta: string;
+}
+
 declare const cores: {
   fundo: string;
   cartao: string;
@@ -29,6 +46,7 @@ declare const cores: {
   aviso: { DEFAULT: string; fundo: string };
   erro: { DEFAULT: string; fundo: string };
   personagem: CoresPersonagem;
+  mapa: CoresMapa;
   marca: { fundoIcone: string };
 };
 

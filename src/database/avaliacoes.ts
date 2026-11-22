@@ -8,6 +8,7 @@ import type {
   ResumoAvaliacao,
 } from '@/types/assessment';
 import type { Attempt, NumeroTentativa, PernaTentativa } from '@/types/attempt';
+import type { PontoMelhoria } from '@/types/melhoria';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import type { MarcasRepeticao, SquatSeries } from '@/types/squat';
@@ -27,6 +28,7 @@ interface LinhaAvaliacao {
   criado_em: string;
   atualizado_em: string;
   pendente_sync: number;
+  melhorias_json: string | null;
 }
 
 interface LinhaTentativa {
@@ -39,7 +41,7 @@ interface LinhaTentativa {
 }
 
 const COLUNAS_AVALIACAO =
-  'id, paciente_id, protocolo, data_hora, perna_lesionada, carga_kg, observacoes, resultado_json, criado_em, atualizado_em, pendente_sync';
+  'id, paciente_id, protocolo, data_hora, perna_lesionada, carga_kg, observacoes, resultado_json, criado_em, atualizado_em, pendente_sync, melhorias_json';
 
 /** Confere, antes de gravar, o que o banco não enxerga: tentativas e série batem com o protocolo. */
 function conferirAvaliacao(nova: NovaAvaliacao) {
@@ -141,7 +143,7 @@ export async function salvarAvaliacao(
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
-      `INSERT INTO avaliacao (${COLUNAS_AVALIACAO}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      `INSERT INTO avaliacao (${COLUNAS_AVALIACAO}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       avaliacao.id,
       avaliacao.pacienteId,
       avaliacao.protocolo,
@@ -152,6 +154,7 @@ export async function salvarAvaliacao(
       JSON.stringify(resumo),
       avaliacao.criadoEm,
       avaliacao.atualizadoEm,
+      avaliacao.melhorias === null ? null : JSON.stringify(avaliacao.melhorias),
     );
     for (const t of avaliacao.tentativas) {
       await db.runAsync(
@@ -205,6 +208,29 @@ export function lerResumo(texto: string): ResumoAvaliacao {
   return valor as unknown as ResumoAvaliacao;
 }
 
+/** Lê melhorias_json; nulo nas avaliações antigas; formato desconhecido é defeito e sobe como erro. */
+export function lerMelhorias(texto: string | null): PontoMelhoria[] | null {
+  if (texto === null) return null;
+  let valor: unknown;
+  try {
+    valor = JSON.parse(texto);
+  } catch {
+    throw new Error('Pontos de melhoria ilegíveis.');
+  }
+  const valido =
+    Array.isArray(valor) &&
+    valor.every(
+      (p) =>
+        ehObjeto(p) &&
+        typeof p.titulo === 'string' &&
+        Array.isArray(p.grupos) &&
+        typeof p.motivo === 'string' &&
+        typeof p.foco === 'string',
+    );
+  if (!valido) throw new Error('Pontos de melhoria em formato desconhecido.');
+  return valor as PontoMelhoria[];
+}
+
 function paraTentativa(linha: LinhaTentativa): Attempt {
   return {
     perna: linha.perna,
@@ -241,6 +267,7 @@ export async function buscarAvaliacao(db: ConexaoBanco, id: string): Promise<Ass
     pendenteSync: linha.pendente_sync === 1,
     tentativas: tentativas.map(paraTentativa),
     serie: linha.protocolo === 'agach' ? await lerSerie(db, id) : null,
+    melhorias: lerMelhorias(linha.melhorias_json),
   };
 }
 
@@ -287,9 +314,12 @@ export async function listarAvaliacoesDoPaciente(
   pacienteId: string,
 ): Promise<AvaliacaoDoHistorico[]> {
   const linhas = await db.getAllAsync<
-    Pick<LinhaAvaliacao, 'id' | 'protocolo' | 'data_hora' | 'perna_lesionada' | 'resultado_json'>
+    Pick<
+      LinhaAvaliacao,
+      'id' | 'protocolo' | 'data_hora' | 'perna_lesionada' | 'resultado_json' | 'melhorias_json'
+    >
   >(
-    `SELECT id, protocolo, data_hora, perna_lesionada, resultado_json FROM avaliacao
+    `SELECT id, protocolo, data_hora, perna_lesionada, resultado_json, melhorias_json FROM avaliacao
       WHERE paciente_id = ? ORDER BY data_hora ASC, criado_em ASC`,
     pacienteId,
   );
@@ -299,5 +329,6 @@ export async function listarAvaliacoesDoPaciente(
     dataHora: linha.data_hora,
     pernaLesionada: linha.perna_lesionada,
     resumo: lerResumo(linha.resultado_json),
+    melhorias: lerMelhorias(linha.melhorias_json),
   }));
 }

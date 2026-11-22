@@ -68,6 +68,9 @@ const MIGRACOES: readonly string[] = [
      PRIMARY KEY (avaliacao_id, numero),
      CHECK (inicio_quadro < fundo_quadro AND fundo_quadro < fim_quadro)
    );`,
+
+  // 3. melhorias (spec 017): pontos de "O que melhorar" revisados; nulo nas avaliações antigas.
+  `ALTER TABLE avaliacao ADD COLUMN melhorias_json TEXT;`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */

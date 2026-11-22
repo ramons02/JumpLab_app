@@ -34,6 +34,18 @@ module.exports = {
     anilhaBorda: '#94a3b8',
     barra: '#cbd5e1',
   },
+  // Mapa muscular do "O que melhorar" (spec 017, research R3b): vermelho melhorar, verde ok
+  mapa: {
+    melhorar: { fundo: '#c4300f', fibra: '#8a1c06' },
+    ok: { fundo: '#2f9e57', fibra: '#1d6b3a' },
+    neutro: { fundo: '#4a5551', fibra: '#5d6a65' },
+    corpo: '#323c39',
+    contorno: '#4c5853',
+    marcador: '#d8e0dd',
+    numero: '#1b2321',
+    texto: '#aebbb5',
+    alerta: '#f87171',
+  },
   marca: { fundoIcone: '#1b1b1b' },
   // linhas dos gráficos de evolução (spec 009), valores do protótipo
   grafico: {

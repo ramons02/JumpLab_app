@@ -37,6 +37,7 @@ export function novaAvaliacao(
     cargaKg: null,
     tentativas,
     serie: null,
+    melhorias: null,
     ...extra,
   };
 }
