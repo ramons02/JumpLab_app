@@ -37,6 +37,7 @@ export const MOTIVO_PES_INSUFICIENTES =
   'Os pés não aparecem em quadros suficientes (pessoa cortada, pouca luz ou câmera mexendo).';
 export const MOTIVO_SEM_SALTO = 'Não achei a decolagem e a aterrissagem no vídeo.';
 export const MOTIVO_SEM_TOQUE = 'Não achei o toque no solo depois da queda da caixa.';
+export const MOTIVO_VIDEO_ILEGIVEL = 'Não consegui ler os quadros deste vídeo.';
 
 /** Pontos mínimos dos pés visíveis num quadro para ele contar (igual ao protótipo). */
 const MINIMO_PONTOS_VISIVEIS = 2;
@@ -200,4 +201,13 @@ export function janelasDeRefino(serieGrossa: AlturaDosPes[], total: number): num
 /** Diferença entre o quadro marcado e o sugerido (positivo: o avaliador avançou). */
 export function ajusteDaSugestao(sugerido: number, marcado: number): number {
   return marcado - sugerido;
+}
+
+/** "conferido" quando o marcado é o sugerido; senão "ajustado +K quadro(s)" ou "-K" (RN08). */
+export function textoDoAjuste(sugerido: number, marcado: number): string {
+  const ajuste = ajusteDaSugestao(sugerido, marcado);
+  if (ajuste === 0) return 'conferido';
+  const sinal = ajuste > 0 ? '+' : '-';
+  const quadros = Math.abs(ajuste);
+  return `ajustado ${sinal}${quadros} quadro${quadros === 1 ? '' : 's'}`;
 }

@@ -199,6 +199,19 @@ describe('sugestão e vídeo (spec 018)', () => {
     expect(definirVideo(comSugestao, video('b', 240)).sugestao).toBeNull();
   });
 
+  it('trocarFps e confirmarFps mantêm a sugestão (ela é em quadros)', () => {
+    const t = congelada({
+      video: video('a', 240),
+      fpsSelecionado: 240,
+      fpsConfirmado: 240,
+      marcas: {},
+      sugestao: pronta,
+    });
+    const trocada = trocarFps(t);
+    expect(trocada.sugestao).toEqual(pronta);
+    expect(confirmarFps(trocada).sugestao).toEqual(pronta);
+  });
+
   it('definirSugestao troca só a sugestão', () => {
     const t = congelada({ ...VAZIA, marcas: { decolagem: 5 } });
     expect(definirSugestao(t, pronta)).toEqual({ ...t, sugestao: pronta });

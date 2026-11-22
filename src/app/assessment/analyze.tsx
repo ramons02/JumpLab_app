@@ -8,13 +8,16 @@ import { AvisoFps } from '@/components/AvisoFps';
 import { BotaoVerResultado } from '@/components/BotaoVerResultado';
 import { EscolherVideo } from '@/components/EscolherVideo';
 import { PainelMarcacao } from '@/components/PainelMarcacao';
+import { PainelSugestao } from '@/components/PainelSugestao';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
 import { SeletorFps } from '@/components/SeletorFps';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
 import { useConfirmarSaida } from '@/hooks/useConfirmarSaida';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
+import { usePreferencias } from '@/hooks/usePreferencias';
 import { useQuadroPorTentativa } from '@/hooks/useQuadroPorTentativa';
 import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
+import { useSugestaoQuadros } from '@/hooks/useSugestaoQuadros';
 import { useTentativaAtual } from '@/hooks/useTentativaAtual';
 import type { EventoSalto, NumeroTentativa, PernaTentativa } from '@/types/attempt';
 import { avisoDoFps } from '@/utils/fps';
@@ -42,6 +45,8 @@ function Analisador({ rascunho, pernas }: AnalisadorProps) {
   const [numero, setNumero] = useState<NumeroTentativa>(1);
   const [recusa, setRecusa] = useState<string | null>(null);
   const atual = useTentativaAtual(perna, numero);
+  const { sugestaoLigada } = usePreferencias();
+  const sugestao = useSugestaoQuadros(perna, numero);
   const { tentativa } = atual;
   const { protocolo, tentativas } = rascunho;
   const info = PROTOCOLOS[protocolo];
@@ -136,6 +141,16 @@ function Analisador({ rascunho, pernas }: AnalisadorProps) {
         <Text className="text-center text-xs text-textoSecundario">
           Confirme o FPS para liberar as marcações.
         </Text>
+      ) : null}
+      {sugestaoLigada && tentativa.video && tentativa.fpsConfirmado !== null ? (
+        <PainelSugestao
+          protocolo={protocolo}
+          sugestao={sugestao.sugestao}
+          progresso={sugestao.progresso}
+          marcas={tentativa.marcas}
+          aoSugerir={() => void sugestao.sugerir()}
+          aoIrAoQuadro={setQuadro}
+        />
       ) : null}
       {tentativa.video ? (
         <PainelMarcacao

@@ -10,6 +10,7 @@ import {
   MOTIVO_SEM_TOQUE,
   quadrosDaPassadaGrossa,
   sugerirQuadrosPelosPes,
+  textoDoAjuste,
 } from '@/utils/sugestaoQuadros';
 
 const CHAO = 0.9;
@@ -270,5 +271,13 @@ describe('ajusteDaSugestao', () => {
     expect(ajusteDaSugestao(299, 300)).toBe(1);
     expect(ajusteDaSugestao(300, 300)).toBe(0);
     expect(ajusteDaSugestao(302, 300)).toBe(-2);
+  });
+});
+
+describe('textoDoAjuste', () => {
+  it('conferido ou ajustado com sinal e plural', () => {
+    expect(textoDoAjuste(300, 300)).toBe('conferido');
+    expect(textoDoAjuste(299, 300)).toBe('ajustado +1 quadro');
+    expect(textoDoAjuste(300, 297)).toBe('ajustado -3 quadros');
   });
 });

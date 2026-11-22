@@ -3,22 +3,32 @@ import { Pressable, Text, View } from 'react-native';
 import type { EventoSalto, MarcasSalto } from '@/types/attempt';
 import type { Protocol } from '@/types/protocol';
 import { eventosDoProtocolo, rotuloDoEvento } from '@/utils/marcacoes';
+import { textoDoAjuste } from '@/utils/sugestaoQuadros';
 
 interface BotoesMarcacaoProps {
   protocolo: Protocol;
   marcas: MarcasSalto;
   liberadas: boolean;
   aoMarcar: (evento: EventoSalto) => void;
+  /** Quadros da sugestão pronta (spec 018); com eles, o evento marcado diz se conferiu ou ajustou. */
+  quadrosSugeridos?: MarcasSalto;
 }
 
 /** Um botão por evento do protocolo; marca no quadro atual do vídeo (spec 007). */
-export function BotoesMarcacao({ protocolo, marcas, liberadas, aoMarcar }: BotoesMarcacaoProps) {
+export function BotoesMarcacao({
+  protocolo,
+  marcas,
+  liberadas,
+  aoMarcar,
+  quadrosSugeridos,
+}: BotoesMarcacaoProps) {
   return (
     <View className="flex-row gap-2">
       {eventosDoProtocolo(protocolo).map((evento) => {
         const rotulo = rotuloDoEvento(evento, protocolo);
         const quadro = marcas[evento];
         const marcado = quadro !== undefined;
+        const sugerido = quadrosSugeridos?.[evento];
         return (
           <Pressable
             key={evento}
@@ -37,6 +47,15 @@ export function BotoesMarcacao({ protocolo, marcas, liberadas, aoMarcar }: Botoe
             <Text className="mt-0.5 text-[11px] text-textoSecundario">
               {marcado ? `quadro ${quadro}` : 'não marcado'}
             </Text>
+            {marcado && sugerido !== undefined ? (
+              <Text
+                className={`mt-0.5 text-[11px] font-semibold ${
+                  quadro === sugerido ? 'text-destaque' : 'text-aviso'
+                }`}
+              >
+                {textoDoAjuste(sugerido, quadro)}
+              </Text>
+            ) : null}
           </Pressable>
         );
       })}
