@@ -4,6 +4,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import { CartaoMedida, type CorCartao } from '@/components/CartaoMedida';
 import { DadosPaciente } from '@/components/DadosPaciente';
 import { ItemAvaliacao } from '@/components/ItemAvaliacao';
+import { SecaoGraficos } from '@/components/SecaoGraficos';
 import { TopoParallax } from '@/components/TopoParallax';
 import { useParallaxSalto, type ParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
@@ -149,6 +150,7 @@ function CabecalhoPerfil({
           }
         />
       </View>
+      <SecaoGraficos avaliacoes={avaliacoes} pernaLesionada={paciente.pernaLesionada} />
       <Text className="text-sm font-semibold text-textoSecundario">Avaliações</Text>
     </View>
   );
