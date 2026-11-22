@@ -75,3 +75,60 @@ export function RascunhoPronto({
     </>
   );
 }
+
+interface SeriePronta {
+  pacienteId: string;
+  cargaKg: number;
+  serie: import('@/types/squat').SquatSeries;
+}
+
+/** Analisador simulado do agachamento: vídeo, FPS confirmado e a série marcada no rascunho. */
+export function SerieAgachamentoPronta({ pacienteId, cargaKg, serie }: SeriePronta) {
+  const { rascunho, iniciarRascunho, atualizarTentativas, atualizarSerie } = useRascunhoAvaliacao();
+  const router = useRouter();
+  const gravado = useRef(false);
+  useEffect(() => {
+    if (gravado.current) return;
+    gravado.current = true;
+    const uri = 'file:///cache/serie.mp4';
+    iniciarRascunho({
+      pacienteId,
+      protocolo: 'agach',
+      cargaKg,
+      dataHora: '2026-11-22T10:30',
+      pernaLesionada: 'nenhuma',
+    });
+    atualizarTentativas(() => ({
+      unica: [
+        {
+          video: {
+            uri,
+            nome: 'serie.mp4',
+            duracaoS: 10,
+            fpsLido: serie.fps,
+            fpsDoArquivo: serie.fps,
+            temporario: true,
+          },
+          fpsSelecionado: serie.fps,
+          fpsConfirmado: serie.fps,
+          marcas: {},
+        },
+      ],
+    }));
+    atualizarSerie(() => ({
+      uriDoVideo: uri,
+      calibracao: { ...serie.calibracao },
+      repeticoes: serie.repeticoes,
+    }));
+  }, [iniciarRascunho, atualizarTentativas, atualizarSerie, pacienteId, cargaKg, serie]);
+  return (
+    <>
+      <Text>Analisador</Text>
+      {rascunho?.serie?.calibracao ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/assessment/result')}>
+          <Text>Ver resultado</Text>
+        </Pressable>
+      ) : null}
+    </>
+  );
+}

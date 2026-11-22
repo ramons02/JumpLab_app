@@ -19,7 +19,7 @@ function tentativaVazia(): TentativaEmAndamento {
   return { video: null, fpsSelecionado: null, fpsConfirmado: null, marcas: {} };
 }
 
-/** Pernas medidas no protocolo. O agachamento é uma série única, fora desta spec (spec 014). */
+/** Pernas medidas no salto. O agachamento não tem pernas: é uma série única (spec 014). */
 export function pernasDoProtocolo(protocolo: Protocol): PernaTentativa[] {
   const info = PROTOCOLOS[protocolo];
   if (info.agachamento) return [];
@@ -27,6 +27,8 @@ export function pernasDoProtocolo(protocolo: Protocol): PernaTentativa[] {
 }
 
 export function criarTentativasVazias(protocolo: Protocol): TentativasPorPerna {
+  // Agachamento: série única, com um só vídeo na tentativa `unica` (spec 014).
+  if (PROTOCOLOS[protocolo].agachamento) return { unica: [tentativaVazia()] };
   const tentativas: TentativasPorPerna = {};
   for (const perna of pernasDoProtocolo(protocolo)) {
     tentativas[perna] = Array.from({ length: TENTATIVAS_POR_PERNA }, tentativaVazia);

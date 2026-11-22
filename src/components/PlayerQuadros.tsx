@@ -1,12 +1,14 @@
 import { VideoView } from 'expo-video';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { BarraDeQuadros } from '@/components/BarraDeQuadros';
 import { LinhaGuia } from '@/components/LinhaGuia';
+import { useAreaDoVideo } from '@/hooks/useAreaDoVideo';
 import { useTocadorQuadros } from '@/hooks/useTocadorQuadros';
 import type { VideoSelecionado } from '@/types/attempt';
 import { tempoS } from '@/utils/biomechanics';
+import type { Dimensoes } from '@/utils/coordenadaVideo';
 import { formatarDecimal } from '@/utils/formatacao';
 import { fpsDeNavegacao, podeAvancar, podeVoltar } from '@/utils/quadros';
 
@@ -17,6 +19,8 @@ interface PlayerQuadrosProps {
   fpsConfirmado: number | null;
   quadro: number;
   onMudarQuadro(quadro: number): void;
+  /** Camada sobre a imagem e abaixo da linha guia (toques e marcadores do agachamento, spec 014). */
+  camadaSobreImagem?: (area: Dimensoes, video: Dimensoes | null) => ReactNode;
 }
 
 function BotaoQuadro({
@@ -48,16 +52,27 @@ function BotaoQuadro({
 }
 
 /** Vídeo quadro a quadro: imagem parada, número do quadro, barra e botões de -1 e +1 quadro. */
-export function PlayerQuadros({ video, fpsConfirmado, quadro, onMudarQuadro }: PlayerQuadrosProps) {
+export function PlayerQuadros({
+  video,
+  fpsConfirmado,
+  quadro,
+  onMudarQuadro,
+  camadaSobreImagem,
+}: PlayerQuadrosProps) {
   const fps = fpsDeNavegacao(video, fpsConfirmado);
   const tocador = useTocadorQuadros({ video, fps, quadro, onMudarQuadro });
   const [previa, setPrevia] = useState<number | null>(null);
+  const imagem = useAreaDoVideo(tocador.player);
   const navegavel = fps !== null;
   const exibido = previa ?? quadro;
 
   return (
     <View className="gap-3">
-      <View className="h-80 w-full overflow-hidden rounded-2xl border border-borda bg-fundo">
+      <View
+        testID="imagem-video"
+        className="h-80 w-full overflow-hidden rounded-2xl border border-borda bg-fundo"
+        onLayout={imagem.aoMedir}
+      >
         <VideoView
           testID="video-quadros"
           player={tocador.player}
@@ -65,6 +80,7 @@ export function PlayerQuadros({ video, fpsConfirmado, quadro, onMudarQuadro }: P
           contentFit="contain"
           style={{ flex: 1 }}
         />
+        {camadaSobreImagem && imagem.area ? camadaSobreImagem(imagem.area, imagem.video) : null}
         <LinhaGuia />
       </View>
 

@@ -2,6 +2,7 @@ import type { Attempt } from '@/types/attempt';
 import type { PernaLesionada } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import type { ResultadoSalto } from '@/types/resultadoSalto';
+import type { ResumoAgachamento, SquatSeries } from '@/types/squat';
 
 /** O que vai para resultado_json: o ResultadoSalto da spec 007 mais versao e tipo, sem recálculo. */
 export interface ResumoSalto extends ResultadoSalto {
@@ -9,8 +10,7 @@ export interface ResumoSalto extends ResultadoSalto {
   tipo: 'salto';
 }
 
-/** A HU014 acrescenta a variante do agachamento a esta união. */
-export type ResumoAvaliacao = ResumoSalto;
+export type ResumoAvaliacao = ResumoSalto | ResumoAgachamento;
 
 export interface NovaAvaliacao {
   pacienteId: string;
@@ -20,6 +20,8 @@ export interface NovaAvaliacao {
   pernaLesionada: PernaLesionada;
   cargaKg: number | null;
   tentativas: Attempt[];
+  /** Só no agachamento (HU014). */
+  serie: SquatSeries | null;
 }
 
 export interface Assessment extends NovaAvaliacao {

@@ -5,6 +5,14 @@ export const CASAS_MARGEM = 1;
 export const CASAS_TEMPO_MS = 0;
 export const CASAS_RSI = 2;
 export const CASAS_LSI = 1;
+// Agachamento com barra (spec 014, research R7). CASAS_VELOCIDADE também é usada pelas specs 003 e 009.
+export const CASAS_VELOCIDADE = 2;
+export const CASAS_TEMPO_AGACH_S = 2;
+export const CASAS_AMPLITUDE = 1;
+export const CASAS_PERDA = 1;
+export const CASAS_POTENCIA = 0;
+export const CASAS_CARGA = 1;
+export const CASAS_PX_POR_CM = 2;
 
 const FORMATOS = new Map<number, Intl.NumberFormat>();
 

@@ -31,6 +31,7 @@ describe('useRascunhoAvaliacao', () => {
     expect(result.current.rascunho).toEqual({
       ...RASCUNHO,
       tentativas: criarTentativasVazias('cmj_bi'),
+      serie: null,
     });
   });
 
@@ -59,7 +60,15 @@ describe('useRascunhoAvaliacao', () => {
     await act(async () => result.current.iniciarRascunho(RASCUNHO));
     const novo: DadosRascunho = { ...RASCUNHO, protocolo: 'agach', cargaKg: 60 };
     await act(async () => result.current.iniciarRascunho(novo));
-    expect(result.current.rascunho).toEqual({ ...novo, tentativas: {} });
+    expect(result.current.rascunho).toEqual({
+      ...novo,
+      tentativas: criarTentativasVazias('agach'),
+      serie: {
+        uriDoVideo: null,
+        calibracao: null,
+        repeticoes: [{ inicio: null, fundo: null, fim: null }],
+      },
+    });
   });
 
   it('descartarRascunho limpa', async () => {

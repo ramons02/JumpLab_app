@@ -1,6 +1,8 @@
 import {
+  cicloAgachamento,
   ESTADO_PARADO,
   estadoDoSalto,
+  PERIODO_AGACHAMENTO_S,
   PX_DESENHO_POR_CM,
   poseDesenho,
   progressoDaRolagem,
@@ -96,5 +98,27 @@ describe('poseDesenho', () => {
     expect(poseDesenho(ESTADO_PARADO, 0.7).yOmbro).not.toBe(poseDesenho(ESTADO_PARADO, 0).yOmbro);
     const agachado = { ...ESTADO_PARADO, agachamento: 0.5 };
     expect(poseDesenho(agachado, 0.7)).toEqual(poseDesenho(agachado, 0));
+  });
+});
+
+describe('cicloAgachamento', () => {
+  it('em pé no início, agachado ao máximo perto de 45% e de volta em pé depois de 70%', () => {
+    expect(cicloAgachamento(0).agachamento).toBe(0);
+    expect(cicloAgachamento(PERIODO_AGACHAMENTO_S * 0.45).agachamento).toBeCloseTo(1, 5);
+    expect(cicloAgachamento(PERIODO_AGACHAMENTO_S * 0.3).agachamento).toBeGreaterThan(0.5);
+    expect(cicloAgachamento(PERIODO_AGACHAMENTO_S * 0.75).agachamento).toBe(0);
+  });
+
+  it('sempre com a barra e sem sair do chão', () => {
+    for (const s of [0, 0.7, 1.5, 2.9]) {
+      expect(cicloAgachamento(s)).toMatchObject({ barra: true, subidaPx: 0 });
+    }
+  });
+
+  it('repete a cada período', () => {
+    expect(cicloAgachamento(1.1 + PERIODO_AGACHAMENTO_S).agachamento).toBeCloseTo(
+      cicloAgachamento(1.1).agachamento,
+      10,
+    );
   });
 });

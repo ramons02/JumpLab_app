@@ -36,6 +36,7 @@ export function novaAvaliacao(
     pernaLesionada: 'direita',
     cargaKg: null,
     tentativas,
+    serie: null,
     ...extra,
   };
 }

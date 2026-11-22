@@ -4,7 +4,9 @@ import { useCallback, useRef, useState } from 'react';
 import { salvarAvaliacao } from '@/database/avaliacoes';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import type { Assessment, NovaAvaliacao } from '@/types/assessment';
-import { montarResumoSalto } from '@/utils/resumoAvaliacao';
+import { paraSerie } from '@/utils/marcacaoAgachamento';
+import { PROTOCOLOS } from '@/utils/protocolos';
+import { montarResumo } from '@/utils/resumoAvaliacao';
 import { tentativasConcluidas } from '@/utils/tentativas';
 import { descartarVideos } from '@/video/descartarVideos';
 
@@ -13,6 +15,20 @@ export function avaliacaoDoRascunho(
   rascunho: ReturnType<typeof useRascunhoAvaliacao>['rascunho'],
 ): NovaAvaliacao | null {
   if (!rascunho) return null;
+  if (PROTOCOLOS[rascunho.protocolo].agachamento) {
+    const fps = rascunho.tentativas.unica?.[0]?.fpsConfirmado ?? null;
+    const serie = rascunho.serie ? paraSerie(fps, rascunho.serie) : null;
+    if (!serie) return null;
+    return {
+      pacienteId: rascunho.pacienteId,
+      protocolo: rascunho.protocolo,
+      dataHora: rascunho.dataHora,
+      pernaLesionada: rascunho.pernaLesionada,
+      cargaKg: rascunho.cargaKg,
+      tentativas: [],
+      serie,
+    };
+  }
   return {
     pacienteId: rascunho.pacienteId,
     protocolo: rascunho.protocolo,
@@ -20,6 +36,7 @@ export function avaliacaoDoRascunho(
     pernaLesionada: rascunho.pernaLesionada,
     cargaKg: rascunho.cargaKg,
     tentativas: tentativasConcluidas(rascunho.tentativas, rascunho.protocolo),
+    serie: null,
   };
 }
 
@@ -40,7 +57,7 @@ export function useSalvarAvaliacao() {
       emAndamento.current = true;
       setSalvando(true);
       try {
-        const salva = await salvarAvaliacao(db, nova, montarResumoSalto(nova), observacoes);
+        const salva = await salvarAvaliacao(db, nova, montarResumo(nova), observacoes);
         await descartarVideos(rascunho.tentativas).catch(() => undefined);
         descartarRascunho();
         return salva;

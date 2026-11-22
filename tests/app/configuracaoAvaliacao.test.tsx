@@ -127,6 +127,7 @@ describe('tela de configuração da avaliação', () => {
       dataHora: '2026-11-22T10:30',
       pernaLesionada: 'direita',
       tentativas: criarTentativasVazias('cmj_bi'),
+      serie: null,
     });
   });
 

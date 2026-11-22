@@ -13,6 +13,15 @@ import type {
   ResumoLsi,
   ResumoPerna,
 } from '@/types/resultadoSalto';
+import type {
+  CalibracaoDisco,
+  CorPerda,
+  MarcaBarra,
+  MarcasRepeticao,
+  ResultadoAgachamento,
+  ResultadoRepeticao,
+  SquatSeries,
+} from '@/types/squat';
 import { CASAS_LSI } from '@/utils/formatacao';
 import { ehBaixaPrecisao } from '@/utils/fps';
 
@@ -188,4 +197,79 @@ export function calcularResultadoSalto(
     lsi,
     baixaPrecisao: Object.values(pernas).some((perna) => perna.baixaPrecisao),
   };
+}
+
+/* Agachamento com barra (HU014): velocidade da subida pela calibração do disco. */
+
+/** Diâmetro do disco olímpico, usado para calibrar pixels por centímetro. */
+export const DIAMETRO_DISCO_CM = 45;
+/** Perda de velocidade até 20% é verde; até 40% amarela; acima, vermelha. */
+export const PERDA_LIMITE_VERDE = 20;
+export const PERDA_LIMITE_AMARELO = 40;
+
+/** Escala da imagem: distância entre topo e base do disco dividida pelo diâmetro real. */
+export function pixelsPorCm(calibracao: CalibracaoDisco): number {
+  const { topoY, baseY } = calibracao;
+  if (!Number.isFinite(topoY) || !Number.isFinite(baseY) || topoY === baseY) {
+    throw new Error('Topo e base do disco no mesmo ponto. Refaça a calibração.');
+  }
+  return Math.abs(baseY - topoY) / DIAMETRO_DISCO_CM;
+}
+
+function repeticaoCompletaNaSerie(
+  r: MarcasRepeticao,
+): r is Record<'inicio' | 'fundo' | 'fim', MarcaBarra> {
+  return r.inicio !== null && r.fundo !== null && r.fim !== null;
+}
+
+/** Descida, subida, amplitude, velocidade e potência por repetição; melhores e perda na série. */
+export function medirAgachamento(serie: SquatSeries, cargaKg: number): ResultadoAgachamento {
+  exigirFpsValido(serie.fps);
+  if (!Number.isFinite(cargaKg) || cargaKg <= 0) {
+    throw new Error('A carga precisa ser maior que zero.');
+  }
+  const escala = pixelsPorCm(serie.calibracao);
+  const completas = serie.repeticoes.filter(repeticaoCompletaNaSerie);
+  if (completas.length === 0) {
+    throw new Error('Marque ao menos uma repetição completa.');
+  }
+
+  const repeticoes = completas.map(({ inicio, fundo, fim }, indice): ResultadoRepeticao => {
+    if (!(inicio.quadro < fundo.quadro && fundo.quadro < fim.quadro)) {
+      throw new Error('A ordem é início da descida, fundo e fim da subida.');
+    }
+    const subidaS = tempoS(fundo.quadro, fim.quadro, serie.fps);
+    const amplitudeCm = Math.abs(fundo.y - fim.y) / escala;
+    const velocidadeMs = amplitudeCm / CM_POR_M / subidaS;
+    return {
+      numero: indice + 1,
+      descidaS: tempoS(inicio.quadro, fundo.quadro, serie.fps),
+      subidaS,
+      amplitudeCm,
+      velocidadeMs,
+      potenciaW: cargaKg * GRAVIDADE * velocidadeMs,
+    };
+  });
+
+  const melhorVelocidadeMs = Math.max(...repeticoes.map((r) => r.velocidadeMs));
+  const ultima = repeticoes[repeticoes.length - 1].velocidadeMs;
+  return {
+    cargaKg,
+    fps: serie.fps,
+    repeticoes,
+    melhorVelocidadeMs,
+    melhorPotenciaW: Math.max(...repeticoes.map((r) => r.potenciaW)),
+    perdaVelocidadePct:
+      repeticoes.length < 2
+        ? null
+        : ((melhorVelocidadeMs - ultima) / melhorVelocidadeMs) * PORCENTO,
+  };
+}
+
+/** Semáforo da perda de velocidade (fadiga). */
+export function corPerda(perdaPct: number | null): CorPerda {
+  if (perdaPct === null) return 'neutro';
+  if (perdaPct <= PERDA_LIMITE_VERDE) return 'verde';
+  if (perdaPct <= PERDA_LIMITE_AMARELO) return 'amarelo';
+  return 'vermelho';
 }
