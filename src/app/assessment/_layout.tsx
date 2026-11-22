@@ -9,6 +9,7 @@ export default function LayoutAvaliacao() {
     <RascunhoAvaliacaoProvider>
       <Stack screenOptions={{ headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 26 } }}>
         <Stack.Screen name="setup" options={{ title: 'NOVA AVALIAÇÃO' }} />
+        <Stack.Screen name="analyze" options={{ title: 'ANALISADOR DE VÍDEO' }} />
       </Stack>
     </RascunhoAvaliacaoProvider>
   );
