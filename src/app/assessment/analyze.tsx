@@ -9,6 +9,7 @@ import { BotaoVerResultado } from '@/components/BotaoVerResultado';
 import { EscolherVideo } from '@/components/EscolherVideo';
 import { PainelMarcacao } from '@/components/PainelMarcacao';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
+import { useMargemInferior } from '@/components/RodapeFixo';
 import { SeletorFps } from '@/components/SeletorFps';
 import { SugestaoDaTentativa } from '@/components/SugestaoDaTentativa';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
@@ -38,6 +39,7 @@ interface AnalisadorProps {
 
 function Analisador({ rascunho, pernas }: AnalisadorProps) {
   const router = useRouter();
+  const margemInferior = useMargemInferior();
   const { paciente } = usePerfilPaciente(rascunho.pacienteId);
   const [perna, setPerna] = useState<PernaTentativa>(pernas[0]);
   const [numero, setNumero] = useState<NumeroTentativa>(1);
@@ -69,7 +71,11 @@ function Analisador({ rascunho, pernas }: AnalisadorProps) {
   useConfirmarSaida(tentativas);
 
   return (
-    <ScrollView className="flex-1 bg-fundo" contentContainerClassName="gap-4 p-4 pb-8">
+    <ScrollView
+      className="flex-1 bg-fundo"
+      contentContainerClassName="gap-4 p-4"
+      contentContainerStyle={{ paddingBottom: 32 + margemInferior }}
+    >
       <Text className="text-xs text-textoSecundario">
         {info.nome}
         {paciente ? ` · ${paciente.nome}` : ''}

@@ -2,6 +2,7 @@ import { Redirect, Stack, usePreventRemove, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, ToastAndroid, View } from 'react-native';
 
+import { RodapeFixo } from '@/components/RodapeFixo';
 import { BlocoResultado } from '@/components/BlocoResultado';
 import { SecaoMelhorias } from '@/components/SecaoMelhorias';
 import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
@@ -147,7 +148,7 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
         </Text>
         <View style={{ height: ESPACO_FINAL_PX }} />
       </ScrollView>
-      <View className="flex-row gap-3 border-t border-borda bg-fundo p-4">
+      <RodapeFixo className="flex-row gap-3">
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: ocupado }}
@@ -166,7 +167,7 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
         >
           <Text className="text-sm font-semibold text-fundo">Salvar e exportar PDF</Text>
         </Pressable>
-      </View>
+      </RodapeFixo>
     </View>
   );
 }

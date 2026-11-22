@@ -6,6 +6,7 @@ import { AvisoFps } from '@/components/AvisoFps';
 import { CamadaToqueVideo, type MarcadorImagem } from '@/components/CamadaToqueVideo';
 import { PainelAgachamento } from '@/components/PainelAgachamento';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
+import { useMargemInferior } from '@/components/RodapeFixo';
 import { SeletorFps } from '@/components/SeletorFps';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
 import { useAbrirCamera } from '@/hooks/useAbrirCamera';
@@ -66,6 +67,7 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
   const { paciente } = usePerfilPaciente(rascunho.pacienteId);
   const atual = useTentativaAtual('unica', 1);
   const gravar = useAbrirCamera('unica', 1);
+  const margemInferior = useMargemInferior();
   const { tentativa } = atual;
   const uri = tentativa.video?.uri ?? null;
   const [estadoQuadro, setEstadoQuadro] = useState({ uri, quadro: 0 });
@@ -92,7 +94,11 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
   });
 
   return (
-    <ScrollView className="flex-1 bg-fundo" contentContainerClassName="gap-4 p-4 pb-8">
+    <ScrollView
+      className="flex-1 bg-fundo"
+      contentContainerClassName="gap-4 p-4"
+      contentContainerStyle={{ paddingBottom: 32 + margemInferior }}
+    >
       <Text className="text-xs text-textoSecundario">
         {PROTOCOLOS.agach.nome}
         {rascunho.cargaKg ? ` · ${formatarCarga(rascunho.cargaKg)} kg` : ''}

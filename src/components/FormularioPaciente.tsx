@@ -2,6 +2,7 @@ import { usePreventRemove } from 'expo-router';
 import { useRef } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { RodapeFixo } from '@/components/RodapeFixo';
 import { CampoData } from '@/components/CampoData';
 import { CampoTexto } from '@/components/CampoTexto';
 import { SeletorOpcoes } from '@/components/SeletorOpcoes';
@@ -91,7 +92,7 @@ export function FormularioPaciente({ gravar, aoSalvar, pacienteInicial }: Formul
           erro={erros.dataLesao}
         />
       </ScrollView>
-      <View className="border-t border-borda bg-cartao p-4">
+      <RodapeFixo fundo="bg-cartao">
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: salvando }}
@@ -103,7 +104,7 @@ export function FormularioPaciente({ gravar, aoSalvar, pacienteInicial }: Formul
             {salvando ? 'Salvando...' : 'Salvar'}
           </Text>
         </Pressable>
-      </View>
+      </RodapeFixo>
     </View>
   );
 }

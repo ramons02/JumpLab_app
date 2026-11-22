@@ -51,7 +51,7 @@ export function TopoResultado({ parallax, topo }: { parallax: ParallaxSalto; top
   return (
     <TopoParallax parallax={parallax} altura={ALTURA_TOPO} ciclo={topo.ciclo}>
       <Text className="text-xs font-semibold uppercase text-destaque">{topo.rotulo}</Text>
-      <Text className="font-titulo text-4xl text-texto">{topo.valor}</Text>
+      <Text className="font-titulo text-4xl leading-[46px] text-texto">{topo.valor}</Text>
     </TopoParallax>
   );
 }
