@@ -1,7 +1,7 @@
 import type { Protocol } from '@/types/protocol';
 import { montarGraficoLsi, montarGraficoProtocolo, protocolosAvaliados } from '@/utils/evolucao';
 
-import { agachamento, lsi, perna, salto } from '../helpers/historicoDeTeste';
+import { agachamento, lsi, perna, salto } from '../helpers/historicoDoLaudo';
 
 const LIMITE_MS = 100;
 

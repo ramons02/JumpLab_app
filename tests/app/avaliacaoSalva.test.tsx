@@ -60,7 +60,7 @@ describe('avaliação salva (só leitura)', () => {
     await abrir(salva.id);
 
     expect(await screen.findByText('Somente leitura')).toBeOnTheScreen();
-    expect(screen.getByText('84,0%')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('cartao-lsi')).getByText('84,0%')).toBeOnTheScreen();
     expect(screen.getByText('Perna direita (lesionada)')).toBeOnTheScreen();
     expect(screen.getByTestId('observacoes')).toHaveTextContent('Leve valgo no pouso.');
     expect(screen.queryByLabelText('Observações')).toBeNull();
@@ -88,5 +88,37 @@ describe('avaliação salva (só leitura)', () => {
   it('id inválido também mostra a mensagem', async () => {
     await abrir('nao-e-uuid');
     expect(await screen.findByText('Avaliação não encontrada.')).toBeOnTheScreen();
+  });
+
+  it('mostra "O que melhorar" com os pontos gravados, só leitura', async () => {
+    const salva = await gravarAvaliacao();
+    await bancoDaTela().runAsync(
+      'UPDATE avaliacao SET melhorias_json = ? WHERE id = ?',
+      JSON.stringify([
+        {
+          titulo: 'Glúteo médio',
+          grupos: [],
+          motivo: 'citado pelo avaliador',
+          foco: '',
+          origem: 'avaliador',
+        },
+      ]),
+      salva.id,
+    );
+    await abrir(salva.id);
+
+    expect(await screen.findByText('O que melhorar')).toBeOnTheScreen();
+    expect(screen.getByText('Glúteo médio')).toBeOnTheScreen();
+    expect(screen.queryByText(/Força e potência/)).toBeNull();
+    expect(screen.queryByLabelText('Acrescentar ponto')).toBeNull();
+  });
+
+  it('avaliação antiga (sem pontos gravados) mostra as sugestões calculadas na hora', async () => {
+    const salva = await gravarAvaliacao(); // LSI 84,0% com a direita lesionada
+    await abrir(salva.id);
+
+    expect(
+      await screen.findByText('Força e potência da perna direita (lesionada)'),
+    ).toBeOnTheScreen();
   });
 });

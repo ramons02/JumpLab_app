@@ -76,6 +76,9 @@ const MIGRACOES: readonly string[] = [
      registro TEXT NOT NULL,
      atualizado_em TEXT NOT NULL
    );`,
+
+  // 4. melhorias (spec 017): pontos de "O que melhorar" revisados; nulo nas avaliações antigas.
+  `ALTER TABLE avaliacao ADD COLUMN melhorias_json TEXT;`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */

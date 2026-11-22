@@ -5,7 +5,7 @@ import {
   temPontosSuficientes,
 } from '@/utils/evolucao';
 
-import { agachamento, lsi, perna, salto } from '../helpers/historicoDeTeste';
+import { agachamento, lsi, perna, salto } from '../helpers/historicoDoLaudo';
 
 const valores = (pontos: ({ valor: number } | null)[]) => pontos.map((p) => p?.valor ?? null);
 
