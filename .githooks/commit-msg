@@ -1,0 +1,16 @@
+#!/bin/sh
+# Recusa mensagens de commit fora da regra da constituicao do JumpLab
+# (travessao, meia-risca, emoji, Co-Authored-By, "Generated with" e mencao a IA).
+msg_file="$1"
+
+recusar() {
+    echo "commit-msg: mensagem recusada: $1" >&2
+    exit 1
+}
+
+grep -q -e '—' -e '–' "$msg_file" && recusar "travessao ou meia-risca"
+grep -qP '[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}]' "$msg_file" && recusar "emoji"
+grep -qi 'co-authored-by' "$msg_file" && recusar "Co-Authored-By"
+grep -qi 'generated with' "$msg_file" && recusar "Generated with"
+grep -qiwE 'ia|ai|claude|anthropic|chatgpt|openai|copilot|gemini|assistente' "$msg_file" && recusar "mencao a IA ou assistente"
+exit 0
