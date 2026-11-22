@@ -33,6 +33,14 @@ export function dataHoraParaBr(dataHora: string): string {
   return paraBr(dataHora.slice(0, 10));
 }
 
+const doisDigitos = (n: number) => String(n).padStart(2, '0');
+
+/** Data e hora local do aparelho, "AAAA-MM-DDTHH:MM" (formato de avaliacao.data_hora). */
+export function dataHoraLocal(agora: Date): string {
+  const data = `${agora.getFullYear()}-${doisDigitos(agora.getMonth() + 1)}-${doisDigitos(agora.getDate())}`;
+  return `${data}T${doisDigitos(agora.getHours())}:${doisDigitos(agora.getMinutes())}`;
+}
+
 /** Anos completos entre o nascimento e hoje; datas em AAAA-MM-DD. */
 export function calcularIdade(nascimentoIso: string, hojeIsoValor: string): number {
   const [anoNasc, mesNasc, diaNasc] = nascimentoIso.split('-').map(Number);
