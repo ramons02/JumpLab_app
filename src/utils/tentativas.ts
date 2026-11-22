@@ -95,6 +95,32 @@ export function usarVideoDaAnterior(
   };
 }
 
+/** A tentativa como `Attempt` (para medir a prévia ou gravar); null se ainda não estiver completa. */
+export function paraAttempt(
+  tentativa: TentativaEmAndamento,
+  perna: PernaTentativa,
+  numero: NumeroTentativa,
+  protocolo: Protocol,
+): Attempt | null {
+  const { fpsConfirmado, marcas } = tentativa;
+  if (
+    !tentativaCompleta(tentativa, protocolo) ||
+    fpsConfirmado === null ||
+    marcas.decolagem === undefined ||
+    marcas.aterrissagem === undefined
+  ) {
+    return null;
+  }
+  return {
+    perna,
+    numero,
+    fps: fpsConfirmado,
+    quadroToque: marcas.toque ?? null,
+    quadroDecolagem: marcas.decolagem,
+    quadroAterrissagem: marcas.aterrissagem,
+  };
+}
+
 /** Tentativas completas no formato gravado pela spec 008; lança erro se alguma estiver incompleta. */
 export function tentativasConcluidas(
   tentativas: TentativasPorPerna,
@@ -102,23 +128,11 @@ export function tentativasConcluidas(
 ): Attempt[] {
   return pernasDoProtocolo(protocolo).flatMap((perna) =>
     (tentativas[perna] ?? []).map((tentativa, indice): Attempt => {
-      const { fpsConfirmado, marcas } = tentativa;
-      if (
-        !tentativaCompleta(tentativa, protocolo) ||
-        fpsConfirmado === null ||
-        marcas.decolagem === undefined ||
-        marcas.aterrissagem === undefined
-      ) {
+      const concluida = paraAttempt(tentativa, perna, (indice + 1) as NumeroTentativa, protocolo);
+      if (!concluida) {
         throw new Error(`A tentativa ${indice + 1} (${perna}) ainda não está completa.`);
       }
-      return {
-        perna,
-        numero: (indice + 1) as NumeroTentativa,
-        fps: fpsConfirmado,
-        quadroToque: marcas.toque ?? null,
-        quadroDecolagem: marcas.decolagem,
-        quadroAterrissagem: marcas.aterrissagem,
-      };
+      return concluida;
     }),
   );
 }
