@@ -22,7 +22,8 @@
         {
           "fonts": ["./assets/fonts/BebasNeue-Regular.ttf"]
         }
-      ]
+      ],
+      "expo-video"
     ],
     "scheme": "jumplab",
     "experiments": {
