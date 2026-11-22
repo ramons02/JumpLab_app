@@ -28,6 +28,10 @@ export default function LayoutAbas() {
         name="index"
         options={{ title: 'PACIENTES', tabBarLabel: 'Pacientes', headerRight: SimboloCabecalho }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: 'CONFIGURAÇÕES', tabBarLabel: 'Configurações' }}
+      />
     </Tabs>
   );
 }

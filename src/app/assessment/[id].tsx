@@ -1,10 +1,12 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { BlocoResultado } from '@/components/BlocoResultado';
 import { SecaoMelhorias } from '@/components/SecaoMelhorias';
 import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
 import { useAvaliacaoSalva } from '@/hooks/useAvaliacaoSalva';
+import { useLaudoPdf } from '@/hooks/useLaudoPdf';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import type { Assessment } from '@/types/assessment';
@@ -80,7 +82,40 @@ function AvaliacaoSalva({ avaliacao }: { avaliacao: Assessment }) {
           {avaliacao.observacoes || 'Sem observações.'}
         </Text>
       </View>
+      {avaliacao.resumo.tipo === 'salto' ? <CompartilharPdf avaliacaoId={avaliacao.id} /> : null}
       <View style={{ height: ESPACO_FINAL_PX }} />
     </ScrollView>
+  );
+}
+
+export const MENSAGEM_ERRO_PDF = 'Não foi possível gerar o PDF.';
+
+/** Gera o laudo da avaliação salva e abre a folha de compartilhamento (HU010, US1). */
+function CompartilharPdf({ avaliacaoId }: { avaliacaoId: string }) {
+  const { gerando, gerarECompartilhar } = useLaudoPdf();
+  const [erro, setErro] = useState(false);
+
+  async function compartilhar() {
+    const resultado = await gerarECompartilhar(avaliacaoId);
+    if (resultado) setErro(resultado === 'erro');
+  }
+
+  return (
+    <View className="gap-2">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: gerando }}
+        disabled={gerando}
+        onPress={compartilhar}
+        className={`items-center rounded-2xl bg-destaque py-4 ${gerando ? 'opacity-60' : ''}`}
+      >
+        <Text className="text-sm font-semibold text-fundo">Compartilhar PDF</Text>
+      </Pressable>
+      {erro ? (
+        <Text accessibilityRole="alert" className="text-center text-xs text-erro">
+          {MENSAGEM_ERRO_PDF}
+        </Text>
+      ) : null}
+    </View>
   );
 }

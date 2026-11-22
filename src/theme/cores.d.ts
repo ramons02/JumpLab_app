@@ -18,6 +18,33 @@ interface CoresPersonagem {
   barra: string;
 }
 
+interface CorDoPapel {
+  fundo: string;
+  texto: string;
+}
+
+interface CoresPapel {
+  fundo: string;
+  texto: string;
+  textoSecundario: string;
+  textoApoio: string;
+  faixa: string;
+  borda: string;
+  marca: string;
+  marcaLinha: string;
+  lsi: { verde: CorDoPapel; amarelo: CorDoPapel; vermelho: CorDoPapel; neutro: CorDoPapel };
+}
+
+interface CoresGrafico {
+  unica: string;
+  direita: string;
+  esquerda: string;
+  lsiAltura: string;
+  lsiRsi: string;
+  referencia: string;
+  eixo: string;
+}
+
 interface CorMusculo {
   fundo: string;
   fibra: string;
@@ -48,6 +75,8 @@ declare const cores: {
   personagem: CoresPersonagem;
   mapa: CoresMapa;
   marca: { fundoIcone: string };
+  papel: CoresPapel;
+  grafico: CoresGrafico;
 };
 
 export = cores;

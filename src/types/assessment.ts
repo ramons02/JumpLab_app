@@ -39,6 +39,8 @@ export interface Assessment extends NovaAvaliacao {
 /** Avaliação no histórico do paciente (HU003, HU009, HU010), sem as tentativas. */
 export interface AvaliacaoDoHistorico {
   id: string;
+  /** Repetido para o laudo conferir que nada de outro paciente entra (HU010 RN06). */
+  pacienteId: string;
   protocolo: Protocol;
   dataHora: string;
   pernaLesionada: PernaLesionada;

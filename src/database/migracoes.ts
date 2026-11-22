@@ -71,6 +71,14 @@ const MIGRACOES: readonly string[] = [
 
   // 3. melhorias (spec 017): pontos de "O que melhorar" revisados; nulo nas avaliações antigas.
   `ALTER TABLE avaliacao ADD COLUMN melhorias_json TEXT;`,
+
+  // 4. avaliador (spec 010): linha única com o cabeçalho do laudo, sem logotipo (HU010 RN08).
+  `CREATE TABLE avaliador (
+     id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+     nome TEXT NOT NULL,
+     registro TEXT NOT NULL,
+     atualizado_em TEXT NOT NULL
+   );`,
 ];
 
 /** Versão do esquema depois de todas as migrações. */

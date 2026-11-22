@@ -32,7 +32,8 @@
           "microphonePermission": false
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-sharing"
     ],
     "scheme": "jumplab",
     "experiments": {

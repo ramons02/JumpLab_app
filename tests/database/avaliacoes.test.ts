@@ -129,6 +129,7 @@ describe('repositório de avaliações', () => {
     expect(lista.map((a) => a.id)).toEqual([antes.id, depois.id]);
     expect(lista[0]).toEqual({
       id: antes.id,
+      pacienteId: ana.id,
       protocolo: 'dj',
       dataHora: '2026-10-01T09:00',
       pernaLesionada: 'direita',

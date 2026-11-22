@@ -316,15 +316,22 @@ export async function listarAvaliacoesDoPaciente(
   const linhas = await db.getAllAsync<
     Pick<
       LinhaAvaliacao,
-      'id' | 'protocolo' | 'data_hora' | 'perna_lesionada' | 'resultado_json' | 'melhorias_json'
+      | 'id'
+      | 'paciente_id'
+      | 'protocolo'
+      | 'data_hora'
+      | 'perna_lesionada'
+      | 'resultado_json'
+      | 'melhorias_json'
     >
   >(
-    `SELECT id, protocolo, data_hora, perna_lesionada, resultado_json, melhorias_json FROM avaliacao
+    `SELECT id, paciente_id, protocolo, data_hora, perna_lesionada, resultado_json, melhorias_json FROM avaliacao
       WHERE paciente_id = ? ORDER BY data_hora ASC, criado_em ASC`,
     pacienteId,
   );
   return linhas.map((linha) => ({
     id: linha.id,
+    pacienteId: linha.paciente_id,
     protocolo: linha.protocolo,
     dataHora: linha.data_hora,
     pernaLesionada: linha.perna_lesionada,

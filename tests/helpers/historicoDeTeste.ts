@@ -6,6 +6,8 @@ import type { ResumoLsi, ResumoPerna } from '@/types/resultadoSalto';
 import type { ResumoAgachamento } from '@/types/squat';
 
 let contador = 0;
+/** Todas as avaliações destes construtores são do mesmo paciente. */
+export const PACIENTE_DO_HISTORICO = 'paciente-1';
 
 /** Perna do resumo com a altura e o RSI pedidos (os demais campos não importam ao perfil). */
 export function perna(
@@ -36,6 +38,7 @@ export function avaliacaoSalto(
   contador += 1;
   return {
     id: `00000000-0000-4000-8000-${String(contador).padStart(12, '0')}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo,
     dataHora,
     pernaLesionada: extra.pernaLesionada ?? 'direita',
@@ -57,6 +60,7 @@ export function avaliacaoAgachamento(
   contador += 1;
   return {
     id: `00000000-0000-4000-8000-${String(contador).padStart(12, '0')}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo: 'agach',
     dataHora,
     pernaLesionada: 'nenhuma',
@@ -123,6 +127,7 @@ export function salto(
   contador += 1;
   return {
     id: `av-${contador}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo,
     dataHora,
     pernaLesionada: 'direita',
@@ -142,6 +147,7 @@ export function agachamento(dataHora: string, melhorVelocidadeMs: number): Avali
   } as unknown as ResumoAgachamento;
   return {
     id: `av-${contador}`,
+    pacienteId: PACIENTE_DO_HISTORICO,
     protocolo: 'agach',
     dataHora,
     pernaLesionada: 'nenhuma',
