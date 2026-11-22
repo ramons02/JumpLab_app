@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { CampoTexto } from '@/components/CampoTexto';
 import { useSessao } from '@/hooks/useSessao';
+import { useSincronizacao } from '@/hooks/useSincronizacao';
 import { validarSenhaNova } from '@/utils/validacaoConta';
 
 export const MENSAGEM_ENTROU_TEMPORARIA = 'Entrou com a senha temporária. Crie sua senha nova.';
@@ -15,6 +16,7 @@ export const MENSAGEM_SENHA_NOVA_SEM_CONEXAO = 'Sem conexão. A senha nova preci
  */
 function Formulario() {
   const { criarSenhaNova, sair } = useSessao();
+  const { sincronizarAgora } = useSincronizacao();
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [erros, setErros] = useState<{ senha?: string; confirmacao?: string }>({});
@@ -32,7 +34,11 @@ function Formulario() {
     setSalvando(true);
     try {
       const resultado = await criarSenhaNova(senha);
-      if (resultado.tipo === 'ok') return;
+      if (resultado.tipo === 'ok') {
+        // A sincronização ficou parada durante a troca; com a senha nova, roda como depois de entrar.
+        void sincronizarAgora();
+        return;
+      }
       setMensagem(resultado.tipo === 'erro' ? resultado.mensagem : MENSAGEM_SENHA_NOVA_SEM_CONEXAO);
     } finally {
       emAndamento.current = false;

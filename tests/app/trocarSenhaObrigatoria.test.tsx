@@ -8,7 +8,7 @@ import { inserirPaciente, listarPacientesComUltimaAvaliacao } from '@/database/p
 import { gravarSessao, lerSessao } from '@/sync/armazenamentoSessao';
 
 import { limparArmazenamentoSeguro } from '../helpers/armazenamentoSeguroFalso';
-import { instalarApiFalsa, responder, sessaoDto } from '../helpers/apiFalsa';
+import { chamadas, instalarApiFalsa, responder, sessaoDto } from '../helpers/apiFalsa';
 import { abrirApp, bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
@@ -86,7 +86,7 @@ describe('troca obrigatória da senha', () => {
     expect(await screen.findByText('As senhas não conferem.')).toBeOnTheScreen();
   });
 
-  it('salvar com sucesso fecha a tela e a sessão fica normal', async () => {
+  it('salvar com sucesso fecha a tela, a sessão fica normal e a sincronização roda', async () => {
     responder('/api/conta/senha', {
       status: 200,
       corpo: sessaoDto('2', 'ana@exemplo.com', { trocaSenhaObrigatoria: false }),
@@ -100,6 +100,9 @@ describe('troca obrigatória da senha', () => {
 
     await waitFor(() => expect(titulo()).toBeNull());
     expect((await lerSessao())?.conta.trocaSenhaObrigatoria).toBe(false);
+    await waitFor(() =>
+      expect(chamadas.some((c) => c.caminho.startsWith('/api/sync/'))).toBe(true),
+    );
   });
 
   it('sem conexão avisa e mantém a tela', async () => {
