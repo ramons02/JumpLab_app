@@ -63,6 +63,18 @@ module.exports = {
       vermelho: { fundo: '#fef2f2', texto: '#b91c1c' },
       neutro: { fundo: '#f8fafc', texto: '#475569' },
     },
+    // mapa muscular no papel (spec 017): mesmas cores de melhorar e ok, neutros claros
+    mapa: {
+      melhorar: { fundo: '#c4300f', fibra: '#8a1c06' },
+      ok: { fundo: '#2f9e57', fibra: '#1d6b3a' },
+      neutro: { fundo: '#d5d9dd', fibra: '#b3bac1' },
+      corpo: '#eceef0',
+      contorno: '#c9cfd4',
+      marcador: '#3d4a46',
+      numero: '#ffffff',
+      texto: '#475569',
+      alerta: '#b42318',
+    },
   },
   // linhas dos gráficos de evolução (spec 009), valores do protótipo
   grafico: {

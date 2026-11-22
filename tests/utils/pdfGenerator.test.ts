@@ -222,12 +222,4 @@ describe('laudo em PDF: dados e HTML', () => {
     expect(html).toContain('background: #ffffff');
     expect(html.toLowerCase()).not.toContain('#2563eb');
   });
-
-  it('o agachamento fica para a spec 014', () => {
-    const agach = {
-      ...salva(novaAvaliacao(PACIENTE.id, 'cmj_bi', CMJ_BILATERAL)),
-      protocolo: 'agach' as const,
-    };
-    expect(() => montarDadosLaudo(agach, PACIENTE, [], AVALIADOR)).toThrow();
-  });
 });

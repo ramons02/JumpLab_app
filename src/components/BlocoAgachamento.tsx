@@ -5,7 +5,7 @@ import type { CorPerda, ResultadoAgachamento } from '@/types/squat';
 import { corPerda } from '@/utils/biomechanics';
 import {
   CASAS_AMPLITUDE,
-  CASAS_CARGA,
+  formatarCarga,
   CASAS_PERDA,
   CASAS_POTENCIA,
   CASAS_TEMPO_AGACH_S,
@@ -34,11 +34,7 @@ export function BlocoAgachamento({ resumo }: { resumo: ResultadoAgachamento }) {
   return (
     <View className="gap-3">
       <View className="flex-row gap-2">
-        <CartaoMedida
-          rotulo="Carga"
-          valor={formatarDecimal(resumo.cargaKg, CASAS_CARGA)}
-          unidade="kg"
-        />
+        <CartaoMedida rotulo="Carga" valor={formatarCarga(resumo.cargaKg)} unidade="kg" />
         <CartaoMedida rotulo="Repetições" valor={String(resumo.repeticoes.length)} />
       </View>
       <View className="flex-row gap-2">

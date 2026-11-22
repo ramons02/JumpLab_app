@@ -11,3 +11,11 @@ describe('formatarDecimal', () => {
     expect(formatarDecimal(valor, casas)).toBe(esperado);
   });
 });
+
+describe('formatarCarga', () => {
+  it('até 1 casa: inteiro sem casa, fração com uma', () => {
+    const { formatarCarga } = jest.requireActual('@/utils/formatacao');
+    expect(formatarCarga(60)).toBe('60');
+    expect(formatarCarga(62.5)).toBe('62,5');
+  });
+});

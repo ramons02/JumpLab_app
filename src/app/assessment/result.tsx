@@ -157,17 +157,15 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
         >
           <Text className="text-sm font-semibold text-destaque">Só salvar</Text>
         </Pressable>
-        {resumo.tipo === 'salto' ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: ocupado }}
-            disabled={ocupado}
-            onPress={salvarEExportar}
-            className={`flex-1 items-center rounded-2xl bg-destaque py-4 ${ocupado ? 'opacity-60' : ''}`}
-          >
-            <Text className="text-sm font-semibold text-fundo">Salvar e exportar PDF</Text>
-          </Pressable>
-        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: ocupado }}
+          disabled={ocupado}
+          onPress={salvarEExportar}
+          className={`flex-1 items-center rounded-2xl bg-destaque py-4 ${ocupado ? 'opacity-60' : ''}`}
+        >
+          <Text className="text-sm font-semibold text-fundo">Salvar e exportar PDF</Text>
+        </Pressable>
       </View>
     </View>
   );

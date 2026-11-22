@@ -1,7 +1,9 @@
 import cores from '@/theme/cores';
 import type { GraficoEvolucao, LinhaEvolucao, PontoEvolucao } from '@/utils/evolucao';
 import { temPontosSuficientes } from '@/utils/evolucao';
-import { formatarDecimal } from '@/utils/formatacao';
+import type { ResultadoRepeticao } from '@/types/squat';
+import { corPerda } from '@/utils/biomechanics';
+import { CASAS_VELOCIDADE, formatarDecimal } from '@/utils/formatacao';
 import { escaparHtml } from '@/utils/html';
 
 /** Área do gráfico no laudo, em unidades do viewBox (a largura acompanha a página A4). */
@@ -120,3 +122,35 @@ export function montarSvgGrafico(grafico: GraficoEvolucao): string {
     desenharLegenda(grafico)
   );
 }
+
+/* Agachamento (spec 014, RN16): velocidade da subida por repetição, em barras. */
+const LARGURA_BARRA = 0.6;
+const FOLGA_BARRAS = 1.1;
+
+export function montarSvgRepeticoes(
+  repeticoes: readonly ResultadoRepeticao[],
+  perdaPct: number | null,
+): string {
+  if (repeticoes.length === 0) return '';
+  const base = ALTURA_SVG - MARGEM.base;
+  const alturaUtil = base - MARGEM.topo;
+  const larguraUtil = LARGURA_SVG - MARGEM.esquerda - MARGEM.direita;
+  const passo = larguraUtil / repeticoes.length;
+  const maximo = Math.max(...repeticoes.map((r) => r.velocidadeMs)) * FOLGA_BARRAS;
+  const corPerdaPapel = cores.papel.lsi[corPerda(perdaPct)];
+  const corUltima = perdaPct === null ? cores.papel.marca : corPerdaPapel.texto;
+  const barras = repeticoes.map((r, i) => {
+    const altura = (r.velocidadeMs / maximo) * alturaUtil;
+    const x = MARGEM.esquerda + i * passo + (passo * (1 - LARGURA_BARRA)) / 2;
+    const largura = passo * LARGURA_BARRA;
+    const cor = i === repeticoes.length - 1 ? corUltima : cores.papel.marca;
+    return (
+      `<rect x="${numero(x)}" y="${numero(base - altura)}" width="${numero(largura)}" height="${numero(altura)}" fill="${cor}"/>` +
+      texto(x + largura / 2, base - altura - 3, formatarDecimal(r.velocidadeMs, CASAS_VELOCIDADE)) +
+      texto(x + largura / 2, base + 14, `Rep ${r.numero}`)
+    );
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGURA_SVG} ${ALTURA_SVG}" width="100%"><line x1="${MARGEM.esquerda}" x2="${LARGURA_SVG - MARGEM.direita}" y1="${base}" y2="${base}" stroke="${cores.papel.borda}"/>${barras.join('')}</svg>`;
+}
+
+export { montarHtmlTabelaLocais, montarSvgMapaMuscular } from '@/utils/graficoSvgMapa';
