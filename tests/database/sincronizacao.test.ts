@@ -92,7 +92,13 @@ describe('banco da sincronização', () => {
       expect(await listarPacientesPendentes(db, 10)).toEqual([]);
 
       const [deNovo] = [enviado];
+      // A edição acontece depois do envio (relógio adiantado: no mesmo milissegundo não muda nada).
+      jest.useFakeTimers({
+        now: Date.parse(enviado.atualizadoEm) + 1000,
+        doNotFake: ['nextTick', 'setImmediate'],
+      });
       await atualizarPaciente(db, ana.id, { ...ANA, nome: 'Ana Lima' });
+      jest.useRealTimers();
       await marcarSincronizado(db, 'paciente', deNovo.id, deNovo.atualizadoEm);
       expect(await listarPacientesPendentes(db, 10)).toHaveLength(1);
     });
