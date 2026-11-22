@@ -38,6 +38,10 @@ const COLUNAS_TENTATIVA = [
   'quadro_toque',
   'quadro_decolagem',
   'quadro_aterrissagem',
+  // Spec 018: quadro sugerido ao lado do marcado; conteúdo antigo sem as chaves volta nulo.
+  'quadro_sugerido_toque',
+  'quadro_sugerido_decolagem',
+  'quadro_sugerido_aterrissagem',
 ] as const;
 const COLUNAS_SERIE = ['fps', 'calib_topo_y', 'calib_base_y'] as const;
 const COLUNAS_REPETICAO = [

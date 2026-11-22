@@ -46,3 +46,6 @@ yarn-error.*
 !.env.example
 coverage/
 videos-d1/
+
+# Saida do Gradle dos modulos nativos locais (spec 018)
+modules/*/android/build/

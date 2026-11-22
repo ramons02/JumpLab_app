@@ -201,6 +201,87 @@ describe('banco da sincronização', () => {
       expect(tentativas.map((t) => t.quadro_aterrissagem)).toEqual([1130, 1130, 1130]);
     });
 
+    it('os quadros sugeridos (spec 018) vão no envio e voltam iguais, inclusive nulos', async () => {
+      const comSugestao = CMJ_BILATERAL.map((t, i) =>
+        i === 0 ? { ...t, quadrosSugeridos: { decolagem: 999, aterrissagem: 1121 } } : t,
+      );
+      const nova = novaAvaliacao(ana.id, 'cmj_bi', comSugestao);
+      const salva = await salvarAvaliacao(db, nova, montarResumoSalto(nova), '');
+      const [enviada] = await listarAvaliacoesPendentes(db, 1);
+      const conteudo = enviada.conteudo as {
+        avaliacao: Record<string, unknown>;
+        tentativas: Record<string, unknown>[];
+      };
+      expect(conteudo.tentativas[0]).toMatchObject({
+        quadro_sugerido_toque: null,
+        quadro_sugerido_decolagem: 999,
+        quadro_sugerido_aterrissagem: 1121,
+      });
+      expect(conteudo.tentativas[1]).toMatchObject({ quadro_sugerido_decolagem: null });
+
+      const novo = new Date(Date.parse(salva.atualizadoEm) + 60_000).toISOString();
+      await aplicarAvaliacaoRecebida(db, {
+        ...enviada,
+        atualizadoEm: novo,
+        conteudo: {
+          ...enviada.conteudo,
+          avaliacao: { ...conteudo.avaliacao, atualizado_em: novo },
+        },
+      });
+      const linhas = await db.getAllAsync(
+        `SELECT quadro_sugerido_toque, quadro_sugerido_decolagem, quadro_sugerido_aterrissagem
+           FROM tentativa ORDER BY numero`,
+      );
+      expect(linhas).toEqual([
+        {
+          quadro_sugerido_toque: null,
+          quadro_sugerido_decolagem: 999,
+          quadro_sugerido_aterrissagem: 1121,
+        },
+        {
+          quadro_sugerido_toque: null,
+          quadro_sugerido_decolagem: null,
+          quadro_sugerido_aterrissagem: null,
+        },
+        {
+          quadro_sugerido_toque: null,
+          quadro_sugerido_decolagem: null,
+          quadro_sugerido_aterrissagem: null,
+        },
+      ]);
+    });
+
+    it('conteúdo antigo, sem as chaves de sugestão, grava o sugerido nulo', async () => {
+      const salva = await salvarCmj();
+      const [enviada] = await listarAvaliacoesPendentes(db, 1);
+      const conteudo = enviada.conteudo as {
+        avaliacao: Record<string, unknown>;
+        tentativas: Record<string, unknown>[];
+      };
+      const antigas = conteudo.tentativas.map(
+        ({
+          quadro_sugerido_toque,
+          quadro_sugerido_decolagem,
+          quadro_sugerido_aterrissagem,
+          ...t
+        }) => t,
+      );
+      const novo = new Date(Date.parse(salva.atualizadoEm) + 60_000).toISOString();
+      expect(
+        await aplicarAvaliacaoRecebida(db, {
+          ...enviada,
+          atualizadoEm: novo,
+          conteudo: {
+            ...enviada.conteudo,
+            avaliacao: { ...conteudo.avaliacao, atualizado_em: novo },
+            tentativas: antigas,
+          },
+        }),
+      ).toBe('gravado');
+      const linha = await db.getFirstAsync('SELECT quadro_sugerido_decolagem FROM tentativa');
+      expect(linha).toEqual({ quadro_sugerido_decolagem: null });
+    });
+
     it('falha no meio desfaz a avaliação inteira (paciente inexistente)', async () => {
       const salva = await salvarCmj();
       const [enviada] = await listarAvaliacoesPendentes(db, 1);
