@@ -5,6 +5,7 @@ import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 
 import { aplicarMigracoes } from '@/database/migracoes';
+import { ProvedorSessao } from '@/hooks/useSessao';
 import cores from '@/theme/cores';
 import { FONTE_TITULO } from '@/theme/fontes';
 import { apagarGravacoesOrfas } from '@/video/gravacoesTemporarias';
@@ -36,15 +37,17 @@ export async function prepararBanco(db: SQLiteDatabase) {
 export default function LayoutRaiz() {
   return (
     <SQLiteProvider databaseName={NOME_BANCO} onInit={prepararBanco}>
-      <ThemeProvider value={TEMA_ESCURO}>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 26 } }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="patient/new" options={{ title: 'NOVO PACIENTE' }} />
-          <Stack.Screen name="patient/[id]/edit" options={{ title: 'EDITAR PACIENTE' }} />
-          <Stack.Screen name="assessment" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
+      <ProvedorSessao>
+        <ThemeProvider value={TEMA_ESCURO}>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerTitleStyle: { fontFamily: FONTE_TITULO, fontSize: 26 } }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="patient/new" options={{ title: 'NOVO PACIENTE' }} />
+            <Stack.Screen name="patient/[id]/edit" options={{ title: 'EDITAR PACIENTE' }} />
+            <Stack.Screen name="assessment" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+      </ProvedorSessao>
     </SQLiteProvider>
   );
 }
