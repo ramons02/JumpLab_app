@@ -35,6 +35,23 @@ module.exports = {
     barra: '#cbd5e1',
   },
   marca: { fundoIcone: '#1b1b1b' },
+  // laudo em PDF: papel branco com o verde da marca (spec 010, D16), valores da classe .papel do protótipo
+  papel: {
+    fundo: '#ffffff',
+    texto: '#1f2937',
+    textoSecundario: '#64748b',
+    textoApoio: '#475569',
+    faixa: '#f1f5f9',
+    borda: '#e2e8f0',
+    marca: '#15803d',
+    marcaLinha: '#16a34a',
+    lsi: {
+      verde: { fundo: '#ecfdf3', texto: '#15803d' },
+      amarelo: { fundo: '#fffbeb', texto: '#b45309' },
+      vermelho: { fundo: '#fef2f2', texto: '#b91c1c' },
+      neutro: { fundo: '#f8fafc', texto: '#475569' },
+    },
+  },
   // linhas dos gráficos de evolução (spec 009), valores do protótipo
   grafico: {
     unica: '#2ee58a',

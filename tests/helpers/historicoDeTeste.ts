@@ -30,6 +30,7 @@ export function salto(
   sequencia += 1;
   return {
     id: `av-${sequencia}`,
+    pacienteId: 'paciente-1',
     protocolo,
     dataHora,
     pernaLesionada: 'direita',
@@ -50,5 +51,12 @@ export function agachamento(dataHora: string, melhorVelocidadeMs: number): Avali
     melhorPotenciaW: 800,
     perdaVelocidadePct: 10,
   } as unknown as ResumoAgachamento;
-  return { id: `av-${sequencia}`, protocolo: 'agach', dataHora, pernaLesionada: 'nenhuma', resumo };
+  return {
+    id: `av-${sequencia}`,
+    pacienteId: 'paciente-1',
+    protocolo: 'agach',
+    dataHora,
+    pernaLesionada: 'nenhuma',
+    resumo,
+  };
 }
