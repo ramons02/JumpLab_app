@@ -1,6 +1,9 @@
 import type { TentativaEmAndamento, TentativasPorPerna, VideoSelecionado } from '@/types/attempt';
 import {
   confirmarFps,
+  marcarNaTentativa,
+  tentativasConcluidas,
+  usarVideoDaAnterior,
   criarTentativasVazias,
   definirVideo,
   marcacoesLiberadas,
@@ -121,5 +124,103 @@ describe('videosTemporarios', () => {
 
   it('sem vídeos devolve lista vazia', () => {
     expect(videosTemporarios(criarTentativasVazias('cmj_uni'))).toEqual([]);
+  });
+});
+
+describe('marcarNaTentativa', () => {
+  it('troca as marcas sem alterar o resto nem o objeto recebido', () => {
+    const t = congelada(confirmarFps(definirVideo(VAZIA, video('a', 240))));
+    const marcada = marcarNaTentativa(t, { decolagem: 1000 });
+    expect(marcada).toEqual({ ...t, marcas: { decolagem: 1000 } });
+    expect(t.marcas).toEqual({});
+  });
+});
+
+describe('usarVideoDaAnterior', () => {
+  it('copia vídeo e FPS confirmado da anterior, sem as marcações', () => {
+    const anterior = congelada({
+      video: video('a', 240),
+      fpsSelecionado: 240,
+      fpsConfirmado: 240,
+      marcas: { decolagem: 1000, aterrissagem: 1120 },
+    });
+    const atual = congelada({ ...VAZIA, marcas: { decolagem: 5 } });
+    expect(usarVideoDaAnterior(anterior, atual)).toEqual({
+      video: video('a', 240),
+      fpsSelecionado: 240,
+      fpsConfirmado: 240,
+      marcas: {},
+    });
+  });
+});
+
+describe('tentativasConcluidas', () => {
+  function completa(marcas: TentativaEmAndamento['marcas'], fps = 240): TentativaEmAndamento {
+    return { video: video('a', fps), fpsSelecionado: fps, fpsConfirmado: fps, marcas };
+  }
+
+  it('bilateral: três Attempt numeradas de 1 a 3, sem toque fora do Drop Jump', () => {
+    const tentativas: TentativasPorPerna = {
+      unica: [
+        completa({ decolagem: 1000, aterrissagem: 1120 }),
+        completa({ decolagem: 2000, aterrissagem: 2110 }),
+        completa({ decolagem: 3000, aterrissagem: 3100 }, 120),
+      ],
+    };
+    expect(tentativasConcluidas(tentativas, 'cmj_bi')).toEqual([
+      {
+        perna: 'unica',
+        numero: 1,
+        fps: 240,
+        quadroToque: null,
+        quadroDecolagem: 1000,
+        quadroAterrissagem: 1120,
+      },
+      {
+        perna: 'unica',
+        numero: 2,
+        fps: 240,
+        quadroToque: null,
+        quadroDecolagem: 2000,
+        quadroAterrissagem: 2110,
+      },
+      {
+        perna: 'unica',
+        numero: 3,
+        fps: 120,
+        quadroToque: null,
+        quadroDecolagem: 3000,
+        quadroAterrissagem: 3100,
+      },
+    ]);
+  });
+
+  it('Drop Jump unilateral: seis Attempt com o quadro do toque', () => {
+    const dj = completa({ toque: 500, decolagem: 548, aterrissagem: 644 });
+    const concluidas = tentativasConcluidas(
+      { direita: [dj, dj, dj], esquerda: [dj, dj, dj] },
+      'dj_uni',
+    );
+    expect(concluidas).toHaveLength(6);
+    expect(concluidas.map((a) => `${a.perna}-${a.numero}`)).toEqual([
+      'direita-1',
+      'direita-2',
+      'direita-3',
+      'esquerda-1',
+      'esquerda-2',
+      'esquerda-3',
+    ]);
+    expect(concluidas.every((a) => a.quadroToque === 500)).toBe(true);
+  });
+
+  it('lança erro com alguma tentativa incompleta', () => {
+    const tentativas: TentativasPorPerna = {
+      unica: [
+        completa({ decolagem: 1000, aterrissagem: 1120 }),
+        completa({ decolagem: 1000 }),
+        VAZIA,
+      ],
+    };
+    expect(() => tentativasConcluidas(tentativas, 'cmj_bi')).toThrow(Error);
   });
 });
