@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, ToastAndroid, View } from 'react-native';
 
 import { BlocoResultado } from '@/components/BlocoResultado';
+import { SecaoMelhorias } from '@/components/SecaoMelhorias';
 import { conteudoDoTopo, TopoResultado } from '@/components/TopoResultado';
 import { useLaudoPdf } from '@/hooks/useLaudoPdf';
 import { useParallaxSalto } from '@/hooks/useParallaxSalto';
@@ -13,6 +14,7 @@ import cores from '@/theme/cores';
 import { paraBr } from '@/utils/datas';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
 import { PROTOCOLOS } from '@/utils/protocolos';
+import { sugerirMelhorias } from '@/utils/melhorias';
 import { montarResumo } from '@/utils/resumoAvaliacao';
 import { descartarVideos } from '@/video/descartarVideos';
 
@@ -44,6 +46,10 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
     const nova = avaliacaoDoRascunho(rascunho);
     return nova ? montarResumo(nova) : null;
   }, [rascunho]);
+  // Sugestões das medidas, revisadas pelo avaliador antes de salvar (HU017).
+  const [melhorias, setMelhorias] = useState(() =>
+    resumo ? sugerirMelhorias(resumo, rascunho.pernaLesionada) : [],
+  );
   const topo = resumo ? conteudoDoTopo(resumo, rascunho.pernaLesionada) : null;
   const parallax = useParallaxSalto(saltoDoDesenhoPx(topo?.alturaCm ?? null));
   const info = PROTOCOLOS[rascunho.protocolo];
@@ -72,7 +78,7 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
   }, [destino, router]);
 
   async function soSalvar() {
-    const avaliacao = await salvar(observacoes);
+    const avaliacao = await salvar(observacoes, melhorias);
     if (!avaliacao) return;
     setSalvo(true);
     setDestino({ rota: `/patient/${avaliacao.pacienteId}`, aviso: MENSAGEM_SALVA });
@@ -108,6 +114,17 @@ function Resultado({ rascunho }: { rascunho: RascunhoAvaliacao }) {
           protocolo={rascunho.protocolo}
           pernaLesionada={rascunho.pernaLesionada}
           resumo={resumo}
+        />
+        <SecaoMelhorias
+          pontos={melhorias}
+          avaliacao={{
+            protocolo: rascunho.protocolo,
+            pernaLesionada: rascunho.pernaLesionada,
+            resumo,
+            dataHora: rascunho.dataHora,
+          }}
+          editavel
+          aoMudar={setMelhorias}
         />
         <View className="gap-2">
           <Text className="text-sm font-semibold text-texto">Observações</Text>

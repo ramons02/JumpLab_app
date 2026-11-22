@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { salvarAvaliacao } from '@/database/avaliacoes';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import type { Assessment, NovaAvaliacao } from '@/types/assessment';
+import type { PontoMelhoria } from '@/types/melhoria';
 import { paraSerie } from '@/utils/marcacaoAgachamento';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { montarResumo } from '@/utils/resumoAvaliacao';
@@ -27,6 +28,7 @@ export function avaliacaoDoRascunho(
       cargaKg: rascunho.cargaKg,
       tentativas: [],
       serie,
+      melhorias: null,
     };
   }
   return {
@@ -37,6 +39,7 @@ export function avaliacaoDoRascunho(
     cargaKg: rascunho.cargaKg,
     tentativas: tentativasConcluidas(rascunho.tentativas, rascunho.protocolo),
     serie: null,
+    melhorias: null,
   };
 }
 
@@ -51,8 +54,9 @@ export function useSalvarAvaliacao() {
   const emAndamento = useRef(false);
 
   const salvar = useCallback(
-    async (observacoes: string): Promise<Assessment | null> => {
-      const nova = avaliacaoDoRascunho(rascunho);
+    async (observacoes: string, melhorias: PontoMelhoria[] | null): Promise<Assessment | null> => {
+      const doRascunho = avaliacaoDoRascunho(rascunho);
+      const nova = doRascunho ? { ...doRascunho, melhorias } : null;
       if (!nova || !rascunho || emAndamento.current) return null;
       emAndamento.current = true;
       setSalvando(true);

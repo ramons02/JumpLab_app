@@ -1,30 +1,45 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
-import { CartaoMedida } from '@/components/CartaoMedida';
+import { CartaoMedida, type CorCartao } from '@/components/CartaoMedida';
 import { DadosPaciente } from '@/components/DadosPaciente';
+import { ItemAvaliacao } from '@/components/ItemAvaliacao';
 import { TopoParallax } from '@/components/TopoParallax';
 import { useParallaxSalto, type ParallaxSalto } from '@/hooks/useParallaxSalto';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
+import type { AvaliacaoDoHistorico } from '@/types/assessment';
 import type { Patient } from '@/types/patient';
-import { calcularIdade, hojeIso } from '@/utils/datas';
+import type { CorLsi } from '@/types/resultadoSalto';
+import { calcularIdade, dataHoraParaBr, hojeIso } from '@/utils/datas';
+import { CASAS_ALTURA, CASAS_LSI, CASAS_RSI, formatarDecimal } from '@/utils/formatacao';
 import { ESPACO_FINAL_PX, saltoDoDesenhoPx } from '@/utils/poseDesenho';
+import { PROTOCOLOS } from '@/utils/protocolos';
+import { ultimoLsi, ultimoRsi, ultimoSalto } from '@/utils/resumoPerfil';
 import { ROTULO_PERFIL } from '@/utils/rotulos';
 
 const ALTURA_TOPO = 210;
 /** Uma leitura de rolagem por quadro, para o personagem acompanhar o dedo. */
 const INTERVALO_ROLAGEM_MS = 16;
 
+const COR_DO_CARTAO: Record<CorLsi, CorCartao | undefined> = {
+  verde: 'verde',
+  amarelo: 'amarelo',
+  vermelho: 'vermelho',
+  neutro: undefined,
+};
+
+const BASE_DO_LSI = { altura: 'Base: altura (CMJ)', rsi: 'Base: RSI (Drop Jump)' } as const;
+
 /**
- * Perfil do paciente, entrega 1 da HU003 (D17): dados, cards e histórico ainda vazios.
- * Os valores dos cards, o histórico e o último salto chegam na entrega 2 (depois das specs 006 a 008);
- * até lá o personagem do topo sobe a altura padrão.
+ * Perfil do paciente (HU003): dados, último LSI e último RSI, histórico de avaliações (mais recente
+ * primeiro) e o topo com o personagem saltando a altura do último salto.
  */
 export default function TelaPerfilPaciente() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { paciente, carregando, naoEncontrado } = usePerfilPaciente(id);
-  const parallax = useParallaxSalto(saltoDoDesenhoPx(null));
+  const { paciente, avaliacoes, carregando, naoEncontrado } = usePerfilPaciente(id);
+  const alturaUltimoSalto = ultimoSalto(avaliacoes);
+  const parallax = useParallaxSalto(saltoDoDesenhoPx(alturaUltimoSalto));
 
   if (naoEncontrado) return <PacienteNaoEncontrado aoVoltar={() => router.replace('/')} />;
   if (carregando || !paciente) return <View className="flex-1 bg-fundo" />;
@@ -32,8 +47,11 @@ export default function TelaPerfilPaciente() {
   return (
     <View className="flex-1 bg-fundo">
       <FlatList
-        data={[]}
-        renderItem={() => null}
+        data={avaliacoes}
+        keyExtractor={(avaliacao) => avaliacao.id}
+        renderItem={({ item }) => (
+          <ItemAvaliacao avaliacao={item} aoTocar={() => router.push(`/assessment/${item.id}`)} />
+        )}
         onScroll={parallax.aoRolar}
         scrollEventThrottle={INTERVALO_ROLAGEM_MS}
         contentContainerClassName="gap-4 p-4 pb-28"
@@ -41,6 +59,8 @@ export default function TelaPerfilPaciente() {
           <CabecalhoPerfil
             parallax={parallax}
             paciente={paciente}
+            avaliacoes={avaliacoes}
+            alturaUltimoSalto={alturaUltimoSalto}
             aoEditar={() => router.push(`/patient/${paciente.id}/edit`)}
           />
         }
@@ -69,17 +89,31 @@ export default function TelaPerfilPaciente() {
 interface CabecalhoPerfilProps {
   parallax: ParallaxSalto;
   paciente: Patient;
+  avaliacoes: AvaliacaoDoHistorico[];
+  alturaUltimoSalto: number | null;
   aoEditar: () => void;
 }
 
-function CabecalhoPerfil({ parallax, paciente, aoEditar }: CabecalhoPerfilProps) {
+function CabecalhoPerfil({
+  parallax,
+  paciente,
+  avaliacoes,
+  alturaUltimoSalto,
+  aoEditar,
+}: CabecalhoPerfilProps) {
+  const lsi = ultimoLsi(avaliacoes);
+  const rsi = ultimoRsi(avaliacoes);
   return (
     <View className="gap-4">
       <TopoParallax parallax={parallax} altura={ALTURA_TOPO}>
         <Text className="text-[11px] font-semibold uppercase tracking-wider text-destaque">
           Último salto
         </Text>
-        <Text className="font-titulo text-4xl uppercase text-texto">Sem avaliações</Text>
+        <Text className="font-titulo text-4xl uppercase text-texto">
+          {alturaUltimoSalto === null
+            ? 'Sem avaliações'
+            : `${formatarDecimal(alturaUltimoSalto, CASAS_ALTURA)} cm`}
+        </Text>
       </TopoParallax>
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
@@ -95,8 +129,25 @@ function CabecalhoPerfil({ parallax, paciente, aoEditar }: CabecalhoPerfilProps)
       </View>
       <DadosPaciente paciente={paciente} />
       <View className="flex-row gap-3">
-        <CartaoMedida rotulo="Último LSI" valor={null} />
-        <CartaoMedida rotulo="Último RSI" valor={null} />
+        <CartaoMedida
+          rotulo="Último LSI"
+          valor={
+            lsi === null
+              ? null
+              : lsi.valor === null
+                ? 'LSI não calculado'
+                : `${formatarDecimal(lsi.valor, CASAS_LSI)}%`
+          }
+          cor={lsi?.cor ? COR_DO_CARTAO[lsi.cor] : undefined}
+          rodape={lsi ? `${BASE_DO_LSI[lsi.base]} · ${dataHoraParaBr(lsi.dataHora)}` : undefined}
+        />
+        <CartaoMedida
+          rotulo="Último RSI"
+          valor={rsi === null ? null : formatarDecimal(rsi.valor, CASAS_RSI)}
+          rodape={
+            rsi ? `${PROTOCOLOS[rsi.protocolo].nome} · ${dataHoraParaBr(rsi.dataHora)}` : undefined
+          }
+        />
       </View>
       <Text className="text-sm font-semibold text-textoSecundario">Avaliações</Text>
     </View>
