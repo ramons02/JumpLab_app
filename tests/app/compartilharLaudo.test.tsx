@@ -17,8 +17,8 @@ import { bancoDaTela, fecharBanco, prepararBanco } from '../helpers/telas';
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => jest.requireActual('../helpers/telas').bancoDaTela(),
 }));
-jest.mock('expo-print', () => require('../helpers/mocksLaudo').moduloPrint);
-jest.mock('expo-sharing', () => require('../helpers/mocksLaudo').moduloSharing);
+jest.mock('expo-print', () => jest.requireActual('../helpers/mocksLaudo').moduloPrint);
+jest.mock('expo-sharing', () => jest.requireActual('../helpers/mocksLaudo').moduloSharing);
 
 async function gravarEAbrir(): Promise<Assessment> {
   const paciente = await inserirPaciente(bancoDaTela(), {

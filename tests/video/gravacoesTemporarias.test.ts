@@ -11,7 +11,10 @@ import {
   paraUriDeArquivo,
 } from '@/video/gravacoesTemporarias';
 
-jest.mock('expo-file-system', () => require('../helpers/mockSistemaArquivos').moduloFalso);
+jest.mock(
+  'expo-file-system',
+  () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso,
+);
 
 const PASTA = 'file:///cache/gravacoes';
 

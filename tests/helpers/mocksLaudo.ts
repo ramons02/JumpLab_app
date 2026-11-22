@@ -1,7 +1,7 @@
 /**
  * expo-print e expo-sharing simulados: guardam o HTML recebido e a URI compartilhada. Uso:
- * jest.mock('expo-print', () => require('../helpers/mocksLaudo').moduloPrint);
- * jest.mock('expo-sharing', () => require('../helpers/mocksLaudo').moduloSharing);
+ * jest.mock('expo-print', () => jest.requireActual('../helpers/mocksLaudo').moduloPrint);
+ * jest.mock('expo-sharing', () => jest.requireActual('../helpers/mocksLaudo').moduloSharing);
  */
 export const laudo = {
   htmls: [] as string[],
