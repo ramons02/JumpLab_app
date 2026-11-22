@@ -116,4 +116,21 @@ describe('tela de cadastro de paciente', () => {
     );
     expect(resultado.getPathname()).toBe('/patient/new');
   });
+
+  it('sem conta e sem internet, o cadastro grava normalmente (spec 012, CA01)', async () => {
+    const fetchOriginal = global.fetch;
+    global.fetch = jest.fn(() =>
+      Promise.reject(new TypeError('Network request failed')),
+    ) as typeof fetch;
+    await abrirCadastro();
+    await preencherAnaSouza();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(async () =>
+      expect(await listarPacientesComUltimaAvaliacao(bancoDaTela())).toHaveLength(1),
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+    global.fetch = fetchOriginal;
+  });
 });
