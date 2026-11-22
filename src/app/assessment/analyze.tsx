@@ -1,14 +1,16 @@
 import { Redirect, usePreventRemove } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AvisoFps } from '@/components/AvisoFps';
 import { EscolherVideo } from '@/components/EscolherVideo';
+import { PlayerQuadros } from '@/components/PlayerQuadros';
 import { SeletorFps } from '@/components/SeletorFps';
 import { VideoDaTentativa } from '@/components/VideoDaTentativa';
 import { usePerfilPaciente } from '@/hooks/usePerfilPaciente';
 import { useRascunhoAvaliacao, type RascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import { useTentativaAtual } from '@/hooks/useTentativaAtual';
-import type { PernaTentativa } from '@/types/attempt';
+import type { PernaTentativa, VideoSelecionado } from '@/types/attempt';
 import { avisoDoFps } from '@/utils/fps';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { marcacoesLiberadas, pernasDoProtocolo } from '@/utils/tentativas';
@@ -47,6 +49,7 @@ function Analisador({ rascunho, perna }: AnalisadorProps) {
   const { tentativa } = atual;
   const info = PROTOCOLOS[rascunho.protocolo];
   const temVideo = Object.values(rascunho.tentativas).some((lista) => lista?.some((t) => t.video));
+  const [quadro, setQuadro] = useQuadroDoVideo(tentativa.video);
   const avisoConfirmado =
     tentativa.fpsConfirmado === null ? null : avisoDoFps(tentativa.fpsConfirmado, true);
 
@@ -85,6 +88,15 @@ function Analisador({ rascunho, perna }: AnalisadorProps) {
           aoTrocarVideo={atual.escolherVideo}
         />
       )}
+      {tentativa.video ? (
+        <PlayerQuadros
+          key={tentativa.video.uri}
+          video={tentativa.video}
+          fpsConfirmado={tentativa.fpsConfirmado}
+          quadro={quadro}
+          onMudarQuadro={setQuadro}
+        />
+      ) : null}
       {atual.mensagem && tentativa.video ? (
         <Text className="text-xs text-erro">{atual.mensagem}</Text>
       ) : null}
@@ -113,4 +125,17 @@ function Analisador({ rascunho, perna }: AnalisadorProps) {
       </Pressable>
     </ScrollView>
   );
+}
+
+/**
+ * Quadro mostrado no analisador: estado da tela (spec 006), por vídeo. Volta ao 0 quando o vídeo da
+ * tentativa muda; o PlayerQuadros é recriado pela chave do vídeo, liberando o tocador anterior.
+ */
+function useQuadroDoVideo(video: VideoSelecionado | null) {
+  const [estado, setEstado] = useState({ uri: video?.uri ?? null, quadro: 0 });
+  const uri = video?.uri ?? null;
+  if (estado.uri !== uri) setEstado({ uri, quadro: 0 });
+  const quadro = estado.uri === uri ? estado.quadro : 0;
+  const setQuadro = useCallback((novo: number) => setEstado({ uri, quadro: novo }), [uri]);
+  return [quadro, setQuadro] as const;
 }
