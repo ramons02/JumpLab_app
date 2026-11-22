@@ -2,16 +2,12 @@ import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
 import { abrirAnalisador, abrirCamera, botaoGravar } from '../helpers/fluxoCamera';
 import { arquivosFalsos, limparSistemaArquivos } from '../helpers/mockSistemaArquivos';
-import { camera, reiniciarCamera } from '../helpers/mockVisionCamera';
+import { camera, reiniciarCamera } from '../helpers/mockCameraAltaVelocidade';
 import { fecharBanco, prepararBanco } from '../helpers/telas';
 
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => jest.requireActual('../helpers/telas').bancoDaTela(),
 }));
-jest.mock(
-  'react-native-vision-camera',
-  () => jest.requireActual('../helpers/mockVisionCamera').moduloFalso,
-);
 jest.mock(
   'expo-file-system',
   () => jest.requireActual('../helpers/mockSistemaArquivos').moduloFalso,

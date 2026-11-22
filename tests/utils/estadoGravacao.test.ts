@@ -23,6 +23,12 @@ describe('estadoDaGravacao', () => {
     expect(estadoDaGravacao({ ...base, gravando: true })).toBe('gravando');
   });
 
+  it('preparando enquanto a câmera ainda não disse as taxas', () => {
+    expect(estadoDaGravacao({ ...base, suportadas: null, taxa: null, negociada: null })).toBe(
+      'preparando',
+    );
+  });
+
   it('sem taxa possível: aparelho sem alta velocidade', () => {
     expect(estadoDaGravacao({ ...base, taxa: null, suportadas: [] })).toBe('sem_alta_velocidade');
   });

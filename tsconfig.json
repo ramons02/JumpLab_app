@@ -4,7 +4,8 @@
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
-      "deteccao-pose": ["./modules/deteccao-pose"]
+      "deteccao-pose": ["./modules/deteccao-pose"],
+      "camera-alta-velocidade": ["./modules/camera-alta-velocidade"]
     },
     "types": ["jest"]
   },

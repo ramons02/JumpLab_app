@@ -9,7 +9,7 @@ function pastaGravacoes(): Directory {
   return new Directory(Paths.cache, PASTA_GRAVACOES);
 }
 
-/** O vision-camera entrega caminho de sistema de arquivos; o expo-file-system usa `file://`. */
+/** A câmera entrega caminho de sistema de arquivos; o expo-file-system usa `file://`. */
 export function paraUriDeArquivo(caminho: string): string {
   return caminho.startsWith('file://') ? caminho : `file://${caminho}`;
 }

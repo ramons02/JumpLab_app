@@ -17,5 +17,6 @@ module.exports = {
     '^react-native-gifted-charts$': '<rootDir>/tests/helpers/mockGiftedCharts.tsx',
     // Módulo nativo do MediaPipe (spec 018); nos testes, o resultado é controlado pelo teste.
     '^deteccao-pose$': '<rootDir>/tests/helpers/mockDeteccaoPose.ts',
+    '^camera-alta-velocidade$': '<rootDir>/tests/helpers/mockCameraAltaVelocidade.tsx',
   },
 };
