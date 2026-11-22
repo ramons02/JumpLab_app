@@ -17,3 +17,16 @@ describe('validarConfiguracao: protocolo', () => {
     expect(validarConfiguracao('cmj_bi', '62,5')).toEqual({ ok: true, cargaKg: null });
   });
 });
+
+describe('validarConfiguracao: carga do agachamento', () => {
+  it.each(['', '0', ','])('agachamento com carga "%s" pede a carga', (carga) => {
+    expect(validarConfiguracao('agach', carga)).toEqual({
+      ok: false,
+      erro: 'Informe a carga na barra.',
+    });
+  });
+
+  it('agachamento com 62,5 é válido com a carga em número', () => {
+    expect(validarConfiguracao('agach', '62,5')).toEqual({ ok: true, cargaKg: 62.5 });
+  });
+});

@@ -159,4 +159,68 @@ describe('tela de configuração da avaliação', () => {
 
     expect(await screen.findByText('Tela de pacientes')).toBeOnTheScreen();
   });
+
+  describe('carga do agachamento', () => {
+    it('o campo de carga só aparece com Agachamento com barra', async () => {
+      const ana = await cadastrar();
+      await abrirConfiguracao(ana.id);
+      await escolher('CMJ Bilateral');
+      expect(screen.queryByLabelText('Carga na barra (kg)')).toBeNull();
+
+      await escolher('Agachamento com barra');
+
+      expect(screen.getByLabelText('Carga na barra (kg)')).toBeOnTheScreen();
+      expect(screen.getByText('Barra mais anilhas.')).toBeOnTheScreen();
+    });
+
+    it.each(['Ir para o vídeo', 'Como fazer'])(
+      '"%s" sem carga mostra o erro e não navega',
+      async (botao) => {
+        const ana = await cadastrar();
+        await abrirConfiguracao(ana.id);
+        await escolher('Agachamento com barra');
+
+        await tocar(botao);
+
+        expect(await screen.findByText('Informe a carga na barra.')).toBeOnTheScreen();
+        expect(screen).toHavePathname('/assessment/setup');
+      },
+    );
+
+    it('com 62,5 segue e o rascunho leva a carga', async () => {
+      const ana = await cadastrar();
+      await abrirConfiguracao(ana.id);
+      await escolher('Agachamento com barra');
+
+      await fireEvent.changeText(screen.getByLabelText('Carga na barra (kg)'), '62,5');
+      await tocar('Ir para o vídeo');
+
+      expect(await screen.findByText('Analisador')).toBeOnTheScreen();
+      expect(rascunhoNaTela()).toMatchObject({ protocolo: 'agach', cargaKg: 62.5 });
+    });
+
+    it('o campo recusa letras e aceita uma vírgula só', async () => {
+      const ana = await cadastrar();
+      await abrirConfiguracao(ana.id);
+      await escolher('Agachamento com barra');
+      const campo = screen.getByLabelText('Carga na barra (kg)');
+
+      await fireEvent.changeText(campo, '6a2,5,0');
+
+      expect(campo).toHaveDisplayValue('62,50');
+    });
+
+    it('carga digitada e troca para CMJ Bilateral segue sem carga', async () => {
+      const ana = await cadastrar();
+      await abrirConfiguracao(ana.id);
+      await escolher('Agachamento com barra');
+      await fireEvent.changeText(screen.getByLabelText('Carga na barra (kg)'), '80');
+
+      await escolher('CMJ Bilateral');
+      await tocar('Ir para o vídeo');
+
+      expect(await screen.findByText('Analisador')).toBeOnTheScreen();
+      expect(rascunhoNaTela()).toMatchObject({ protocolo: 'cmj_bi', cargaKg: null });
+    });
+  });
 });

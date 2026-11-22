@@ -3,6 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { CampoTexto } from '@/components/CampoTexto';
 import { OpcaoProtocolo } from '@/components/OpcaoProtocolo';
 import { buscarPaciente } from '@/database/pacientes';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
@@ -10,7 +11,8 @@ import type { Patient } from '@/types/patient';
 import type { Protocol } from '@/types/protocol';
 import { dataHoraLocal } from '@/utils/datas';
 import { ehUuid } from '@/utils/ids';
-import { ORDEM_PROTOCOLOS } from '@/utils/protocolos';
+import { filtrarDecimal } from '@/utils/numeros';
+import { ORDEM_PROTOCOLOS, PROTOCOLOS } from '@/utils/protocolos';
 import { validarConfiguracao } from '@/utils/validacaoConfiguracao';
 
 type Carga =
@@ -26,6 +28,7 @@ export default function TelaConfiguracao() {
   const idValido = typeof pacienteId === 'string' && ehUuid(pacienteId);
   const [carga, setCarga] = useState<Carga>({ estado: 'carregando' });
   const [protocolo, setProtocolo] = useState<Protocol | null>(null);
+  const [cargaTexto, setCargaTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export default function TelaConfiguracao() {
   };
 
   const seguir = (destino: Destino) => {
-    const resultado = validarConfiguracao(protocolo, '');
+    const resultado = validarConfiguracao(protocolo, cargaTexto);
     if (!resultado.ok || !protocolo) {
       setErro(resultado.ok ? null : resultado.erro);
       return;
@@ -84,6 +87,19 @@ export default function TelaConfiguracao() {
             aoEscolher={() => escolher(opcao)}
           />
         ))}
+        {protocolo && PROTOCOLOS[protocolo].agachamento ? (
+          <CampoTexto
+            rotulo="Carga na barra (kg)"
+            dica="Barra mais anilhas."
+            valor={cargaTexto}
+            aoMudar={(texto) => {
+              setCargaTexto(filtrarDecimal(texto));
+              setErro(null);
+            }}
+            keyboardType="decimal-pad"
+            placeholder="Ex.: 60"
+          />
+        ) : null}
         {erro ? <Text className="text-sm font-medium text-erro">{erro}</Text> : null}
       </ScrollView>
       <View className="flex-row gap-2 border-t border-borda bg-fundo p-4">
