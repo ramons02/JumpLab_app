@@ -1,7 +1,13 @@
 import { randomUUID } from 'expo-crypto';
 
 import type { ConexaoBanco } from '@/database/conexao';
-import type { DadosPaciente, Patient, Perfil, PernaLesionada } from '@/types/patient';
+import type {
+  DadosPaciente,
+  PacienteNaLista,
+  Patient,
+  Perfil,
+  PernaLesionada,
+} from '@/types/patient';
 
 interface LinhaPaciente {
   id: string;
@@ -92,10 +98,27 @@ export async function buscarPaciente(db: ConexaoBanco, id: string): Promise<Pati
   return linha ? paraPaciente(linha) : null;
 }
 
-/** Todos os pacientes, por nome, sem diferenciar maiúsculas. */
-export async function listarPacientes(db: ConexaoBanco): Promise<Patient[]> {
-  const linhas = await db.getAllAsync<LinhaPaciente>(
-    `SELECT ${COLUNAS} FROM paciente ORDER BY nome COLLATE NOCASE, id`,
+interface LinhaPacienteNaLista extends LinhaPaciente {
+  ultima_avaliacao_em: string | null;
+}
+
+/**
+ * Todos os pacientes com a data da avaliação mais recente de cada um (null sem avaliações).
+ * Não ordena nem filtra: isso é de `filtrarPacientes`. `data_hora` é texto AAAA-MM-DDTHH:MM, então o
+ * MAX em texto é a mais recente.
+ */
+export async function listarPacientesComUltimaAvaliacao(
+  db: ConexaoBanco,
+): Promise<PacienteNaLista[]> {
+  const linhas = await db.getAllAsync<LinhaPacienteNaLista>(
+    `SELECT p.id, p.nome, p.data_nascimento, p.perfil, p.perna_lesionada, p.data_lesao,
+            p.criado_em, p.atualizado_em, MAX(a.data_hora) AS ultima_avaliacao_em
+       FROM paciente p
+       LEFT JOIN avaliacao a ON a.paciente_id = p.id
+      GROUP BY p.id`,
   );
-  return linhas.map(paraPaciente);
+  return linhas.map((linha) => ({
+    ...paraPaciente(linha),
+    ultimaAvaliacaoEm: linha.ultima_avaliacao_em,
+  }));
 }

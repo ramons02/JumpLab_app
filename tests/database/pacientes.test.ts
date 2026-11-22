@@ -3,7 +3,7 @@ import {
   atualizarPaciente,
   buscarPaciente,
   inserirPaciente,
-  listarPacientes,
+  listarPacientesComUltimaAvaliacao,
 } from '@/database/pacientes';
 import type { DadosPaciente } from '@/types/patient';
 
@@ -12,7 +12,7 @@ import { criarBancoEmMemoria, type BancoDeTeste } from '../helpers/bancoEmMemori
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-const ana: DadosPaciente = {
+const anaSouza: DadosPaciente = {
   nome: '  Ana Souza  ',
   dataNascimento: '1995-03-15',
   perfil: 'pos_lca',
@@ -42,7 +42,7 @@ describe('repositório de pacientes', () => {
 
   describe('inserirPaciente', () => {
     it('gera UUID e carimbos e grava o nome sem espaços nas pontas', async () => {
-      const salvo = await inserirPaciente(db, ana);
+      const salvo = await inserirPaciente(db, anaSouza);
 
       expect(salvo.id).toMatch(UUID);
       expect(salvo.nome).toBe('Ana Souza');
@@ -64,28 +64,57 @@ describe('repositório de pacientes', () => {
     });
   });
 
-  describe('listarPacientes', () => {
-    it('ordena por nome sem diferenciar maiúsculas', async () => {
-      await inserirPaciente(db, dados('carla'));
-      await inserirPaciente(db, dados('Bruno'));
-      await inserirPaciente(db, dados('ana'));
+  describe('listarPacientesComUltimaAvaliacao', () => {
+    async function avaliar(pacienteId: string, id: string, dataHora: string) {
+      await db.runAsync(
+        `INSERT INTO avaliacao (id, paciente_id, protocolo, data_hora, perna_lesionada, carga_kg,
+           observacoes, resultado_json, criado_em, atualizado_em, pendente_sync)
+         VALUES (?, ?, 'cmj_bi', ?, 'nenhuma', NULL, '', '{}', ?, ?, 1)`,
+        id,
+        pacienteId,
+        dataHora,
+        '2026-11-22T12:00:00.000Z',
+        '2026-11-22T12:00:00.000Z',
+      );
+    }
 
-      const nomes = (await listarPacientes(db)).map((p) => p.nome);
-      expect(nomes).toEqual(['ana', 'Bruno', 'carla']);
+    it('sem avaliações, todo paciente vem com ultimaAvaliacaoEm nulo', async () => {
+      await inserirPaciente(db, dados('Ana'));
+      await inserirPaciente(db, dados('Bruno'));
+
+      const lista = await listarPacientesComUltimaAvaliacao(db);
+
+      expect(lista).toHaveLength(2);
+      expect(lista.every((p) => p.ultimaAvaliacaoEm === null)).toBe(true);
     });
 
-    it('devolve lista vazia sem pacientes', async () => {
-      expect(await listarPacientes(db)).toEqual([]);
+    it('traz a data da avaliação mais recente e cada paciente uma vez só', async () => {
+      const ana = await inserirPaciente(db, dados('Ana'));
+      const bruno = await inserirPaciente(db, dados('Bruno'));
+      await avaliar(ana.id, 'a1', '2026-10-01T09:00');
+      await avaliar(ana.id, 'a2', '2026-11-20T18:30');
+
+      const lista = await listarPacientesComUltimaAvaliacao(db);
+
+      expect(lista).toHaveLength(2);
+      expect(lista.find((p) => p.id === ana.id)?.ultimaAvaliacaoEm).toBe('2026-11-20T18:30');
+      expect(lista.find((p) => p.id === bruno.id)?.ultimaAvaliacaoEm).toBeNull();
+    });
+
+    it('devolve os campos do paciente', async () => {
+      const ana = await inserirPaciente(db, anaSouza);
+      const [item] = await listarPacientesComUltimaAvaliacao(db);
+      expect(item).toEqual({ ...ana, ultimaAvaliacaoEm: null });
     });
   });
 
   describe('atualizarPaciente', () => {
     it('mantém id e criadoEm e atualiza os dados e o atualizadoEm', async () => {
-      const original = await inserirPaciente(db, ana);
+      const original = await inserirPaciente(db, anaSouza);
       await new Promise((resolver) => setTimeout(resolver, 5));
 
       const atualizado = await atualizarPaciente(db, original.id, {
-        ...ana,
+        ...anaSouza,
         nome: ' Ana Souza Lima ',
         pernaLesionada: 'esquerda',
       });
@@ -98,7 +127,7 @@ describe('repositório de pacientes', () => {
     });
 
     it('falha com id inexistente', async () => {
-      await expect(atualizarPaciente(db, 'nao-existe', ana)).rejects.toThrow(
+      await expect(atualizarPaciente(db, 'nao-existe', anaSouza)).rejects.toThrow(
         'Paciente não encontrado.',
       );
     });

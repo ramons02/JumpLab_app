@@ -30,14 +30,14 @@ export function SeletorOpcoes<T extends string>({
               onPress={() => aoMudar(opcao)}
               className={`flex-1 items-center rounded-xl border py-3 ${
                 selecionada
-                  ? 'border-marca bg-marca-fraca'
+                  ? 'border-destaque bg-destaqueFundo'
                   : erro
-                    ? 'border-erro bg-superficie'
-                    : 'border-borda bg-superficie'
+                    ? 'border-erro bg-cartao'
+                    : 'border-borda bg-cartao'
               }`}
             >
               <Text
-                className={`text-sm font-semibold ${selecionada ? 'text-marca-forte' : 'text-texto-suave'}`}
+                className={`text-sm font-semibold ${selecionada ? 'text-destaque' : 'text-textoSecundario'}`}
               >
                 {texto}
               </Text>

@@ -1,70 +1,74 @@
-import { Link, useFocusEffect } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Text, View } from 'react-native';
 
-import { listarPacientes } from '@/database/pacientes';
-import type { Patient } from '@/types/patient';
-import { calcularIdade, hojeIso } from '@/utils/datas';
-import { ROTULO_PERFIL } from '@/utils/rotulos';
+import { BotaoNovoPaciente } from '@/components/BotaoNovoPaciente';
+import { CampoBusca } from '@/components/CampoBusca';
+import { FiltroPerfil } from '@/components/FiltroPerfil';
+import { ItemPaciente } from '@/components/ItemPaciente';
+import { ListaPacientesVazia } from '@/components/ListaPacientesVazia';
+import { TopoParallax } from '@/components/TopoParallax';
+import { useListaPacientes } from '@/hooks/useListaPacientes';
+import { useParallaxSalto } from '@/hooks/useParallaxSalto';
+import type { FiltroPerfil as Filtro } from '@/types/patient';
+import { hojeIso } from '@/utils/datas';
+import { filtrarPacientes } from '@/utils/filtroPacientes';
+import { ESPACO_FINAL_PX, SUBIDA_LISTA_PX } from '@/utils/poseDesenho';
 
-function ItemPaciente({ paciente, hoje }: { paciente: Patient; hoje: string }) {
-  return (
-    <View className="mb-2 rounded-2xl border border-borda bg-superficie p-3">
-      <Text className="font-semibold text-texto">{paciente.nome}</Text>
-      <Text className="mt-0.5 text-xs text-texto-suave">
-        {ROTULO_PERFIL[paciente.perfil]} · {calcularIdade(paciente.dataNascimento, hoje)} anos
-      </Text>
-    </View>
-  );
-}
+const ALTURA_TOPO = 200;
+/** Uma leitura de rolagem por quadro, para o personagem acompanhar o dedo. */
+const INTERVALO_ROLAGEM_MS = 16;
 
-function BotaoNovoPaciente() {
-  return (
-    <Link href="/patient/new" asChild>
-      <Pressable accessibilityRole="button" className="items-center rounded-2xl bg-marca px-5 py-4">
-        <Text className="text-sm font-semibold text-fundo">+ Novo Paciente</Text>
-      </Pressable>
-    </Link>
-  );
-}
-
-/** Lista mínima da HU001; busca, filtros e última avaliação chegam com a HU002. */
 export default function TelaPacientes() {
-  const db = useSQLiteContext();
-  const [pacientes, setPacientes] = useState<Patient[] | null>(null);
+  const router = useRouter();
+  const { pacientes, carregando } = useListaPacientes();
+  const [filtro, setFiltro] = useState<Filtro>('todos');
+  const [busca, setBusca] = useState('');
+  const parallax = useParallaxSalto(SUBIDA_LISTA_PX);
   const hoje = hojeIso();
-
-  useFocusEffect(
-    useCallback(() => {
-      let ativo = true;
-      listarPacientes(db).then((lista) => {
-        if (ativo) setPacientes(lista);
-      });
-      return () => {
-        ativo = false;
-      };
-    }, [db]),
+  const lista = useMemo(
+    () => filtrarPacientes(pacientes, filtro, busca),
+    [pacientes, filtro, busca],
   );
-
-  if (pacientes === null) return <View className="flex-1 bg-fundo" />;
+  const abrirCadastro = () => router.push('/patient/new');
 
   return (
     <View className="flex-1 bg-fundo">
-      <FlatList
-        data={pacientes}
-        keyExtractor={(paciente) => paciente.id}
-        renderItem={({ item }) => <ItemPaciente paciente={item} hoje={hoje} />}
-        contentContainerClassName="p-4 pb-28"
-        ListEmptyComponent={
-          <Text className="mt-16 text-center text-sm text-texto-suave">
-            Nenhum paciente cadastrado ainda.
-          </Text>
-        }
-      />
-      <View className="absolute bottom-4 right-4">
-        <BotaoNovoPaciente />
+      <View className="gap-3 px-4 pt-3">
+        <CampoBusca valor={busca} aoMudar={setBusca} />
+        <FiltroPerfil valor={filtro} aoMudar={setFiltro} />
       </View>
+      <FlatList
+        data={lista}
+        keyExtractor={(paciente) => paciente.id}
+        renderItem={({ item }) => (
+          <ItemPaciente
+            paciente={item}
+            hoje={hoje}
+            aoTocar={() => router.push(`/patient/${item.id}`)}
+          />
+        )}
+        onScroll={parallax.aoRolar}
+        scrollEventThrottle={INTERVALO_ROLAGEM_MS}
+        contentContainerClassName="px-4"
+        ListHeaderComponent={
+          <TopoParallax parallax={parallax} altura={ALTURA_TOPO}>
+            <Text className="font-titulo text-3xl uppercase text-texto">Meça cada salto</Text>
+            <Text className="text-xs text-textoSecundario">Role a lista para saltar</Text>
+          </TopoParallax>
+        }
+        ListEmptyComponent={
+          carregando ? undefined : (
+            <ListaPacientesVazia semCadastro={pacientes.length === 0} aoNovo={abrirCadastro} />
+          )
+        }
+        ListFooterComponent={<View testID="espaco-final" style={{ height: ESPACO_FINAL_PX }} />}
+      />
+      {lista.length > 0 && (
+        <View className="absolute bottom-4 right-4">
+          <BotaoNovoPaciente aoTocar={abrirCadastro} />
+        </View>
+      )}
     </View>
   );
 }
