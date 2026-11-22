@@ -123,3 +123,11 @@ Os seis MP4 de `assets/videos/como-fazer/` são a animação do boneco do protó
 
 O `ffmpeg` e o navegador são ferramentas só da máquina de desenvolvimento; não entram no app. A soma dos
 seis arquivos precisa ficar abaixo de 6 MB (testado em `tests/utils/comoFazer.test.ts`).
+
+## Conta e API (spec 012)
+
+A conta é opcional e serve só para sincronizar; o app funciona inteiro sem ela. O endereço da API vem
+de `EXPO_PUBLIC_API_URL` (veja `.env.example`): copie para `.env` e preencha. Em desenvolvimento pode
+ser `http://<ip-da-maquina>:8080` (API subida pelo `JumpLab_infra`); em build de produção o app só
+aceita `https://`. Os tokens ficam no armazenamento seguro do aparelho (`expo-secure-store`) e nunca
+vão para log.
