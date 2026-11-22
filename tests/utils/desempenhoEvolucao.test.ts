@@ -1,7 +1,7 @@
 import type { Protocol } from '@/types/protocol';
 import { montarGraficoLsi, montarGraficoProtocolo, protocolosAvaliados } from '@/utils/evolucao';
 
-import { agachamento, lsi, perna, salto } from '../helpers/historicoDoLaudo';
+import { agachamento, lsi, pernaResumo, salto } from '../helpers/historicoDeTeste';
 
 const LIMITE_MS = 100;
 
@@ -12,8 +12,8 @@ it('100 avaliações variadas viram gráficos em menos de 100 ms', () => {
     const data = `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}T10:00`;
     if (protocolo === 'agach') return agachamento(data, 0.9);
     const pernas = protocolo.endsWith('uni')
-      ? { direita: perna(20, { rsi: 1 }), esquerda: perna(22, { rsi: 1.1 }) }
-      : { unica: perna(30, { rsi: 1.2 }) };
+      ? { direita: pernaResumo(20, { rsi: 1 }), esquerda: pernaResumo(22, { rsi: 1.1 }) }
+      : { unica: pernaResumo(30, { rsi: 1.2 }) };
     return salto(protocolo, data, pernas, {
       lsi: protocolo.endsWith('uni') ? lsi(90, 'altura') : null,
     });

@@ -1,7 +1,5 @@
 import type { VideoSelecionado } from '@/types/attempt';
 
-/** Posição dentro do quadro ao pedir um quadro por tempo: o meio evita cair no quadro vizinho. */
-export const MEIO_QUADRO = 0.5;
 /** Evita perder o último quadro quando a duração vem arredondada para baixo. */
 export const TOLERANCIA_QUADROS = 1e-6;
 /** Intervalo do evento de tempo durante a reprodução. */
@@ -31,8 +29,14 @@ export function limitarQuadro(quadro: number, total: number): number {
   return Math.min(Math.max(Math.round(quadro), 0), Math.max(total - 1, 0));
 }
 
+/**
+ * Posição no arquivo para mostrar o quadro: o começo dele. O expo-video corta a posição para
+ * milissegundos e o tocador do Android mostra o primeiro quadro que começa nela ou depois; com o meio
+ * do quadro aparecia o seguinte (teste D1 no emulador). O corte fica abaixo do começo do quadro e acima
+ * do começo do anterior enquanto o quadro durar mais de 1 ms.
+ */
 export function posicaoNoArquivoS(quadro: number, fps: number): number {
-  return (quadro + MEIO_QUADRO) / fps;
+  return quadro / fps;
 }
 
 export function quadroNaPosicao(tempoS: number, fps: number, total: number): number {

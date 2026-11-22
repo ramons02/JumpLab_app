@@ -5,7 +5,7 @@ import {
   temPontosSuficientes,
 } from '@/utils/evolucao';
 
-import { agachamento, lsi, perna, salto } from '../helpers/historicoDoLaudo';
+import { agachamento, lsi, pernaResumo, salto } from '../helpers/historicoDeTeste';
 
 const valores = (pontos: ({ valor: number } | null)[]) => pontos.map((p) => p?.valor ?? null);
 
@@ -13,8 +13,8 @@ describe('protocolosAvaliados', () => {
   it('na ordem fixa, com o agachamento por último', () => {
     const historico = [
       agachamento('2026-11-01T10:00', 1),
-      salto('dj', '2026-11-02T10:00', { unica: perna(30, { rsi: 1.5 }) }),
-      salto('cmj_bi', '2026-11-03T10:00', { unica: perna(30) }),
+      salto('dj', '2026-11-02T10:00', { unica: pernaResumo(30, { rsi: 1.5 }) }),
+      salto('cmj_bi', '2026-11-03T10:00', { unica: pernaResumo(30) }),
     ];
     expect(protocolosAvaliados(historico)).toEqual(['cmj_bi', 'dj', 'agach']);
   });
@@ -23,9 +23,9 @@ describe('protocolosAvaliados', () => {
 describe('montarGraficoProtocolo', () => {
   it('só o protocolo pedido, em ordem de data, com a altura em cm', () => {
     const historico = [
-      salto('cmj_bi', '2026-11-20T10:00', { unica: perna(32) }),
-      salto('sj', '2026-11-10T10:00', { unica: perna(25) }),
-      salto('cmj_bi', '2026-11-05T10:00', { unica: perna(30) }),
+      salto('cmj_bi', '2026-11-20T10:00', { unica: pernaResumo(32) }),
+      salto('sj', '2026-11-10T10:00', { unica: pernaResumo(25) }),
+      salto('cmj_bi', '2026-11-05T10:00', { unica: pernaResumo(30) }),
     ];
     const grafico = montarGraficoProtocolo('cmj_bi', historico, 'direita');
 
@@ -45,7 +45,7 @@ describe('montarGraficoProtocolo', () => {
   it('Squat Jump também usa a altura', () => {
     const grafico = montarGraficoProtocolo(
       'sj',
-      [salto('sj', '2026-11-10T10:00', { unica: perna(25) })],
+      [salto('sj', '2026-11-10T10:00', { unica: pernaResumo(25) })],
       'nenhuma',
     );
     expect(grafico.unidade).toBe('cm');
@@ -54,7 +54,7 @@ describe('montarGraficoProtocolo', () => {
   it('Drop Jump usa o RSI com 2 casas', () => {
     const grafico = montarGraficoProtocolo(
       'dj',
-      [salto('dj', '2026-11-10T10:00', { unica: perna(30, { rsi: 1.42 }) })],
+      [salto('dj', '2026-11-10T10:00', { unica: pernaResumo(30, { rsi: 1.42 }) })],
       'nenhuma',
     );
     expect(grafico).toMatchObject({ medida: 'RSI', unidade: 'RSI', casas: 2 });
@@ -64,10 +64,10 @@ describe('montarGraficoProtocolo', () => {
   it('unilateral: duas linhas com a perna lesionada indicada e baixa precisão por perna', () => {
     const historico = [
       salto('cmj_uni', '2026-11-05T10:00', {
-        direita: perna(20, { baixaPrecisao: true }),
-        esquerda: perna(25),
+        direita: pernaResumo(20, { baixaPrecisao: true }),
+        esquerda: pernaResumo(25),
       }),
-      salto('cmj_uni', '2026-11-12T10:00', { direita: perna(22), esquerda: perna(26) }),
+      salto('cmj_uni', '2026-11-12T10:00', { direita: pernaResumo(22), esquerda: pernaResumo(26) }),
     ];
     const grafico = montarGraficoProtocolo('cmj_uni', historico, 'direita');
 
@@ -84,8 +84,8 @@ describe('montarGraficoProtocolo', () => {
       'dj_uni',
       [
         salto('dj_uni', '2026-11-05T10:00', {
-          direita: perna(20, { rsi: 1.1 }),
-          esquerda: perna(22, { rsi: 1.3 }),
+          direita: pernaResumo(20, { rsi: 1.1 }),
+          esquerda: pernaResumo(22, { rsi: 1.3 }),
         }),
       ],
       'direita',
@@ -97,7 +97,12 @@ describe('montarGraficoProtocolo', () => {
   it('paciente sem lesão: pernas sem "(lesionada)"', () => {
     const grafico = montarGraficoProtocolo(
       'cmj_uni',
-      [salto('cmj_uni', '2026-11-05T10:00', { direita: perna(20), esquerda: perna(25) })],
+      [
+        salto('cmj_uni', '2026-11-05T10:00', {
+          direita: pernaResumo(20),
+          esquerda: pernaResumo(25),
+        }),
+      ],
       'nenhuma',
     );
     expect(grafico.linhas.map((l) => l.nome)).toEqual(['Direita', 'Esquerda']);
@@ -106,7 +111,7 @@ describe('montarGraficoProtocolo', () => {
   it('bilateral: baixa precisão vem da avaliação', () => {
     const grafico = montarGraficoProtocolo(
       'cmj_bi',
-      [salto('cmj_bi', '2026-11-05T10:00', { unica: perna(30) }, { baixaPrecisao: true })],
+      [salto('cmj_bi', '2026-11-05T10:00', { unica: pernaResumo(30) }, { baixaPrecisao: true })],
       'nenhuma',
     );
     expect(grafico.linhas[0].pontos[0]).toEqual({ valor: 30, baixaPrecisao: true });
@@ -114,8 +119,8 @@ describe('montarGraficoProtocolo', () => {
 
   it('duas avaliações no mesmo dia viram dois pontos', () => {
     const historico = [
-      salto('cmj_bi', '2026-11-05T09:00', { unica: perna(30) }),
-      salto('cmj_bi', '2026-11-05T17:00', { unica: perna(31) }),
+      salto('cmj_bi', '2026-11-05T09:00', { unica: pernaResumo(30) }),
+      salto('cmj_bi', '2026-11-05T17:00', { unica: pernaResumo(31) }),
     ];
     const grafico = montarGraficoProtocolo('cmj_bi', historico, 'nenhuma');
     expect(grafico.eixo).toEqual(['2026-11-05', '2026-11-05']);
@@ -143,7 +148,7 @@ describe('montarGraficoProtocolo', () => {
   it('uma única avaliação não tem pontos suficientes (CA02)', () => {
     const grafico = montarGraficoProtocolo(
       'cmj_bi',
-      [salto('cmj_bi', '2026-11-05T10:00', { unica: perna(30) })],
+      [salto('cmj_bi', '2026-11-05T10:00', { unica: pernaResumo(30) })],
       'nenhuma',
     );
     expect(temPontosSuficientes(grafico)).toBe(false);
@@ -155,14 +160,14 @@ describe('montarGraficoLsi', () => {
     salto(
       'cmj_uni',
       data,
-      { direita: perna(20), esquerda: perna(25) },
+      { direita: pernaResumo(20), esquerda: pernaResumo(25) },
       { lsi: lsi(valor, 'altura') },
     );
   const dj = (data: string, valor: number) =>
     salto(
       'dj_uni',
       data,
-      { direita: perna(20, { rsi: 1 }), esquerda: perna(22, { rsi: 1.2 }) },
+      { direita: pernaResumo(20, { rsi: 1 }), esquerda: pernaResumo(22, { rsi: 1.2 }) },
       { lsi: lsi(valor, 'rsi') },
     );
 
@@ -171,7 +176,7 @@ describe('montarGraficoLsi', () => {
       cmj('2026-11-01T10:00', 80),
       dj('2026-11-02T10:00', 82),
       cmj('2026-11-08T10:00', 85),
-      salto('cmj_bi', '2026-11-09T10:00', { unica: perna(30) }),
+      salto('cmj_bi', '2026-11-09T10:00', { unica: pernaResumo(30) }),
       dj('2026-11-10T10:00', 88),
       cmj('2026-11-15T10:00', 91),
     ];
@@ -199,7 +204,7 @@ describe('montarGraficoLsi', () => {
 
   it('só bilaterais devolve null', () => {
     expect(
-      montarGraficoLsi([salto('cmj_bi', '2026-11-01T10:00', { unica: perna(30) })]),
+      montarGraficoLsi([salto('cmj_bi', '2026-11-01T10:00', { unica: pernaResumo(30) })]),
     ).toBeNull();
   });
 
