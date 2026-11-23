@@ -55,13 +55,20 @@ export function useTentativaAtual(perna: PernaTentativa, numero: NumeroTentativa
     [tentativas, perna, indice, alterar],
   );
 
-  /** Escolhe (ou troca) o vídeo da tentativa. */
-  const escolherVideo = useCallback(async () => {
+  /** Escolhe (ou troca) o vídeo da tentativa; verdadeiro quando um vídeo foi escolhido. */
+  const escolherVideo = useCallback(async (): Promise<boolean> => {
     const resultado = await importarVideoDaGaleria();
-    if (resultado.tipo === 'cancelado') return;
-    if (resultado.tipo === 'permissao_negada') return setMensagem(MENSAGEM_PERMISSAO_NEGADA);
-    if (resultado.tipo === 'erro') return setMensagem(MENSAGEM_VIDEO_NAO_ABRE);
+    if (resultado.tipo === 'cancelado') return false;
+    if (resultado.tipo === 'permissao_negada') {
+      setMensagem(MENSAGEM_PERMISSAO_NEGADA);
+      return false;
+    }
+    if (resultado.tipo === 'erro') {
+      setMensagem(MENSAGEM_VIDEO_NAO_ABRE);
+      return false;
+    }
     trocarVideo(resultado.video);
+    return true;
   }, [trocarVideo]);
 
   /** Entrega à tentativa o vídeo gravado pela câmera do app (spec 011), como se fosse importado. */
