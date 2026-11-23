@@ -1,5 +1,5 @@
 import { gravarSessao } from '@/sync/armazenamentoSessao';
-import { chamarApi, type ResultadoHttp } from '@/sync/clienteHttp';
+import { chamarApi, TEMPO_LIMITE_ACORDAR_MS, type ResultadoHttp } from '@/sync/clienteHttp';
 import { lerRespostaSessao } from '@/sync/validacaoRespostas';
 import type { Sessao } from '@/types/conta';
 import { normalizarEmail } from '@/utils/validacaoConta';
@@ -8,7 +8,12 @@ import { normalizarEmail } from '@/utils/validacaoConta';
 export async function pedirRecuperacao(email: string): Promise<ResultadoHttp<null>> {
   return chamarApi(
     '/api/recuperacao/pedidos',
-    { metodo: 'POST', corpo: { email: normalizarEmail(email) }, autenticada: false },
+    {
+      metodo: 'POST',
+      corpo: { email: normalizarEmail(email) },
+      autenticada: false,
+      tempoLimiteMs: TEMPO_LIMITE_ACORDAR_MS,
+    },
     () => null,
   );
 }

@@ -1,5 +1,7 @@
 import { gravarSessao, lerSessao } from '@/sync/armazenamentoSessao';
 import { criarConta, entrar, MENSAGEM_CREDENCIAIS, sair } from '@/sync/autenticacao';
+import * as clienteHttp from '@/sync/clienteHttp';
+import { pedirRecuperacao } from '@/sync/recuperacao';
 
 import { limparArmazenamentoSeguro } from '../helpers/armazenamentoSeguroFalso';
 import { chamadas, instalarApiFalsa, responder, sessaoDto } from '../helpers/apiFalsa';
@@ -79,5 +81,19 @@ describe('autenticação', () => {
     });
     await sair();
     expect(await lerSessao()).toBeNull();
+  });
+});
+
+describe('espera do servidor acordando', () => {
+  it('entrar, criar conta e pedir recuperação esperam até 75 s', async () => {
+    const espiao = jest.spyOn(clienteHttp, 'chamarApi').mockResolvedValue({ tipo: 'sem-conexao' });
+    await entrar('ana@exemplo.com', 'segredo123');
+    await criarConta({ nome: 'Ana', email: 'ana@exemplo.com', senha: 'segredo123' });
+    await pedirRecuperacao('ana@exemplo.com');
+    expect(espiao).toHaveBeenCalledTimes(3);
+    for (const [, opcoes] of espiao.mock.calls) {
+      expect(opcoes.tempoLimiteMs).toBe(clienteHttp.TEMPO_LIMITE_ACORDAR_MS);
+    }
+    espiao.mockRestore();
   });
 });

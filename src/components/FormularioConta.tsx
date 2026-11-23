@@ -3,12 +3,18 @@ import { Pressable, Text, View } from 'react-native';
 
 import { CampoTexto } from '@/components/CampoTexto';
 import { EsqueciSenha } from '@/components/EsqueciSenha';
+import { useAvisoDeDemora } from '@/hooks/useAvisoDeDemora';
 import type { ResultadoHttp } from '@/sync/clienteHttp';
 import type { DadosCriarConta, ErrosConta, Sessao } from '@/types/conta';
 import { validarCriarConta, validarEntrar } from '@/utils/validacaoConta';
 
 export const MENSAGEM_SEM_CONEXAO =
   'Sem conexão. O app continua funcionando; entre quando houver internet.';
+
+export const MENSAGEM_ACORDANDO =
+  'Acordando o servidor... Depois de um tempo sem uso, a primeira entrada pode levar até 1 minuto.';
+/** Depois deste tempo esperando a resposta, o formulário avisa que o servidor pode estar acordando. */
+export const ESPERA_ANTES_DO_AVISO_MS = 4_000;
 
 export type ModoConta = 'entrar' | 'criar';
 
@@ -38,6 +44,7 @@ export function FormularioConta({
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const emAndamento = useRef(false);
+  const demorando = useAvisoDeDemora(enviando, ESPERA_ANTES_DO_AVISO_MS);
   const criar = modo === 'criar';
 
   const mudar = (campo: keyof DadosCriarConta) => (valor: string) =>
@@ -109,6 +116,11 @@ export function FormularioConta({
           secureTextEntry
           autoCapitalize="none"
         />
+      ) : null}
+      {demorando ? (
+        <Text accessibilityRole="text" className="text-xs text-textoSecundario">
+          {MENSAGEM_ACORDANDO}
+        </Text>
       ) : null}
       {mensagem ? (
         <Text accessibilityRole="alert" className="text-xs text-erro">
