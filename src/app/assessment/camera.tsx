@@ -6,6 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { AvisoTaxaNaoSuportada } from '@/components/AvisoTaxaNaoSuportada';
 import { IndicadorGravacao } from '@/components/IndicadorGravacao';
 import { LinhaGuia } from '@/components/LinhaGuia';
+import { SemCameraLenta } from '@/components/SemCameraLenta';
 import { SeletorTaxa } from '@/components/SeletorTaxa';
 import { useGravacaoAltaVelocidade } from '@/hooks/useGravacaoAltaVelocidade';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
@@ -18,8 +19,6 @@ export const MENSAGEM_MOTIVO_CAMERA =
   'O app usa a câmera para filmar o salto em câmera lenta. O vídeo não sai do app e é apagado ao fim da avaliação.';
 export const MENSAGEM_CAMERA_NEGADA =
   'Sem a câmera, o app não grava o salto. Permita o acesso nas configurações do aparelho ou escolha um vídeo da galeria.';
-export const MENSAGEM_SEM_ALTA_VELOCIDADE =
-  'Este aparelho não libera a câmera lenta (120 ou 240 fps) para outros apps. Filme no modo Câmera lenta da câmera do celular e escolha o vídeo da galeria.';
 export const MENSAGEM_PREPARANDO = 'Preparando a câmera em câmera lenta...';
 export const MENSAGEM_TENTATIVA_INVALIDA = 'Tentativa inválida. Volte ao analisador.';
 const NOTA_DESCARTE =
@@ -44,7 +43,7 @@ export default function TelaCamera() {
 
 function Gravacao({ perna, numero }: { perna: PernaTentativa; numero: NumeroTentativa }) {
   const router = useRouter();
-  const { usarVideoGravado } = useTentativaAtual(perna, numero);
+  const { usarVideoGravado, escolherVideo, mensagem } = useTentativaAtual(perna, numero);
   const g = useGravacaoAltaVelocidade();
 
   if (g.estado === 'sem_permissao' || g.estado === 'permissao_negada') {
@@ -63,9 +62,11 @@ function Gravacao({ perna, numero }: { perna: PernaTentativa; numero: NumeroTent
   }
   if (g.estado === 'sem_alta_velocidade') {
     return (
-      <Centro>
-        <Text className="text-center text-sm text-texto">{MENSAGEM_SEM_ALTA_VELOCIDADE}</Text>
-      </Centro>
+      <SemCameraLenta
+        aoEscolherDaGaleria={escolherVideo}
+        aoConcluir={() => router.back()}
+        mensagemGaleria={mensagem}
+      />
     );
   }
   if (!g.propsCamera) {

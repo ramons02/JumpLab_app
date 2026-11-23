@@ -1,6 +1,12 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
-import { MENSAGEM_SEM_ALTA_VELOCIDADE } from '@/app/assessment/camera';
+import { Linking } from 'react-native';
+
+import {
+  MENSAGEM_CAMERA_NAO_ABRIU,
+  MENSAGEM_SEM_ALTA_VELOCIDADE,
+} from '@/components/SemCameraLenta';
+import { importarVideoDaGaleria } from '@/video/importarVideo';
 
 import { abrirAnalisador, abrirCamera, botaoGravar } from '../helpers/fluxoCamera';
 import { limparSistemaArquivos } from '../helpers/mockSistemaArquivos';
@@ -84,5 +90,51 @@ describe('câmera: taxa não suportada', () => {
     await abrirCamera();
 
     expect(await screen.findByText(MENSAGEM_SEM_ALTA_VELOCIDADE)).toBeOnTheScreen();
+  });
+
+  it('Abrir a câmera do celular abre o app de câmera no modo vídeo', async () => {
+    const abrir = jest.spyOn(Linking, 'sendIntent').mockResolvedValue();
+    camera.maximosFps = [30, 60];
+    await abrirAnalisador();
+    await abrirCamera();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Abrir a câmera do celular' }));
+
+    expect(abrir).toHaveBeenCalledWith('android.media.action.VIDEO_CAMERA');
+    abrir.mockRestore();
+  });
+
+  it('se a câmera do celular não abre, avisa', async () => {
+    const abrir = jest.spyOn(Linking, 'sendIntent').mockRejectedValue(new Error('sem app'));
+    camera.maximosFps = [30, 60];
+    await abrirAnalisador();
+    await abrirCamera();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Abrir a câmera do celular' }));
+
+    expect(await screen.findByText(MENSAGEM_CAMERA_NAO_ABRIU)).toBeOnTheScreen();
+    abrir.mockRestore();
+  });
+
+  it('Escolher vídeo da galeria entrega o vídeo à tentativa e volta ao analisador', async () => {
+    jest.mocked(importarVideoDaGaleria).mockResolvedValue({
+      tipo: 'ok',
+      video: {
+        uri: 'content://galeria/camera-lenta.mp4',
+        nome: 'camera-lenta.mp4',
+        duracaoS: 4,
+        fpsLido: 30,
+        fpsDoArquivo: 30,
+        temporario: false,
+      },
+    });
+    camera.maximosFps = [30, 60];
+    await abrirAnalisador();
+    await abrirCamera();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Escolher vídeo da galeria' }));
+
+    expect(await screen.findByText('camera-lenta.mp4')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Confirmar FPS' })).toBeOnTheScreen();
   });
 });
