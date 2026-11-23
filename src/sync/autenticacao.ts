@@ -1,6 +1,6 @@
 import type { Sessao } from '@/types/conta';
 import { apagarSessao, gravarSessao, lerSessao } from '@/sync/armazenamentoSessao';
-import { chamarApi, type ResultadoHttp } from '@/sync/clienteHttp';
+import { chamarApi, TEMPO_LIMITE_ACORDAR_MS, type ResultadoHttp } from '@/sync/clienteHttp';
 import { lerRespostaSessao } from '@/sync/validacaoRespostas';
 import { normalizarEmail } from '@/utils/validacaoConta';
 
@@ -25,6 +25,7 @@ export async function criarConta(dados: {
         metodo: 'POST',
         corpo: { nome: dados.nome.trim(), email: normalizarEmail(dados.email), senha: dados.senha },
         autenticada: false,
+        tempoLimiteMs: TEMPO_LIMITE_ACORDAR_MS,
       },
       lerRespostaSessao,
     ),
@@ -35,7 +36,12 @@ export async function criarConta(dados: {
 export async function entrar(email: string, senha: string): Promise<ResultadoHttp<Sessao>> {
   const resultado = await chamarApi(
     '/api/auth/entrar',
-    { metodo: 'POST', corpo: { email: normalizarEmail(email), senha }, autenticada: false },
+    {
+      metodo: 'POST',
+      corpo: { email: normalizarEmail(email), senha },
+      autenticada: false,
+      tempoLimiteMs: TEMPO_LIMITE_ACORDAR_MS,
+    },
     lerRespostaSessao,
   );
   if (resultado.tipo === 'erro' && resultado.status === NAO_AUTORIZADO) {

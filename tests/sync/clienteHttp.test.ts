@@ -1,5 +1,10 @@
 import { gravarSessao, lerSessao } from '@/sync/armazenamentoSessao';
-import { aoEncerrarSessao, chamarApi, TEMPO_LIMITE_MS } from '@/sync/clienteHttp';
+import {
+  aoEncerrarSessao,
+  chamarApi,
+  TEMPO_LIMITE_ACORDAR_MS,
+  TEMPO_LIMITE_MS,
+} from '@/sync/clienteHttp';
 
 import { limparArmazenamentoSeguro } from '../helpers/armazenamentoSeguroFalso';
 import { cabecalho, chamadas, instalarApiFalsa, responder, sessaoDto } from '../helpers/apiFalsa';
@@ -111,6 +116,40 @@ describe('chamarApi', () => {
     await jest.advanceTimersByTimeAsync(TEMPO_LIMITE_MS);
 
     expect(await resultado).toEqual({ tipo: 'sem-conexao' });
+    jest.useRealTimers();
+  });
+
+  it('com a espera de acordar, resposta depois de 15 s ainda chega; depois de 75 s, sem-conexao', async () => {
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
+    const lenta = (atrasoMs: number) =>
+      jest.fn(
+        (_url: RequestInfo | URL, init?: RequestInit) =>
+          new Promise<Response>((resolver, rejeitar) => {
+            const t = setTimeout(
+              () => resolver(new Response(JSON.stringify({ sucesso: true }), { status: 200 })),
+              atrasoMs,
+            );
+            init?.signal?.addEventListener('abort', () => {
+              clearTimeout(t);
+              rejeitar(new Error('aborted'));
+            });
+          }),
+      ) as typeof fetch;
+    const opcoes = {
+      metodo: 'POST' as const,
+      autenticada: false,
+      tempoLimiteMs: TEMPO_LIMITE_ACORDAR_MS,
+    };
+
+    global.fetch = lenta(40_000);
+    const acordou = chamarApi('/api/auth/entrar', opcoes, lerTudo);
+    await jest.advanceTimersByTimeAsync(40_000);
+    expect(await acordou).toEqual({ tipo: 'ok', dados: { sucesso: true } });
+
+    global.fetch = lenta(TEMPO_LIMITE_ACORDAR_MS + 5_000);
+    const dormindo = chamarApi('/api/auth/entrar', opcoes, lerTudo);
+    await jest.advanceTimersByTimeAsync(TEMPO_LIMITE_ACORDAR_MS);
+    expect(await dormindo).toEqual({ tipo: 'sem-conexao' });
     jest.useRealTimers();
   });
 

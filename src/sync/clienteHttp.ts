@@ -13,9 +13,16 @@ interface OpcoesChamada {
   metodo: 'GET' | 'POST';
   corpo?: unknown;
   autenticada: boolean;
+  /** Espera maior para entrar, criar conta e pedir recuperação: o servidor pode estar acordando. */
+  tempoLimiteMs?: number;
 }
 
 export const TEMPO_LIMITE_MS = 15_000;
+/**
+ * O servidor gratuito da API dorme depois de um tempo parado e leva perto de um minuto para acordar;
+ * as ações da conta, que o avaliador espera de olho na tela, aguardam até este tempo.
+ */
+export const TEMPO_LIMITE_ACORDAR_MS = 75_000;
 const NAO_AUTORIZADO = 401;
 const MENSAGEM_ERRO_PADRAO = 'Erro inesperado. Tente de novo.';
 const MENSAGEM_RESPOSTA_INVALIDA = 'Resposta inesperada do servidor.';
@@ -34,9 +41,10 @@ async function requisitar(
   metodo: 'GET' | 'POST',
   corpo: unknown,
   token: string | null,
+  tempoLimiteMs: number = TEMPO_LIMITE_MS,
 ): Promise<Resposta> {
   const controle = new AbortController();
-  const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS);
+  const limite = setTimeout(() => controle.abort(), tempoLimiteMs);
   try {
     const cabecalhos: Record<string, string> = { Accept: 'application/json' };
     if (corpo !== undefined) cabecalhos['Content-Type'] = 'application/json';
@@ -127,7 +135,13 @@ export async function chamarApi<T>(
   lerDados: (corpo: unknown) => T,
 ): Promise<ResultadoHttp<T>> {
   if (!opcoes.autenticada) {
-    const resposta = await requisitar(caminho, opcoes.metodo, opcoes.corpo, null);
+    const resposta = await requisitar(
+      caminho,
+      opcoes.metodo,
+      opcoes.corpo,
+      null,
+      opcoes.tempoLimiteMs,
+    );
     return resposta === 'sem-conexao' ? { tipo: 'sem-conexao' } : paraResultado(resposta, lerDados);
   }
 
