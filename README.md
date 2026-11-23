@@ -62,12 +62,21 @@ biblioteca de câmera usada antes só abria a sessão comum, que no Samsung vai 
 fica só em `cache/gravacoes/` até o fim da avaliação (D14). Depois de mexer no módulo, gere um
 Development Build novo (`npm run android`).
 
-- Ao abrir a tela, o app pergunta à câmera traseira as taxas de alta velocidade que ela libera e abre na
-  maior. Se o aparelho não libera nenhuma, a tela orienta filmar na câmera lenta do próprio celular e
-  importar pela galeria.
+- Ao abrir a tela, o app pergunta à câmera traseira as taxas de alta velocidade que ela libera e abre em
+  120, o padrão do app (D22), ou em 240 se o aparelho só liberar 240. Se o aparelho não libera nenhuma,
+  a tela orienta filmar na câmera lenta do próprio celular e importar pela galeria, e oferece abrir a
+  câmera do celular.
+- O vídeo gravado ou importado já chega com o FPS confirmado: o app lê a taxa nos dados do arquivo
+  (`modules/leitura-video/`, D22) e, sem leitura, usa 120. `Trocar FPS` corrige à mão.
 - A permissão `CAMERA` vem do `app.json`; o microfone fica bloqueado, porque a gravação é sem áudio.
 
-Aparelhos testados a 240 e a 120 fps: a registrar na validação em aparelho (quickstart da spec 011).
+Aparelhos testados:
+
+| Aparelho           | Câmera do app (120/240)                                              | Câmera lenta do celular, importada                                                                 |
+| ------------------ | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Samsung Galaxy A54 | não libera a sessão de alta velocidade para outros apps (23/11/2026) | arquivo a 120 fps em tempo real (465 quadros em 3,875 s); usar o original, não a cópia do WhatsApp |
+
+Novos aparelhos entram nesta tabela na validação em aparelho (quickstart da spec 011).
 
 ## Verificações
 
@@ -98,14 +107,11 @@ desenvolvimento.
 
 2. Copie os dois vídeos para o aparelho (`adb push videos-d1/*.mp4 /sdcard/Movies/`) e grave
    também um vídeo em câmera lenta filmando um cronômetro de milissegundos.
-3. Com o build de desenvolvimento instalado, abra a rota provisória:
+3. No app, crie uma avaliação de CMJ e, no analisador, toque em `Escolher vídeo da galeria`. O FPS é
+   lido do arquivo (D22); confira em `Trocar FPS` que é a taxa da faixa (240 para o nativo, 30 para o
+   regravado). A rota provisória `/dev/teste-d1` foi retirada (spec 006, T026).
 
-   ```bash
-   adb shell am start -a android.intent.action.VIEW -d "jumplab://dev/teste-d1"
-   ```
-
-4. Escolha o vídeo, marque a taxa da faixa (240 para o nativo, 30 para o regravado) e siga o
-   procedimento do `quickstart.md` da spec 006: 100 toques em `+1 Frame`, 100 em `-1 Frame`, 20
+4. Siga o procedimento do `quickstart.md` da spec 006: 100 toques em `+1 Frame`, 100 em `-1 Frame`, 20
    posições na barra e 10 sequências de 5 toques rápidos, comparando o número da imagem com o
    "Quadro N / último" da tela.
 

@@ -2,17 +2,10 @@ import { Pressable, Text, View } from 'react-native';
 
 import { SeloBaixaPrecisao } from '@/components/SeloBaixaPrecisao';
 import type { AvaliacaoDoHistorico } from '@/types/assessment';
-import type { CorLsi } from '@/types/resultadoSalto';
+import { ESTILO_SEMAFORO } from '@/theme/semaforoLsi';
 import { dataHoraParaBr } from '@/utils/datas';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { medidaPrincipal } from '@/utils/resumoPerfil';
-
-const COR_TEXTO: Record<CorLsi, string> = {
-  verde: 'text-destaque',
-  amarelo: 'text-aviso',
-  vermelho: 'text-erro',
-  neutro: 'text-texto',
-};
 
 interface ItemAvaliacaoProps {
   avaliacao: AvaliacaoDoHistorico;
@@ -36,7 +29,7 @@ export function ItemAvaliacao({ avaliacao, aoTocar }: ItemAvaliacaoProps) {
         <Text className="text-xs text-textoSecundario">{dataHoraParaBr(avaliacao.dataHora)}</Text>
         {baixaPrecisao ? <SeloBaixaPrecisao /> : null}
       </View>
-      <Text className={`text-base font-bold ${COR_TEXTO[medida.cor ?? 'neutro']}`}>
+      <Text className={`text-base font-bold ${ESTILO_SEMAFORO[medida.cor ?? 'neutro'].valor}`}>
         {medida.texto}
       </Text>
     </Pressable>

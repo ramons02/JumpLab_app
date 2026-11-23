@@ -1,5 +1,7 @@
 import { Text, View } from 'react-native';
 
+import { ESTILO_SEMAFORO } from '@/theme/semaforoLsi';
+
 export type CorCartao = 'verde' | 'amarelo' | 'vermelho';
 
 interface CartaoMedidaProps {
@@ -13,12 +15,6 @@ interface CartaoMedidaProps {
   tentativas?: string[];
 }
 
-const ESTILO_POR_COR: Record<CorCartao, { caixa: string; valor: string }> = {
-  verde: { caixa: 'border-destaque bg-destaqueFundo', valor: 'text-destaque' },
-  amarelo: { caixa: 'border-aviso bg-aviso-fundo', valor: 'text-aviso' },
-  vermelho: { caixa: 'border-erro bg-erro-fundo', valor: 'text-erro' },
-};
-
 /** Card de uma medida do resumo; compartilhado com a spec 008, que acrescenta as tentativas. */
 export function CartaoMedida({
   rotulo,
@@ -28,9 +24,7 @@ export function CartaoMedida({
   cor,
   tentativas,
 }: CartaoMedidaProps) {
-  const estilo = cor
-    ? ESTILO_POR_COR[cor]
-    : { caixa: 'border-borda bg-cartao', valor: 'text-texto' };
+  const estilo = ESTILO_SEMAFORO[cor ?? 'neutro'];
   return (
     <View className={`flex-1 rounded-2xl border p-3 ${estilo.caixa}`}>
       <Text className="text-xs font-medium text-textoSecundario">{rotulo}</Text>

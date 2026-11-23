@@ -1,17 +1,11 @@
 import { Text, View } from 'react-native';
 
 import type { PernaLesionada } from '@/types/patient';
-import type { CorLsi, ResumoLsi } from '@/types/resultadoSalto';
+import { ESTILO_SEMAFORO } from '@/theme/semaforoLsi';
+import type { ResumoLsi } from '@/types/resultadoSalto';
 import { corLsi, LSI_LIMITE_AMARELO, LSI_LIMITE_VERDE } from '@/utils/biomechanics';
 import { CASAS_LSI, formatarDecimal } from '@/utils/formatacao';
 import { ROTULO_PERNA } from '@/utils/rotulos';
-
-const ESTILO: Record<CorLsi, { caixa: string; valor: string }> = {
-  verde: { caixa: 'border-destaque bg-destaqueFundo', valor: 'text-destaque' },
-  amarelo: { caixa: 'border-aviso bg-aviso-fundo', valor: 'text-aviso' },
-  vermelho: { caixa: 'border-erro bg-erro-fundo', valor: 'text-erro' },
-  neutro: { caixa: 'border-borda bg-cartao', valor: 'text-texto' },
-};
 
 function explicacao(lsi: ResumoLsi, pernaLesionada: PernaLesionada): string {
   const base = lsi.base === 'rsi' ? 'pelo RSI' : 'pela altura';
@@ -31,7 +25,7 @@ export function CartaoLsi({
   pernaLesionada: PernaLesionada;
 }) {
   const cor = corLsi(lsi.valor);
-  const estilo = ESTILO[cor];
+  const estilo = ESTILO_SEMAFORO[cor];
   return (
     <View testID="cartao-lsi" className={`gap-1 rounded-2xl border p-4 ${estilo.caixa}`}>
       <Text className="text-xs font-semibold text-textoSecundario">LSI (Índice de Simetria)</Text>

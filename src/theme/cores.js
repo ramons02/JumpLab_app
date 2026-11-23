@@ -13,6 +13,12 @@ module.exports = {
   destaqueFundo: '#13361f',
   aviso: { DEFAULT: '#f8c867', fundo: '#2b2210' },
   erro: { DEFAULT: '#f87171', fundo: '#2c1414' },
+  // semáforo do LSI (D12, spec 007 R7): mesmos tons do destaque, do aviso e do erro, como no protótipo
+  lsi: {
+    verde: { DEFAULT: '#2ee58a', fundo: '#13361f' },
+    amarelo: { DEFAULT: '#f8c867', fundo: '#2b2210' },
+    vermelho: { DEFAULT: '#f87171', fundo: '#2c1414' },
+  },
   // linha guia vertical do analisador (amarelo do protótipo, spec 006)
   guia: '#fde047',
   personagem: {
