@@ -21,6 +21,7 @@ import { useTentativaAtual } from '@/hooks/useTentativaAtual';
 import type { EventoSalto, NumeroTentativa, PernaTentativa } from '@/types/attempt';
 import { avisoDoFps } from '@/utils/fps';
 import { tentativaCompleta, todasCompletas } from '@/utils/marcacoes';
+import { pendenciasDaAvaliacao } from '@/utils/pendencias';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { marcacoesLiberadas, pernasDoProtocolo, TENTATIVAS_POR_PERNA } from '@/utils/tentativas';
 
@@ -165,7 +166,11 @@ function Analisador({ rascunho, pernas }: AnalisadorProps) {
         {TENTATIVAS_POR_PERNA} tentativas{pernas.length > 1 ? ' por perna' : ''}; o resultado é a
         média delas.
       </Text>
-      <BotaoVerResultado pronto={prontas} aoTocar={() => router.push('/assessment/result')} />
+      <BotaoVerResultado
+        pronto={prontas}
+        aoTocar={() => router.push('/assessment/result')}
+        pendencias={pendenciasDaAvaliacao(tentativas, protocolo)}
+      />
     </ScrollView>
   );
 }
