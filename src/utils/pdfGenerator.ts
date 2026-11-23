@@ -143,9 +143,9 @@ function evolucao({ evolucao: e, avaliacao }: DadosLaudo): string {
   if (!e.protocolo) return '';
   const titulo = `Evolução: ${escaparHtml(PROTOCOLOS[avaliacao.protocolo].nome)} · ${escaparHtml(e.protocolo.medida)}`;
   const lsi = e.lsi
-    ? `<p class="titulo-grafico">Evolução da simetria (LSI)</p>${montarSvgGrafico(e.lsi)}`
+    ? `<div class="bloco"><p class="titulo-grafico">Evolução da simetria (LSI)</p>${montarSvgGrafico(e.lsi)}</div>`
     : '';
-  return `<section class="evolucao"><p class="titulo-grafico">${titulo}</p>${montarSvgGrafico(e.protocolo)}${lsi}</section>`;
+  return `<section class="evolucao"><div class="bloco"><p class="titulo-grafico">${titulo}</p>${montarSvgGrafico(e.protocolo)}</div>${lsi}</section>`;
 }
 
 /** Seção do agachamento (spec 014, RN11 e RN16): resumo, tabela por repetição, barras e perda. */
@@ -167,7 +167,7 @@ function secaoAgachamento(resumo: ResumoAgachamento): string {
     )
     .join('');
   const tabela = `<table><thead><tr><th>Repetição</th><th class="numero">Amplitude (cm)</th><th class="numero">Subida (s)</th><th class="numero">Velocidade (m/s)</th><th class="numero">Potência (W)</th></tr></thead><tbody>${linhas}</tbody></table>`;
-  const grafico = `<p class="titulo-grafico">Velocidade da subida por repetição (m/s)</p>${montarSvgRepeticoes(resumo.repeticoes, resumo.perdaVelocidadePct)}`;
+  const grafico = `<div class="bloco"><p class="titulo-grafico">Velocidade da subida por repetição (m/s)</p>${montarSvgRepeticoes(resumo.repeticoes, resumo.perdaVelocidadePct)}</div>`;
   const corDaPerda = cores.papel.lsi[corPerda(resumo.perdaVelocidadePct)];
   const frase =
     resumo.perdaVelocidadePct === null
@@ -186,7 +186,7 @@ function secaoMelhorias({ avaliacao }: DadosLaudo): string {
       return `<li><b>${escaparHtml(p.titulo)}</b>${detalhe ? `<br><span class="secundario">${detalhe}</span>` : ''}</li>`;
     })
     .join('');
-  return `<section class="evolucao"><p class="titulo-grafico">O que melhorar</p>${montarSvgMapaMuscular(consolidarGrupos(avaliacao.melhorias), avaliacao.protocolo)}${montarHtmlTabelaLocais(avaliacao.melhorias, avaliacao)}<ul>${pontos}</ul></section>`;
+  return `<section class="evolucao"><div class="bloco"><p class="titulo-grafico">O que melhorar</p>${montarSvgMapaMuscular(consolidarGrupos(avaliacao.melhorias), avaliacao.protocolo)}</div>${montarHtmlTabelaLocais(avaliacao.melhorias, avaliacao)}<ul>${pontos}</ul></section>`;
 }
 
 function medidas({ avaliacao }: DadosLaudo): string[] {

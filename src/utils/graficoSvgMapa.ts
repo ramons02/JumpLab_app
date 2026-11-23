@@ -119,14 +119,15 @@ export function montarHtmlTabelaLocais(
     const motivo = linha.motivos.length
       ? `<tr><td colspan="5" class="numero" style="color:${COR.alerta}">${escaparHtml(linha.motivos.join(' · '))}</td></tr>`
       : '';
+    // Um tbody por local: a linha do local e a do motivo não se separam entre páginas.
     return (
-      `<tr><td>${numeros} · ${linha.local.nome} ${lado}<br><span class="secundario">${escaparHtml(grupos)}</span></td>` +
+      `<tbody><tr><td>${numeros} · ${linha.local.nome} ${lado}<br><span class="secundario">${escaparHtml(grupos)}</span></td>` +
       `<td>${NOME_CURTO[avaliacao.protocolo]}</td><td>${medidaDoLado(avaliacao, linha.lados[0])}</td>` +
-      `<td>${razao === null ? '—' : `${formatarDecimal(razao, CASAS_LSI)}%`}</td><td>${desvio}</td></tr>${motivo}`
+      `<td>${razao === null ? '—' : `${formatarDecimal(razao, CASAS_LSI)}%`}</td><td>${desvio}</td></tr>${motivo}</tbody>`
     );
   });
   return (
-    `<table><thead><tr><th>Local</th><th>Teste ${dataHoraParaBr(avaliacao.dataHora)}</th><th>Medida</th><th>Razão</th><th>Desvio</th></tr></thead><tbody>${linhas.join('')}</tbody></table>` +
+    `<table class="bloco"><thead><tr><th>Local</th><th>Teste ${dataHoraParaBr(avaliacao.dataHora)}</th><th>Medida</th><th>Razão</th><th>Desvio</th></tr></thead>${linhas.join('')}</table>` +
     `<p class="secundario nota">${escaparHtml(explicacaoDaRazao(avaliacao))}</p>`
   );
 }

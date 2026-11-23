@@ -146,3 +146,23 @@ describe('"O que melhorar" no laudo (spec 017, US3)', () => {
     }
   });
 });
+
+describe('quebra de página do laudo', () => {
+  it('título e gráfico no mesmo bloco, sem quebra dentro de bloco, tabela nem local', () => {
+    const { html } = laudo(
+      salva(novaAvaliacao(PACIENTE.id, 'cmj_uni', CMJ_UNILATERAL), 'av-quebra'),
+    );
+    expect(html).toContain('.bloco, tbody, tr { break-inside: avoid; page-break-inside: avoid; }');
+    expect(html).toMatch(/<div class="bloco"><p class="titulo-grafico">O que melhorar<\/p><svg/);
+    expect(html).toContain('<table class="bloco"><thead><tr><th>Local</th>');
+    // cada local vem num tbody próprio, com a linha do motivo junto
+    expect(html).toMatch(/<tbody><tr><td>1 · Quadril[^]*?<\/tr><tr><td colspan="5"[^]*?<\/tbody>/);
+  });
+
+  it('agachamento: o título do gráfico de barras fica junto do gráfico', () => {
+    const { html } = laudo(agach());
+    expect(html).toMatch(
+      /<div class="bloco"><p class="titulo-grafico">Velocidade da subida por repetição \(m\/s\)<\/p><svg/,
+    );
+  });
+});

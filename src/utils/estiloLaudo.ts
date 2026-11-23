@@ -22,7 +22,9 @@ td { padding: 4px; border-bottom: 1px solid ${p.borda}; }
 .lsi { margin-top: 12px; padding: 8px; border-radius: 4px; text-align: center; font-weight: bold; }
 .observacoes { margin-top: 12px; }
 .evolucao { margin-top: 16px; border-top: 1px solid ${p.borda}; padding-top: 12px; }
-.titulo-grafico { font-weight: bold; margin: 8px 0 4px; }
+.titulo-grafico { font-weight: bold; margin: 8px 0 4px; break-after: avoid; page-break-after: avoid; }
+.bloco, tbody, tr { break-inside: avoid; page-break-inside: avoid; }
+thead { display: table-header-group; }
 .legenda { color: ${p.textoSecundario}; font-size: 9px; }
-footer { margin-top: 16px; border-top: 1px solid ${p.borda}; padding-top: 8px; color: ${p.textoSecundario}; font-size: 9px; }`;
+footer { break-before: avoid; page-break-before: avoid; margin-top: 16px; border-top: 1px solid ${p.borda}; padding-top: 8px; color: ${p.textoSecundario}; font-size: 9px; }`;
 }
