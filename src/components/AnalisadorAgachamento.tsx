@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AvisoFps } from '@/components/AvisoFps';
+import { BotaoVerResultado } from '@/components/BotaoVerResultado';
 import { CamadaToqueVideo, type MarcadorImagem } from '@/components/CamadaToqueVideo';
 import { PainelAgachamento } from '@/components/PainelAgachamento';
 import { PlayerQuadros } from '@/components/PlayerQuadros';
@@ -162,21 +163,11 @@ export function AnalisadorAgachamento({ rascunho }: { rascunho: RascunhoAvaliaca
           <PainelAgachamento marcacao={marcacao} fpsConfirmado={fpsConfirmado !== null} />
         </>
       )}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !marcacao.podeVerResultado }}
-        disabled={!marcacao.podeVerResultado}
-        onPress={() => router.push('/assessment/result')}
-        className={`items-center rounded-2xl py-4 ${
-          marcacao.podeVerResultado ? 'bg-destaque' : 'bg-destaqueFundo'
-        }`}
-      >
-        <Text
-          className={`font-semibold ${marcacao.podeVerResultado ? 'text-fundo' : 'text-textoSecundario'}`}
-        >
-          Ver resultado
-        </Text>
-      </Pressable>
+      <BotaoVerResultado
+        pronto={marcacao.podeVerResultado}
+        aoTocar={() => router.push('/assessment/result')}
+        pendencias={marcacao.pendencias}
+      />
     </ScrollView>
   );
 }

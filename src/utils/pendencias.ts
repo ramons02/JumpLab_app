@@ -1,5 +1,7 @@
 import type { EventoSalto, TentativaEmAndamento, TentativasPorPerna } from '@/types/attempt';
 import type { Protocol } from '@/types/protocol';
+import type { SerieEmAndamento } from '@/types/squat';
+import { repeticaoCompleta } from '@/utils/marcacaoAgachamento';
 import { eventosDoProtocolo } from '@/utils/marcacoes';
 import { PROTOCOLOS } from '@/utils/protocolos';
 import { ROTULO_PERNA } from '@/utils/rotulos';
@@ -41,4 +43,34 @@ export function pendenciasDaAvaliacao(
       return [`${qual}: ${falta}`];
     }),
   );
+}
+
+interface EstadoAgachamento {
+  temVideo: boolean;
+  fpsConfirmado: number | null;
+  cargaKg: number | null;
+  serie: SerieEmAndamento;
+}
+
+/**
+ * O que ainda impede o "Ver resultado" do agachamento (spec 014): vídeo, FPS, carga, calibração pelo
+ * disco e ao menos uma repetição com início, fundo e fim. Repetição pela metade não trava.
+ */
+export function pendenciasDoAgachamento({
+  temVideo,
+  fpsConfirmado,
+  cargaKg,
+  serie,
+}: EstadoAgachamento): string[] {
+  if (!temVideo) return ['sem vídeo'];
+  const faltas: string[] = [];
+  if (fpsConfirmado === null) faltas.push('FPS não confirmado');
+  if (!cargaKg) faltas.push('carga não informada');
+  if (!serie.calibracao || serie.calibracao.baseY === null) {
+    faltas.push('calibrar o disco (topo e base)');
+  }
+  if (!serie.repeticoes.some(repeticaoCompleta)) {
+    faltas.push('uma repetição completa (início, fundo e fim)');
+  }
+  return faltas;
 }
