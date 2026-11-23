@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRascunhoAvaliacao } from '@/hooks/useRascunhoAvaliacao';
 import type { EventoRepeticao, ResultadoAgachamento, SquatSeries } from '@/types/squat';
 import { medirAgachamento, pixelsPorCm as escalaDoDisco } from '@/utils/biomechanics';
+import { pendenciasDoAgachamento } from '@/utils/pendencias';
 import {
   aplicarMarca,
   paraSerie,
@@ -126,6 +127,12 @@ export function useMarcacaoAgachamento(quadroAtual: number) {
         : null,
     previa,
     podeVerResultado: previa !== null,
+    pendencias: pendenciasDoAgachamento({
+      temVideo: uriDoVideo !== null,
+      fpsConfirmado,
+      cargaKg: rascunho?.cargaKg ?? null,
+      serie,
+    }),
     mensagem,
   };
 }

@@ -133,6 +133,8 @@ describe('analisador do agachamento', () => {
     expect(screen.queryByText(MENSAGEM_AVISO_FPS.baixa_precisao)).toBeNull();
     expect(screen.getByRole('button', { name: 'Início da descida da repetição 1' })).toBeDisabled();
     expect(verResultado()).toBeDisabled();
+    expect(screen.getByText('• calibrar o disco (topo e base)')).toBeOnTheScreen();
+    expect(screen.getByText('• uma repetição completa (início, fundo e fim)')).toBeOnTheScreen();
   });
 
   it('calibrar com dois toques mostra a escala e as duas linhas do disco', async () => {
@@ -170,6 +172,7 @@ describe('analisador do agachamento', () => {
       { exact: false },
     );
     expect(verResultado()).toBeEnabled();
+    expect(screen.queryByTestId('pendencias-resultado')).toBeNull();
   });
 
   it('CA04: fim no quadro 90 com o fundo no 102 é recusado e nada muda', async () => {

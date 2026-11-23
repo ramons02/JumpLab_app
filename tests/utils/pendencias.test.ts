@@ -1,5 +1,6 @@
 import type { MarcasSalto, TentativaEmAndamento, VideoSelecionado } from '@/types/attempt';
-import { pendenciasDaAvaliacao } from '@/utils/pendencias';
+import type { SerieEmAndamento } from '@/types/squat';
+import { pendenciasDaAvaliacao, pendenciasDoAgachamento } from '@/utils/pendencias';
 
 const VIDEO: VideoSelecionado = {
   uri: 'file:///v.mp4',
@@ -60,5 +61,60 @@ describe('pendenciasDaAvaliacao', () => {
     expect(pendenciasDaAvaliacao(tentativas, 'cmj_uni')).toEqual([
       'Perna esquerda, tentativa 1: falta marcar aterrissagem',
     ]);
+  });
+});
+
+describe('pendenciasDoAgachamento', () => {
+  const REP_OK = {
+    inicio: { quadro: 1, y: 10 },
+    fundo: { quadro: 5, y: 40 },
+    fim: { quadro: 9, y: 10 },
+  };
+  const serie = (s: Partial<SerieEmAndamento> = {}): SerieEmAndamento => ({
+    uriDoVideo: 'file:///v.mp4',
+    calibracao: null,
+    repeticoes: [{ inicio: null, fundo: null, fim: null }],
+    ...s,
+  });
+
+  it('sem vídeo diz só isso', () => {
+    expect(
+      pendenciasDoAgachamento({
+        temVideo: false,
+        fpsConfirmado: null,
+        cargaKg: 60,
+        serie: serie(),
+      }),
+    ).toEqual(['sem vídeo']);
+  });
+
+  it('lista FPS, carga, calibração e repetição que faltam', () => {
+    expect(
+      pendenciasDoAgachamento({
+        temVideo: true,
+        fpsConfirmado: null,
+        cargaKg: null,
+        serie: serie({ calibracao: { topoY: 100, baseY: null } }),
+      }),
+    ).toEqual([
+      'FPS não confirmado',
+      'carga não informada',
+      'calibrar o disco (topo e base)',
+      'uma repetição completa (início, fundo e fim)',
+    ]);
+  });
+
+  it('nada falta com uma repetição completa, mesmo com outra pela metade', () => {
+    expect(
+      pendenciasDoAgachamento({
+        temVideo: true,
+        fpsConfirmado: 240,
+        cargaKg: 60,
+        serie: serie({
+          calibracao: { topoY: 100, baseY: 158 },
+          repeticoes: [REP_OK, { inicio: { quadro: 12, y: 10 }, fundo: null, fim: null }],
+        }),
+      }),
+    ).toEqual([]);
   });
 });
