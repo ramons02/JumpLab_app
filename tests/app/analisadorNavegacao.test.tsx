@@ -54,7 +54,7 @@ async function abrirComVideoConfirmado() {
   await fireEvent.press(await screen.findByRole('button', { name: 'Ir para o vídeo' }));
   importar.mockResolvedValueOnce({ tipo: 'ok', video: video('salto1.mp4') });
   await fireEvent.press(await screen.findByRole('button', { name: 'Escolher vídeo da galeria' }));
-  await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
+  await screen.findByText(/fps lido do vídeo/);
   return app;
 }
 

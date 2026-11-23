@@ -28,8 +28,9 @@ describe('taxasAltaSuportadas', () => {
 });
 
 describe('taxaInicial', () => {
-  it('prefere 240, depois 120, senão nenhuma', () => {
-    expect(taxaInicial([120, 240])).toBe(240);
+  it('prefere 120 (padrão, D22), depois 240, senão nenhuma', () => {
+    expect(taxaInicial([120, 240])).toBe(120);
+    expect(taxaInicial([240])).toBe(240);
     expect(taxaInicial([120])).toBe(120);
     expect(taxaInicial([])).toBeNull();
   });

@@ -70,14 +70,14 @@ describe('tela de gravação em alta velocidade', () => {
     expect(abrirConfiguracoes).toHaveBeenCalled();
   });
 
-  it('câmera com a linha guia e 240 pré-escolhido', async () => {
+  it('câmera com a linha guia e 120 pré-escolhido (padrão, D22)', async () => {
     await abrirAnalisador();
     await abrirCamera();
 
     await screen.findByTestId('camera');
-    expect(camera.ultimasProps?.fps).toBe(240);
+    expect(camera.ultimasProps?.fps).toBe(120);
     expect(screen.getByTestId('linha-guia')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '240 fps' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '120 fps' })).toBeChecked();
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
   });
 
@@ -87,14 +87,15 @@ describe('tela de gravação em alta velocidade', () => {
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
 
     await fireEvent.press(botaoGravar());
-    expect(await screen.findByText('REC 00:00 · 240 fps')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '120 fps' })).toBeDisabled();
+    expect(await screen.findByText('REC 00:00 · 120 fps')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: '240 fps' })).toBeDisabled();
 
     await fireEvent.press(botaoParar());
 
-    expect(await screen.findByText('gravacao_240fps.mp4')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '240 fps' })).toBeChecked();
-    expect(screen.getByText('Confirme o FPS para liberar as marcações.')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('120 fps lido do vídeo · gravacao_120fps.mp4'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Confirme o FPS para liberar as marcações.')).toBeNull();
     expect(lerTaxaDoVideo).toHaveBeenCalledWith(
       expect.stringMatching(/^file:\/\/\/cache\/gravacoes\//),
     );
@@ -114,7 +115,7 @@ describe('tela de gravação em alta velocidade', () => {
       await act(async () => {
         jest.advanceTimersByTime(65_000);
       });
-      expect(screen.getByText('REC 01:05 · 240 fps')).toBeOnTheScreen();
+      expect(screen.getByText('REC 01:05 · 120 fps')).toBeOnTheScreen();
     } finally {
       jest.useRealTimers();
     }
@@ -125,7 +126,7 @@ describe('tela de gravação em alta velocidade', () => {
     await abrirCamera();
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
     await fireEvent.press(botaoGravar());
-    await screen.findByText('REC 00:00 · 240 fps');
+    await screen.findByText('REC 00:00 · 120 fps');
 
     await act(async () => router.back());
 
@@ -146,7 +147,7 @@ describe('tela de gravação em alta velocidade', () => {
     await abrirCamera();
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
     await fireEvent.press(botaoGravar());
-    await screen.findByText('REC 00:00 · 240 fps');
+    await screen.findByText('REC 00:00 · 120 fps');
 
     await act(async () => ouvintes.forEach((ouvinte) => ouvinte('background')));
     await act(async () => ouvintes.forEach((ouvinte) => ouvinte('active')));
@@ -174,7 +175,7 @@ describe('tela de gravação em alta velocidade', () => {
     await abrirCamera();
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
     await fireEvent.press(botaoGravar());
-    await screen.findByText('REC 00:00 · 240 fps');
+    await screen.findByText('REC 00:00 · 120 fps');
 
     await act(async () => camera.aoFalhar?.());
 

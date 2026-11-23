@@ -9,7 +9,7 @@ import type {
   VideoSelecionado,
 } from '@/types/attempt';
 import type { Protocol } from '@/types/protocol';
-import { podeConfirmarFps } from '@/utils/fps';
+import { FPS_GRAVACAO_PADRAO, podeConfirmarFps } from '@/utils/fps';
 import { eventosDoProtocolo, tentativaCompleta } from '@/utils/marcacoes';
 import { PROTOCOLOS } from '@/utils/protocolos';
 
@@ -38,14 +38,17 @@ export function criarTentativasVazias(protocolo: Protocol): TentativasPorPerna {
 }
 
 /**
- * Vídeo novo (escolhido ou trocado): FPS lido pré-selecionado, nada confirmado, marcas zeradas e sem
- * sugestão, porque a sugestão pertence ao vídeo (spec 018, RN10).
+ * Vídeo novo (escolhido ou trocado): o FPS lido nos dados do arquivo já vem confirmado; sem leitura,
+ * vale o padrão de 120 fps (D22). O seletor só aparece em Trocar FPS ou quando a leitura dá menos de
+ * 60 fps. Marcas zeradas e sem sugestão, porque a sugestão pertence ao vídeo (spec 018, RN10).
  */
 export function definirVideo(
   _tentativa: TentativaEmAndamento,
   video: VideoSelecionado,
 ): TentativaEmAndamento {
-  return { video, fpsSelecionado: video.fpsLido, fpsConfirmado: null, marcas: {}, sugestao: null };
+  const fps = video.fpsLido ?? FPS_GRAVACAO_PADRAO;
+  const fpsConfirmado = podeConfirmarFps(fps) ? fps : null;
+  return { video, fpsSelecionado: fps, fpsConfirmado, marcas: {}, sugestao: null };
 }
 
 /** Troca a sugestão automática da tentativa, sem tocar em vídeo, FPS ou marcas (spec 018). */

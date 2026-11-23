@@ -77,7 +77,7 @@ async function abrirAnalisador(protocolo: string, esperarVideo = true) {
 async function escolherVideoEConfirmar(nome = 'salto.mp4') {
   importar.mockResolvedValueOnce({ tipo: 'ok', video: video(nome) });
   await fireEvent.press(screen.getByRole('button', { name: 'Escolher vídeo da galeria' }));
-  await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
+  await screen.findByText(/fps lido do vídeo/);
 }
 
 const ligarSugestao = () => gravarPreferencia(bancoDaTela(), CHAVE_SUGESTAO_AUTOMATICA, '1');
@@ -104,7 +104,7 @@ describe('analisador: sugestão automática dos quadros (spec 018)', () => {
     await abrirAnalisador('CMJ Bilateral');
     importar.mockResolvedValueOnce({ tipo: 'ok', video: video('salto.mp4') });
     await fireEvent.press(screen.getByRole('button', { name: 'Escolher vídeo da galeria' }));
-    await screen.findByRole('button', { name: 'Confirmar FPS' });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Trocar FPS' }));
     expect(screen.queryByRole('button', { name: 'Sugerir quadros' })).toBeNull();
     await fireEvent.press(botao('Confirmar FPS'));
     expect(await screen.findByRole('button', { name: 'Sugerir quadros' })).toBeOnTheScreen();
@@ -309,7 +309,7 @@ describe('reaproveitar a sugestão no mesmo vídeo (spec 018, US4)', () => {
 
     importar.mockResolvedValueOnce({ tipo: 'ok', video: video('outro.mp4') });
     await fireEvent.press(botao('Trocar vídeo'));
-    await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
+    await screen.findByText(/fps lido do vídeo/);
     expect(screen.queryByText('sugerido no quadro 300')).toBeNull();
     expect(await screen.findByRole('button', { name: 'Sugerir quadros' })).toBeOnTheScreen();
   });

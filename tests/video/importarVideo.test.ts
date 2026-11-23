@@ -1,7 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
 import { createVideoPlayer } from 'expo-video';
 
-import { importarVideoDaGaleria, lerTaxaDoVideo } from '@/video/importarVideo';
+import { importarVideoDaGaleria, lerTaxaDoVideo, lerTaxasDoVideo } from '@/video/importarVideo';
+
+import { leituraVideo, reiniciarLeituraVideo } from '../helpers/mockLeituraVideo';
 
 const CACHE = 'file:///data/user/0/br.com.jumplab.app/cache/';
 
@@ -54,6 +56,7 @@ function escolher(uri: string, extras: Partial<ImagePicker.ImagePickerAsset> = {
 describe('importarVideoDaGaleria', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    reiniciarLeituraVideo();
     mockTocador.ouvintes = {};
     pedirPermissao.mockResolvedValue({
       granted: true,
@@ -141,5 +144,40 @@ describe('lerTaxaDoVideo', () => {
     expect(await leitura).toBeNull();
     expect(mockTocador.release).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+});
+
+describe('lerTaxasDoVideo (D22)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    reiniciarLeituraVideo();
+    mockTocador.ouvintes = {};
+  });
+
+  it('conta os quadros pela duração da faixa, sem abrir o tocador', async () => {
+    leituraVideo.dados = { taxaDeCaptura: null, quadros: 465, duracaoS: 3.875, taxaDaFaixa: 30 };
+    expect(await lerTaxasDoVideo('file:///v.mp4')).toEqual({ fpsLido: 120, fpsDoArquivo: 120 });
+    expect(createVideoPlayer).not.toHaveBeenCalled();
+  });
+
+  it('câmera lenta salva para tocar devagar: conta pela taxa de captura, navega pela do arquivo', async () => {
+    leituraVideo.dados = { taxaDeCaptura: 240, quadros: 300, duracaoS: 10, taxaDaFaixa: 30 };
+    expect(await lerTaxasDoVideo('file:///v.mp4')).toEqual({ fpsLido: 240, fpsDoArquivo: 30 });
+  });
+
+  it('taxa de captura igual ou menor que a do arquivo não muda nada', async () => {
+    leituraVideo.dados = { taxaDeCaptura: 30, quadros: 1200, duracaoS: 5, taxaDaFaixa: null };
+    expect(await lerTaxasDoVideo('file:///v.mp4')).toEqual({ fpsLido: 240, fpsDoArquivo: 240 });
+  });
+
+  it('sem contagem, usa a taxa declarada na faixa', async () => {
+    leituraVideo.dados = { taxaDeCaptura: null, quadros: null, duracaoS: null, taxaDaFaixa: 119.9 };
+    expect(await lerTaxasDoVideo('file:///v.mp4')).toEqual({ fpsLido: 120, fpsDoArquivo: 120 });
+  });
+
+  it('módulo nativo falhando, cai na taxa do tocador', async () => {
+    leituraVideo.falhar = true;
+    carregarCom(60);
+    expect(await lerTaxasDoVideo('file:///v.mp4')).toEqual({ fpsLido: 60, fpsDoArquivo: 60 });
   });
 });

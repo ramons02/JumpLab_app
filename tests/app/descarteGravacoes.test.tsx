@@ -75,7 +75,7 @@ describe('descarte das gravações (D14)', () => {
     await waitFor(() => expect(botaoGravar()).toBeEnabled());
     await fireEvent.press(botaoGravar());
     await fireEvent.press(await screen.findByRole('button', { name: 'Parar' }));
-    await screen.findByText('gravacao_240fps.mp4');
+    await screen.findByText('120 fps lido do vídeo · gravacao_120fps.mp4');
     expect(arquivosFalsos.size).toBe(1);
     expect([...arquivosFalsos][0].startsWith(`${PASTA}/`)).toBe(true);
 

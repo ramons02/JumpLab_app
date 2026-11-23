@@ -58,7 +58,7 @@ describe('pernasDoProtocolo e criarTentativasVazias', () => {
 });
 
 describe('transições da tentativa', () => {
-  it('definirVideo pré-seleciona o FPS lido, zera a confirmação e as marcas', () => {
+  it('definirVideo já confirma o FPS lido (D22) e zera as marcas e a sugestão', () => {
     const anterior = congelada({
       video: video('a', 120),
       fpsSelecionado: 120,
@@ -70,19 +70,27 @@ describe('transições da tentativa', () => {
     expect(nova).toEqual({
       video: video('b', 240),
       fpsSelecionado: 240,
-      fpsConfirmado: null,
+      fpsConfirmado: 240,
       marcas: {},
       sugestao: null,
     });
   });
 
-  it('definirVideo sem FPS lido deixa o seletor sem seleção', () => {
-    expect(definirVideo(VAZIA, video('a', null)).fpsSelecionado).toBeNull();
+  it('definirVideo sem FPS lido confirma o padrão de 120 (D22)', () => {
+    const t = definirVideo(VAZIA, video('a', null));
+    expect(t.fpsSelecionado).toBe(120);
+    expect(t.fpsConfirmado).toBe(120);
+  });
+
+  it('definirVideo lido abaixo de 60 não confirma', () => {
+    const t = definirVideo(VAZIA, video('a', 30));
+    expect(t.fpsSelecionado).toBe(30);
+    expect(t.fpsConfirmado).toBeNull();
   });
 
   it('selecionarFps troca a seleção sem confirmar', () => {
-    const t = selecionarFps(congelada(definirVideo(VAZIA, video('a', null))), 120);
-    expect(t.fpsSelecionado).toBe(120);
+    const t = selecionarFps(congelada(trocarFps(definirVideo(VAZIA, video('a', null)))), 240);
+    expect(t.fpsSelecionado).toBe(240);
     expect(t.fpsConfirmado).toBeNull();
   });
 
@@ -114,7 +122,8 @@ describe('transições da tentativa', () => {
 
   it('marcacoesLiberadas só com FPS confirmado', () => {
     expect(marcacoesLiberadas(VAZIA)).toBe(false);
-    expect(marcacoesLiberadas(definirVideo(VAZIA, video('a', 240)))).toBe(false);
+    expect(marcacoesLiberadas(definirVideo(VAZIA, video('a', 240)))).toBe(true);
+    expect(marcacoesLiberadas(definirVideo(VAZIA, video('a', 30)))).toBe(false);
   });
 });
 

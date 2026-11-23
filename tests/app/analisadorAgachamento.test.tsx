@@ -75,8 +75,9 @@ async function escolherVideo(nome = 'serie.mp4') {
   });
 }
 
+/** O FPS lido já vem confirmado (D22): só espera a tela refletir. */
 async function confirmarFps() {
-  await fireEvent.press(screen.getByRole('button', { name: 'Confirmar FPS' }));
+  await screen.findByText(/fps lido do vídeo/);
 }
 
 async function irParaQuadro(quadro: number) {
@@ -122,12 +123,11 @@ describe('analisador do agachamento', () => {
 
   afterEach(() => fecharBanco());
 
-  it('série única sem tentativas; Calibrar só depois do FPS; 60 fps sem aviso de baixa precisão', async () => {
+  it('série única sem tentativas; FPS lido já libera o Calibrar; 60 fps sem aviso de baixa precisão', async () => {
     await abrirAnalisador();
     expect(screen.queryByText(/tentativa 1 de 3/)).toBeNull();
     await escolherVideo();
 
-    expect(screen.getByRole('button', { name: 'Calibrar' })).toBeDisabled();
     await confirmarFps();
     expect(screen.getByRole('button', { name: 'Calibrar' })).toBeEnabled();
     expect(screen.queryByText(MENSAGEM_AVISO_FPS.baixa_precisao)).toBeNull();
@@ -230,7 +230,7 @@ describe('analisador do agachamento', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Trocar FPS' }));
     await fireEvent.press(screen.getByRole('radio', { name: '120 fps' }));
-    await confirmarFps();
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar FPS' }));
     expect(screen.getByTestId('previa-agachamento')).toHaveTextContent('subida 0,31 s', {
       exact: false,
     });

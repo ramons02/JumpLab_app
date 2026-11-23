@@ -1,9 +1,10 @@
 import { Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { createVideoPlayer, type VideoPlayer } from 'expo-video';
+import { lerDadosDoVideo } from 'leitura-video';
 
 import type { VideoSelecionado } from '@/types/attempt';
-import { normalizarFpsLido } from '@/utils/fps';
+import { normalizarFpsLido, taxaDeGravacao, taxaDoArquivo, type LeituraDaTaxa } from '@/utils/fps';
 
 export type ResultadoImportacao =
   | { tipo: 'ok'; video: VideoSelecionado }
@@ -47,12 +48,34 @@ export async function lerTaxaDoVideo(uri: string): Promise<number | null> {
   }
 }
 
+/** Taxas lidas do arquivo: a real (para as contas) e a dos quadros no arquivo (para navegar). */
+export interface TaxasDoVideo {
+  fpsLido: number | null;
+  fpsDoArquivo: number | null;
+}
+
+/**
+ * Lê a taxa de gravação nos dados do arquivo (D22): taxa de captura e contagem de quadros pelo módulo
+ * nativo; o que faltar, completa com a taxa que o tocador informa. Falhas viram null, nunca erro.
+ */
+export async function lerTaxasDoVideo(uri: string): Promise<TaxasDoVideo> {
+  const dados = await lerDadosDoVideo(uri).catch(() => null);
+  const leitura: LeituraDaTaxa = {
+    taxaDeCaptura: dados?.taxaDeCaptura ?? null,
+    quadros: dados?.quadros ?? null,
+    duracaoS: dados?.duracaoS ?? null,
+    taxaDaFaixa: dados?.taxaDaFaixa ?? null,
+  };
+  if (taxaDoArquivo(leitura) === null) leitura.taxaDaFaixa = await lerTaxaDoVideo(uri);
+  return { fpsLido: taxaDeGravacao(leitura), fpsDoArquivo: taxaDoArquivo(leitura) };
+}
+
 /** Cópia criada pelo picker no cache do app: precisa ser apagada ao fim da avaliação (D14). */
 function ehCopiaNoCache(uri: string): boolean {
   return uri.startsWith(Paths.cache.uri);
 }
 
-/** Pede a permissão, abre a galeria só com vídeos e monta o vídeo da tentativa com o FPS lido. */
+/** Pede a permissão, abre a galeria só com vídeos e monta o vídeo da tentativa com o FPS lido (D22). */
 export async function importarVideoDaGaleria(): Promise<ResultadoImportacao> {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permissao.granted) return { tipo: 'permissao_negada' };
@@ -68,15 +91,15 @@ export async function importarVideoDaGaleria(): Promise<ResultadoImportacao> {
     if (escolha.canceled) return { tipo: 'cancelado' };
 
     const arquivo = escolha.assets[0];
-    const fps = await lerTaxaDoVideo(arquivo.uri);
+    const taxas = await lerTaxasDoVideo(arquivo.uri);
     return {
       tipo: 'ok',
       video: {
         uri: arquivo.uri,
         nome: arquivo.fileName ?? NOME_PADRAO,
         duracaoS: (arquivo.duration ?? 0) / 1000,
-        fpsLido: fps,
-        fpsDoArquivo: fps,
+        fpsLido: taxas.fpsLido,
+        fpsDoArquivo: taxas.fpsDoArquivo,
         temporario: ehCopiaNoCache(arquivo.uri),
       },
     };

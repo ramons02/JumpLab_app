@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "deteccao-pose": ["./modules/deteccao-pose"],
-      "camera-alta-velocidade": ["./modules/camera-alta-velocidade"]
+      "camera-alta-velocidade": ["./modules/camera-alta-velocidade"],
+      "leitura-video": ["./modules/leitura-video"]
     },
     "types": ["jest"]
   },

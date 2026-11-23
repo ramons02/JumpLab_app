@@ -1,5 +1,7 @@
 /** Opções do seletor sempre presentes. */
 export const FPS_PADRAO: readonly number[] = [60, 120, 240];
+/** Taxa assumida quando os dados do vídeo não trazem a taxa de gravação (D22). */
+export const FPS_GRAVACAO_PADRAO = 120;
 /** Abaixo disso não confirma (HU005 RN08); igual a isso é baixa precisão (D3). */
 export const FPS_MINIMO = 60;
 
@@ -15,6 +17,41 @@ export const MENSAGEM_AVISO_FPS: Record<AvisoFps, string> = {
 export function normalizarFpsLido(valor: unknown): number | null {
   if (typeof valor !== 'number' || !Number.isFinite(valor) || valor <= 0) return null;
   return Math.round(valor);
+}
+
+/** O que se leu do arquivo para chegar à taxa de gravação (D22). */
+export interface LeituraDaTaxa {
+  /** Taxa de captura gravada pela câmera lenta, se houver. */
+  taxaDeCaptura: number | null;
+  /** Quadros da faixa de vídeo e a duração dela, em segundos. */
+  quadros: number | null;
+  duracaoS: number | null;
+  /** Taxa declarada na faixa (pelo sistema ou pelo tocador). */
+  taxaDaFaixa: number | null;
+}
+
+function positivo(valor: number | null): valor is number {
+  return typeof valor === 'number' && Number.isFinite(valor) && valor > 0;
+}
+
+/** Taxa em que os quadros estão no arquivo: contagem pela duração; sem ela, a declarada na faixa. */
+export function taxaDoArquivo(leitura: LeituraDaTaxa): number | null {
+  if (positivo(leitura.quadros) && positivo(leitura.duracaoS)) {
+    return normalizarFpsLido(leitura.quadros / leitura.duracaoS);
+  }
+  return normalizarFpsLido(leitura.taxaDaFaixa);
+}
+
+/**
+ * Taxa real de gravação, usada nas contas (D22). Câmera lenta salva para tocar devagar guarda cada
+ * quadro capturado e uma taxa de reprodução menor; nesse caso vale a taxa de captura. Sem ela, os
+ * quadros estão em tempo real e vale a taxa do arquivo.
+ */
+export function taxaDeGravacao(leitura: LeituraDaTaxa): number | null {
+  const doArquivo = taxaDoArquivo(leitura);
+  const captura = normalizarFpsLido(leitura.taxaDeCaptura);
+  if (captura !== null && (doArquivo === null || captura > doArquivo)) return captura;
+  return doArquivo;
 }
 
 export function opcoesDeFps(fpsLido: number | null): number[] {
