@@ -12,19 +12,13 @@ import {
   CASAS_VELOCIDADE,
   formatarDecimal,
 } from '@/utils/formatacao';
+import { ESTILO_SEMAFORO } from '@/theme/semaforoLsi';
 
 const COR_CARTAO: Record<CorPerda, CorCartao | undefined> = {
   verde: 'verde',
   amarelo: 'amarelo',
   vermelho: 'vermelho',
   neutro: undefined,
-};
-
-const COR_BARRA: Record<CorPerda, string> = {
-  verde: 'bg-destaque',
-  amarelo: 'bg-aviso',
-  vermelho: 'bg-erro',
-  neutro: 'bg-destaque',
 };
 
 /** Resultado da série: cartões, barras da velocidade por repetição e tabela por repetição. */
@@ -69,7 +63,7 @@ export function BlocoAgachamento({ resumo }: { resumo: ResultadoAgachamento }) {
             <View className="h-3 flex-1 rounded-full bg-borda">
               <View
                 testID={`barra-rep-${r.numero}`}
-                className={`h-3 rounded-full ${indice === ultima ? COR_BARRA[cor] : 'bg-destaque'}`}
+                className={`h-3 rounded-full ${indice === ultima ? ESTILO_SEMAFORO[cor].barra : 'bg-destaque'}`}
                 style={{ width: `${(r.velocidadeMs / resumo.melhorVelocidadeMs) * 100}%` }}
               />
             </View>

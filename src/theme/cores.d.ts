@@ -73,6 +73,11 @@ declare const cores: {
   destaqueFundo: string;
   aviso: { DEFAULT: string; fundo: string };
   erro: { DEFAULT: string; fundo: string };
+  lsi: {
+    verde: { DEFAULT: string; fundo: string };
+    amarelo: { DEFAULT: string; fundo: string };
+    vermelho: { DEFAULT: string; fundo: string };
+  };
   personagem: CoresPersonagem;
   mapa: CoresMapa;
   marca: { fundoIcone: string };

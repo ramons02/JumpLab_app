@@ -16,6 +16,7 @@ module.exports = {
         destaqueFundo: cores.destaqueFundo,
         aviso: cores.aviso,
         erro: cores.erro,
+        lsi: cores.lsi,
         guia: cores.guia,
       },
       fontFamily: {

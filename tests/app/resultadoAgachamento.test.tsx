@@ -80,14 +80,14 @@ describe('resultado do agachamento', () => {
     expect(screen.getByText('20,0%')).toBeOnTheScreen();
     expect(screen.getByText('Melhor potência')).toBeOnTheScreen();
     expect(screen.getAllByText('1,00 m/s')).toHaveLength(3); // topo, cartão e barra da repetição 2
-    expect(classe('barra-rep-3')).toContain('bg-destaque');
+    expect(classe('barra-rep-3')).toContain('bg-lsi-verde');
     expect(screen.queryByText('Baixa precisão (60 fps)')).toBeNull();
     expect(screen.queryByTestId('cartao-lsi')).toBeNull();
   });
 
   it.each([
-    [0.65, '35,0%', 'bg-aviso'],
-    [0.55, '45,0%', 'bg-erro'],
+    [0.65, '35,0%', 'bg-lsi-amarelo'],
+    [0.55, '45,0%', 'bg-lsi-vermelho'],
   ])('última a %p m/s: perda %s com a cor do semáforo', async (velocidade, texto, cor) => {
     await abrirResultado(serieComUltima(velocidade));
     expect(screen.getByText(texto)).toBeOnTheScreen();
