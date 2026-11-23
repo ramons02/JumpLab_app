@@ -15,10 +15,23 @@ export interface DadosDoVideo {
   taxaDaFaixa: number | null;
 }
 
-const modulo = requireNativeModule<{ lerDadosDoVideo(uri: string): Promise<DadosDoVideo> }>(
-  'LeituraVideo',
-);
+const modulo = requireNativeModule<{
+  lerDadosDoVideo(uri: string): Promise<DadosDoVideo>;
+  extrairQuadros(uri: string, temposS: number[], largura: number): Promise<(string | null)[]>;
+}>('LeituraVideo');
 
 export function lerDadosDoVideo(uri: string): Promise<DadosDoVideo> {
   return modulo.lerDadosDoVideo(uri);
+}
+
+/**
+ * Miniaturas da fita de quadros do analisador (D23): uma imagem por tempo pedido, no quadro mais
+ * próximo, com a largura dada em pixels. Volta o endereço de cada imagem no cache, ou null.
+ */
+export function extrairQuadros(
+  uri: string,
+  temposS: number[],
+  largura: number,
+): Promise<(string | null)[]> {
+  return modulo.extrairQuadros(uri, temposS, largura);
 }

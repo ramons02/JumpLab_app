@@ -171,3 +171,30 @@ export function tentativasConcluidas(
     }),
   );
 }
+
+export interface PosicaoTentativa {
+  perna: PernaTentativa;
+  numero: NumeroTentativa;
+}
+
+/**
+ * Próxima tentativa incompleta para o botão do rodapé (D23): primeiro as outras tentativas da perna
+ * atual, em ordem, depois as das outras pernas. Null quando só falta a atual ou nada falta.
+ */
+export function proximaTentativaIncompleta(
+  tentativas: TentativasPorPerna,
+  protocolo: Protocol,
+  atual: PosicaoTentativa,
+): PosicaoTentativa | null {
+  const pernas = pernasDoProtocolo(protocolo);
+  const ordem = [atual.perna, ...pernas.filter((p) => p !== atual.perna)];
+  for (const perna of ordem) {
+    const lista = tentativas[perna] ?? [];
+    const indice = lista.findIndex(
+      (t, i) =>
+        !(perna === atual.perna && i + 1 === atual.numero) && !tentativaCompleta(t, protocolo),
+    );
+    if (indice >= 0) return { perna, numero: (indice + 1) as NumeroTentativa };
+  }
+  return null;
+}

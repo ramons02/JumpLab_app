@@ -20,3 +20,9 @@ export const lerDadosDoVideo = jest.fn(async (): Promise<DadosDoVideo> => {
     leituraVideo.dados ?? { taxaDeCaptura: null, quadros: null, duracaoS: null, taxaDaFaixa: null }
   );
 });
+
+/** Miniaturas simuladas: um endereço por tempo, com o tempo em milissegundos no nome. */
+export const extrairQuadros = jest.fn(
+  async (_uri: string, temposS: number[]): Promise<(string | null)[]> =>
+    temposS.map((t) => `file:///cache/miniatura_${Math.round(t * 1000)}.jpg`),
+);

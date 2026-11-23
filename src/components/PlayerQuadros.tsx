@@ -2,15 +2,23 @@ import { VideoView } from 'expo-video';
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { BarraDeQuadros } from '@/components/BarraDeQuadros';
+import { BarraDeQuadros, type MarcaDaBarra, type TrechoDeVoo } from '@/components/BarraDeQuadros';
+import { FitaDeQuadros } from '@/components/FitaDeQuadros';
 import { LinhaGuia } from '@/components/LinhaGuia';
 import { useAreaDoVideo } from '@/hooks/useAreaDoVideo';
+import { useMiniaturasDeQuadros } from '@/hooks/useMiniaturasDeQuadros';
 import { useTocadorQuadros } from '@/hooks/useTocadorQuadros';
 import type { VideoSelecionado } from '@/types/attempt';
 import { tempoS } from '@/utils/biomechanics';
 import type { Dimensoes } from '@/utils/coordenadaVideo';
 import { formatarDecimal } from '@/utils/formatacao';
-import { fpsDeNavegacao, podeAvancar, podeVoltar } from '@/utils/quadros';
+import {
+  fpsDeNavegacao,
+  PASSO_RAPIDO_QUADROS,
+  podeAvancar,
+  podeVoltar,
+  quadrosVizinhos,
+} from '@/utils/quadros';
 
 const CASAS_TEMPO_S = 3;
 
@@ -21,43 +29,64 @@ interface PlayerQuadrosProps {
   onMudarQuadro(quadro: number): void;
   /** Camada sobre a imagem e abaixo da linha guia (toques e marcadores do agachamento, spec 014). */
   camadaSobreImagem?: (area: Dimensoes, video: Dimensoes | null) => ReactNode;
+  /** Eventos marcados e sugestão sobre a barra de progresso (D23). */
+  marcasDaBarra?: MarcaDaBarra[];
+  /** Trecho de voo pintado na barra (D23). */
+  voo?: TrechoDeVoo | null;
+  /** Selo do evento marcado no quadro atual, sobre o vídeo (D23). */
+  selo?: string | null;
 }
+
+type EstiloBotao = 'cheio' | 'contorno' | 'discreto';
+
+const CLASSE_BOTAO: Record<EstiloBotao, { caixa: string; texto: string }> = {
+  cheio: { caixa: 'flex-1 bg-destaque', texto: 'text-fundo' },
+  contorno: { caixa: 'px-4 border border-destaque', texto: 'text-destaque' },
+  discreto: { caixa: 'px-3 border border-borda bg-cartao', texto: 'text-texto' },
+};
 
 function BotaoQuadro({
   rotulo,
+  acessivel = rotulo,
   habilitado,
   onPress,
-  estreito = false,
+  estilo = 'cheio',
 }: {
   rotulo: string;
+  acessivel?: string;
   habilitado: boolean;
   onPress: () => void;
-  estreito?: boolean;
+  estilo?: EstiloBotao;
 }) {
+  const classe = CLASSE_BOTAO[estilo];
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={rotulo}
+      accessibilityLabel={acessivel}
       disabled={!habilitado}
       onPress={onPress}
-      className={`${estreito ? 'px-4' : 'flex-1'} items-center rounded-2xl ${
-        estreito ? 'border border-destaque' : 'bg-destaque'
-      } py-5 ${habilitado ? '' : 'opacity-40'}`}
+      className={`items-center justify-center rounded-2xl py-4 ${classe.caixa} ${
+        habilitado ? '' : 'opacity-40'
+      }`}
     >
-      <Text className={`text-lg font-semibold ${estreito ? 'text-destaque' : 'text-fundo'}`}>
-        {rotulo}
-      </Text>
+      <Text className={`text-base font-semibold ${classe.texto}`}>{rotulo}</Text>
     </Pressable>
   );
 }
 
-/** Vídeo quadro a quadro: imagem parada, número do quadro, barra e botões de -1 e +1 quadro. */
+/**
+ * Vídeo quadro a quadro: imagem parada com o quadro e o tempo por cima, fita de quadros vizinhos,
+ * barra com as marcas e botões de 10 e de 1 quadro (spec 006 e D23).
+ */
 export function PlayerQuadros({
   video,
   fpsConfirmado,
   quadro,
   onMudarQuadro,
   camadaSobreImagem,
+  marcasDaBarra = [],
+  voo = null,
+  selo = null,
 }: PlayerQuadrosProps) {
   const fps = fpsDeNavegacao(video, fpsConfirmado);
   const tocador = useTocadorQuadros({ video, fps, quadro, onMudarQuadro });
@@ -65,6 +94,9 @@ export function PlayerQuadros({
   const imagem = useAreaDoVideo(tocador.player);
   const navegavel = fps !== null;
   const exibido = previa ?? quadro;
+  const vizinhos = quadrosVizinhos(quadro, tocador.totalQuadros);
+  const miniaturas = useMiniaturasDeQuadros(video.uri, fps, navegavel ? vizinhos : []);
+  const ultimo = tocador.totalQuadros - 1;
 
   return (
     <View className="gap-3">
@@ -82,25 +114,52 @@ export function PlayerQuadros({
         />
         {camadaSobreImagem && imagem.area ? camadaSobreImagem(imagem.area, imagem.video) : null}
         <LinhaGuia />
-      </View>
-
-      <View className="flex-row items-baseline justify-center gap-3">
-        <Text className="text-base text-texto">
-          {navegavel
-            ? `Quadro ${exibido} / ${tocador.totalQuadros - 1}`
-            : 'Confirme o FPS do vídeo para navegar pelos quadros.'}
-        </Text>
-        {navegavel && fpsConfirmado !== null && fpsConfirmado > 0 ? (
-          <Text testID="tempo-quadro" className="text-sm text-textoSecundario">
-            {formatarDecimal(tempoS(0, exibido, fpsConfirmado), CASAS_TEMPO_S)} s
+        {navegavel ? (
+          <View
+            pointerEvents="none"
+            className="absolute left-2 top-2 flex-row items-baseline gap-2 rounded-lg bg-fundo/80 px-2 py-1"
+          >
+            <Text className="text-sm font-semibold text-texto">{`Quadro ${exibido} / ${ultimo}`}</Text>
+            {fpsConfirmado !== null && fpsConfirmado > 0 ? (
+              <Text testID="tempo-quadro" className="text-xs text-textoSecundario">
+                {formatarDecimal(tempoS(0, exibido, fpsConfirmado), CASAS_TEMPO_S)} s
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+        {selo ? (
+          <Text
+            testID="selo-evento"
+            pointerEvents="none"
+            className="absolute right-2 top-2 rounded-full border border-destaque bg-destaqueFundo px-2 py-1 text-xs font-semibold text-destaque"
+          >
+            {selo}
           </Text>
         ) : null}
       </View>
+
+      {navegavel ? null : (
+        <Text className="text-center text-base text-texto">
+          Confirme o FPS do vídeo para navegar pelos quadros.
+        </Text>
+      )}
+
+      {navegavel ? (
+        <FitaDeQuadros
+          quadros={vizinhos}
+          atual={quadro}
+          miniaturas={miniaturas}
+          desabilitada={tocador.reproduzindo}
+          aoEscolher={tocador.irPara}
+        />
+      ) : null}
 
       <BarraDeQuadros
         quadro={exibido}
         totalQuadros={tocador.totalQuadros}
         desabilitada={!navegavel}
+        marcas={marcasDaBarra}
+        voo={voo}
         onArrastar={(alvo) => {
           setPrevia(alvo);
           tocador.posicionar(alvo);
@@ -111,7 +170,14 @@ export function PlayerQuadros({
         }}
       />
 
-      <View className="flex-row gap-3">
+      <View className="flex-row gap-2">
+        <BotaoQuadro
+          rotulo="-10"
+          acessivel="-10 quadros"
+          habilitado={navegavel && podeVoltar(quadro)}
+          onPress={() => tocador.irPara(quadro - PASSO_RAPIDO_QUADROS)}
+          estilo="discreto"
+        />
         <BotaoQuadro
           rotulo="-1 Frame"
           habilitado={navegavel && podeVoltar(quadro)}
@@ -123,12 +189,19 @@ export function PlayerQuadros({
             navegavel && (tocador.reproduzindo || podeAvancar(quadro, tocador.totalQuadros))
           }
           onPress={tocador.alternarReproducao}
-          estreito
+          estilo="contorno"
         />
         <BotaoQuadro
           rotulo="+1 Frame"
           habilitado={navegavel && podeAvancar(quadro, tocador.totalQuadros)}
           onPress={tocador.avancar}
+        />
+        <BotaoQuadro
+          rotulo="+10"
+          acessivel="+10 quadros"
+          habilitado={navegavel && podeAvancar(quadro, tocador.totalQuadros)}
+          onPress={() => tocador.irPara(quadro + PASSO_RAPIDO_QUADROS)}
+          estilo="discreto"
         />
       </View>
     </View>

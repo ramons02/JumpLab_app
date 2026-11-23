@@ -56,3 +56,19 @@ export function podeVoltar(quadro: number): boolean {
 export function podeAvancar(quadro: number, total: number): boolean {
   return quadro < total - 1;
 }
+
+/** Quadros andados por `-10` e `+10` (D23). */
+export const PASSO_RAPIDO_QUADROS = 10;
+/** Quadros de cada lado do atual na fita de quadros vizinhos (D23). */
+export const VIZINHOS_DA_FITA = 3;
+
+/** Quadros da fita: até `raio` antes e depois do atual, só os que existem no vídeo. */
+export function quadrosVizinhos(
+  quadro: number,
+  total: number,
+  raio: number = VIZINHOS_DA_FITA,
+): number[] {
+  const lista: number[] = [];
+  for (let q = quadro - raio; q <= quadro + raio; q++) if (q >= 0 && q < total) lista.push(q);
+  return lista;
+}
