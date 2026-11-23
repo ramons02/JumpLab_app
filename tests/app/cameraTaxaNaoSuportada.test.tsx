@@ -70,6 +70,7 @@ describe('câmera: taxa não suportada', () => {
     camera.maximoNegociado = 120;
     await abrirAnalisador();
     await abrirCamera();
+    await fireEvent.press(await screen.findByRole('radio', { name: '240 fps' }));
 
     expect(await screen.findByText(AVISO)).toBeOnTheScreen();
     expect(botaoGravar()).toBeDisabled();

@@ -18,5 +18,7 @@ module.exports = {
     // Módulo nativo do MediaPipe (spec 018); nos testes, o resultado é controlado pelo teste.
     '^deteccao-pose$': '<rootDir>/tests/helpers/mockDeteccaoPose.ts',
     '^camera-alta-velocidade$': '<rootDir>/tests/helpers/mockCameraAltaVelocidade.tsx',
+    // Leitura da taxa nos dados do arquivo (D22); nos testes, o teste define o que o arquivo traz.
+    '^leitura-video$': '<rootDir>/tests/helpers/mockLeituraVideo.ts',
   },
 };

@@ -87,19 +87,11 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
       expect(screen.getByText('Vídeo do salto · tentativa 1 de 3')).toBeOnTheScreen();
     });
 
-    it('vídeo de 240 fps vem com 240 selecionado e as marcações bloqueadas até confirmar', async () => {
+    it('D22: vídeo de 240 fps já vem confirmado, sem o seletor, e as marcações liberadas', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(240) });
 
-      expect(
-        await screen.findByText('Lido nos dados do vídeo: 240 fps. Confirme ou corrija.'),
-      ).toBeOnTheScreen();
-      expect(chip(240)).toBeChecked();
-      expect(screen.getByText('Confirme o FPS para liberar as marcações.')).toBeOnTheScreen();
-
-      await fireEvent.press(botaoConfirmar());
-
-      expect(await screen.findByText('salto.mp4 · 240 fps confirmado')).toBeOnTheScreen();
+      expect(await screen.findByText('240 fps lido do vídeo · salto.mp4')).toBeOnTheScreen();
       expect(screen.queryByText('Confirme o FPS para liberar as marcações.')).toBeNull();
       expect(screen.queryByText('FPS de gravação')).toBeNull();
     });
@@ -137,7 +129,7 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
       const alerta = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
       const app = await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(240) });
-      await screen.findByText('FPS de gravação');
+      await screen.findByText('240 fps lido do vídeo · salto.mp4');
 
       await act(async () => {
         const { router } = jest.requireActual('expo-router');
@@ -163,7 +155,7 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
           {
             video: video(240),
             fpsSelecionado: 240,
-            fpsConfirmado: null,
+            fpsConfirmado: 240,
             marcas: {},
             sugestao: null,
           },
@@ -176,35 +168,31 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
   });
 
   describe('US2: escolher ou corrigir o FPS', () => {
-    it('sem FPS nos dados, nada vem selecionado e não dá para confirmar', async () => {
+    it('D22: sem FPS nos dados, vale o padrão de 120 sem perguntar', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(null) });
 
-      expect(
-        await screen.findByText('Não foi possível ler o FPS de gravação. Escolha antes de marcar.'),
-      ).toBeOnTheScreen();
-      for (const fps of [60, 120, 240]) expect(chip(fps)).not.toBeChecked();
-      expect(botaoConfirmar()).toBeDisabled();
-
-      await fireEvent.press(chip(120));
-      expect(botaoConfirmar()).toBeEnabled();
+      expect(await screen.findByText('120 fps padrão · salto.mp4')).toBeOnTheScreen();
+      expect(screen.queryByText('FPS de gravação')).toBeNull();
     });
 
     it('60 fps mostra o aviso de baixa precisão, confirma e o aviso continua', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(null) });
+      await fireEvent.press(await screen.findByRole('button', { name: 'Trocar FPS' }));
       await fireEvent.press(await screen.findByRole('radio', { name: '60 fps' }));
 
       expect(screen.getByText(MENSAGEM_AVISO_FPS.baixa_precisao)).toBeOnTheScreen();
       await fireEvent.press(botaoConfirmar());
 
-      expect(await screen.findByText('salto.mp4 · 60 fps confirmado')).toBeOnTheScreen();
+      expect(await screen.findByText('60 fps escolhido · salto.mp4')).toBeOnTheScreen();
       expect(screen.getByText(MENSAGEM_AVISO_FPS.baixa_precisao)).toBeOnTheScreen();
     });
 
-    it('vídeo lido a 480 oferece 480 entre as opções, já selecionado', async () => {
+    it('vídeo lido a 480 vem confirmado e, em Trocar FPS, oferece 480 já selecionado', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(480) });
+      await fireEvent.press(await screen.findByRole('button', { name: 'Trocar FPS' }));
       await screen.findByText('FPS de gravação');
       expect(screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel)).toEqual([
         '60 fps',
@@ -226,7 +214,6 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
     it('Trocar FPS volta ao seletor com o valor atual e bloqueia as marcações de novo', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(240) });
-      await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
 
       await fireEvent.press(await screen.findByRole('button', { name: 'Trocar FPS' }));
 
@@ -235,18 +222,26 @@ describe('analisador: importar vídeo e confirmar o FPS', () => {
       expect(screen.getByText('Confirme o FPS para liberar as marcações.')).toBeOnTheScreen();
     });
 
-    it('Trocar vídeo zera o FPS confirmado da tentativa', async () => {
+    it('Trocar vídeo troca o FPS pela leitura do vídeo novo', async () => {
       await abrirAnalisador();
       await escolherVideo({ tipo: 'ok', video: video(240) });
-      await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
-      await screen.findByText('salto.mp4 · 240 fps confirmado');
+      await screen.findByText('240 fps lido do vídeo · salto.mp4');
 
       proximaImportacao({ tipo: 'ok', video: video(120, 'outro.mp4') });
       await fireEvent.press(screen.getByRole('button', { name: 'Trocar vídeo' }));
 
-      expect(await screen.findByText('outro.mp4')).toBeOnTheScreen();
-      expect(chip(120)).toBeChecked();
-      expect(screen.getByText('Confirme o FPS para liberar as marcações.')).toBeOnTheScreen();
+      expect(await screen.findByText('120 fps lido do vídeo · outro.mp4')).toBeOnTheScreen();
+    });
+
+    it('Trocar vídeo por um sem FPS nos dados usa o padrão de 120', async () => {
+      await abrirAnalisador();
+      await escolherVideo({ tipo: 'ok', video: video(240) });
+      await screen.findByText('240 fps lido do vídeo · salto.mp4');
+
+      proximaImportacao({ tipo: 'ok', video: video(null, 'outro.mp4') });
+      await fireEvent.press(screen.getByRole('button', { name: 'Trocar vídeo' }));
+
+      expect(await screen.findByText('120 fps padrão · outro.mp4')).toBeOnTheScreen();
     });
   });
 });

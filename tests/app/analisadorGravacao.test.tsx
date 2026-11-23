@@ -40,26 +40,26 @@ describe('analisador: gravar com a câmera', () => {
     expect(screen.getByRole('button', { name: 'Gravar com a câmera' })).toBeOnTheScreen();
   });
 
-  it('o vídeo gravado volta com 240 selecionado, aguardando a confirmação (CA01)', async () => {
+  it('o vídeo gravado volta a 120 fps (padrão), já confirmado (CA01, D22)', async () => {
     await abrirAnalisador();
     await abrirCamera();
     await gravarEParar();
 
-    expect(await screen.findByText('gravacao_240fps.mp4')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '240 fps' })).toBeChecked();
-    expect(screen.getByRole('button', { name: 'Confirmar FPS' })).toBeOnTheScreen();
-    expect(screen.getByText('Confirme o FPS para liberar as marcações.')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('120 fps lido do vídeo · gravacao_120fps.mp4'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Confirmar FPS' })).toBeNull();
   });
 
-  it('a 120 fps o vídeo volta com 120 selecionado', async () => {
-    camera.maximosFps = [30, 120];
-    camera.maximoNegociado = 120;
+  it('gravado a 240 fps, o vídeo volta com 240 confirmado', async () => {
     await abrirAnalisador();
     await abrirCamera();
+    await fireEvent.press(await screen.findByRole('radio', { name: '240 fps' }));
     await gravarEParar();
 
-    expect(await screen.findByText('gravacao_120fps.mp4')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '120 fps' })).toBeChecked();
+    expect(
+      await screen.findByText('240 fps lido do vídeo · gravacao_240fps.mp4'),
+    ).toBeOnTheScreen();
   });
 
   it('no unilateral, o vídeo vai para a perna e a tentativa em que o avaliador está', async () => {
@@ -67,7 +67,9 @@ describe('analisador: gravar com a câmera', () => {
     await abrirCamera();
     await gravarEParar();
 
-    expect(await screen.findByText('gravacao_240fps.mp4')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('120 fps lido do vídeo · gravacao_120fps.mp4'),
+    ).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Gravar com a câmera' })).toBeNull();
   });
 
@@ -75,19 +77,18 @@ describe('analisador: gravar com a câmera', () => {
     await abrirAnalisador();
     await abrirCamera();
     await gravarEParar();
-    await screen.findByText('gravacao_240fps.mp4');
-    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar FPS' }));
+    await screen.findByText('120 fps lido do vídeo · gravacao_120fps.mp4');
     const primeira = [...arquivosFalsos];
     expect(primeira).toHaveLength(1);
 
     camera.caminhoGravado = '/data/camera/VID_2.mp4';
     await fireEvent.press(screen.getByRole('button', { name: 'Gravar de novo' }));
-    await fireEvent.press(await screen.findByRole('radio', { name: '120 fps' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: '240 fps' }));
     await gravarEParar();
 
-    expect(await screen.findByText('gravacao_120fps.mp4')).toBeOnTheScreen();
-    expect(screen.getByRole('radio', { name: '120 fps' })).toBeChecked();
-    expect(screen.getByRole('button', { name: 'Confirmar FPS' })).toBeOnTheScreen();
+    expect(
+      await screen.findByText('240 fps lido do vídeo · gravacao_240fps.mp4'),
+    ).toBeOnTheScreen();
     expect(arquivosFalsos.has(primeira[0])).toBe(false);
     expect(arquivosFalsos.size).toBe(1);
   });

@@ -65,7 +65,7 @@ async function abrirAnalisador(protocolo: string, pernaLesionada: PernaLesionada
 async function escolherVideoEConfirmar(nome = 'salto.mp4') {
   importar.mockResolvedValueOnce({ tipo: 'ok', video: video(nome) });
   await fireEvent.press(screen.getByRole('button', { name: 'Escolher vídeo da galeria' }));
-  await fireEvent.press(await screen.findByRole('button', { name: 'Confirmar FPS' }));
+  await screen.findByText(/fps lido do vídeo/);
 }
 
 async function irAoQuadro(quadro: number) {
@@ -102,11 +102,11 @@ describe('analisador: marcar os eventos e calcular', () => {
   afterEach(() => fecharBanco());
 
   describe('US1: marcar decolagem e aterrissagem e ver a prévia', () => {
-    it('os botões ficam bloqueados até confirmar o FPS', async () => {
+    it('em Trocar FPS, os botões ficam bloqueados até confirmar', async () => {
       await abrirAnalisador('CMJ Bilateral');
       importar.mockResolvedValueOnce({ tipo: 'ok', video: video('salto.mp4') });
       await fireEvent.press(screen.getByRole('button', { name: 'Escolher vídeo da galeria' }));
-      await screen.findByRole('button', { name: 'Confirmar FPS' });
+      await fireEvent.press(await screen.findByRole('button', { name: 'Trocar FPS' }));
 
       expect(botao('[Marcar Decolagem]')).toBeDisabled();
       expect(botao('[Marcar Aterrissagem]')).toBeDisabled();
@@ -169,7 +169,7 @@ describe('analisador: marcar os eventos e calcular', () => {
       await fireEvent.press(aba(/^Tentativa 2/));
       expect(screen.queryByRole('button', { name: /Mesmo vídeo/ })).not.toBeNull();
       await fireEvent.press(screen.getByRole('button', { name: 'Mesmo vídeo da tentativa 1' }));
-      expect(screen.getByText('salto.mp4 · 240 fps confirmado')).toBeOnTheScreen();
+      expect(screen.getByText('240 fps lido do vídeo · salto.mp4')).toBeOnTheScreen();
       await completarCmj(1500, 1610);
 
       expect(verResultado()).toBeDisabled();

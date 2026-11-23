@@ -14,10 +14,10 @@ export function taxasAltaSuportadas(faixas: readonly FaixaFps[]): TaxaAlta[] {
   return TAXAS_ALTAS.filter((taxa) => faixas.some((faixa) => faixa.max >= taxa));
 }
 
-/** 240 se suportada; senão 120; senão nenhuma. */
+/** 120, o padrão do app (D22), se suportada; senão 240; senão nenhuma. */
 export function taxaInicial(suportadas: readonly TaxaAlta[]): TaxaAlta | null {
-  if (suportadas.includes(240)) return 240;
   if (suportadas.includes(120)) return 120;
+  if (suportadas.includes(240)) return 240;
   return null;
 }
 
