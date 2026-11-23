@@ -173,6 +173,8 @@ describe('analisador: marcar os eventos e calcular', () => {
       await completarCmj(1500, 1610);
 
       expect(verResultado()).toBeDisabled();
+      expect(screen.getByText('Para ver o resultado, falta:')).toBeOnTheScreen();
+      expect(screen.getByText('• Tentativa 3: sem vídeo')).toBeOnTheScreen();
 
       await fireEvent.press(aba(/^Tentativa 3/));
       await fireEvent.press(screen.getByRole('button', { name: 'Mesmo vídeo da tentativa 2' }));
@@ -180,6 +182,7 @@ describe('analisador: marcar os eventos e calcular', () => {
       await completarCmj(2000, 2105);
 
       expect(verResultado()).toBeEnabled();
+      expect(screen.queryByTestId('pendencias-resultado')).toBeNull();
       await fireEvent.press(verResultado());
       await waitFor(() => expect(app.getPathname()).toBe('/assessment/result'));
     });
