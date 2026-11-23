@@ -6,6 +6,7 @@ import type { VideoSelecionado } from '@/types/attempt';
 import { posicaoNoArquivoS } from '@/utils/quadros';
 
 import { mockTocador, reiniciarTocador } from '../helpers/mockExpoVideo';
+import { extrairQuadros } from '../helpers/mockLeituraVideo';
 
 jest.mock('expo-video', () => jest.requireActual('../helpers/mockExpoVideo').moduloExpoVideo);
 
@@ -256,5 +257,81 @@ describe('PlayerQuadros: reprodução', () => {
   it('sem taxa de navegação, reproduzir fica desabilitado', async () => {
     await render(<TelaControlada video={{ ...VIDEO, fpsDoArquivo: null }} fpsConfirmado={null} />);
     expect(screen.getByRole('button', { name: 'Reproduzir' })).toBeDisabled();
+  });
+
+  describe('D23: tocador da tela de marcação guiada', () => {
+    const maisDez = () => screen.getByRole('button', { name: '+10 quadros' });
+    const menosDez = () => screen.getByRole('button', { name: '-10 quadros' });
+
+    it('CA04 da HU006: +10 e -10 andam 10 quadros e param no primeiro', async () => {
+      await render(<TelaControlada inicial={5} />);
+      await fireEvent.press(maisDez());
+      expect(screen.getByText('Quadro 15 / 719')).toBeOnTheScreen();
+      await fireEvent.press(menosDez());
+      await fireEvent.press(menosDez());
+      expect(screen.getByText('Quadro 0 / 719')).toBeOnTheScreen();
+      expect(menosDez()).toBeDisabled();
+    });
+
+    it('+10 para no último quadro', async () => {
+      await render(<TelaControlada inicial={715} />);
+      await fireEvent.press(maisDez());
+      expect(screen.getByText('Quadro 719 / 719')).toBeOnTheScreen();
+      expect(maisDez()).toBeDisabled();
+    });
+
+    it('CA05 da HU006: fita com 3 quadros antes e 3 depois; tocar leva ao quadro', async () => {
+      jest.useFakeTimers();
+      try {
+        await render(<TelaControlada inicial={139} />);
+        const fita = screen.getAllByRole('button', { name: /^Mostrar o quadro/ });
+        expect(fita.map((b) => b.props.accessibilityLabel)).toEqual(
+          [136, 137, 138, 139, 140, 141, 142].map((q) => `Mostrar o quadro ${q}`),
+        );
+        await act(async () => {
+          jest.runOnlyPendingTimers();
+        });
+        expect(extrairQuadros).toHaveBeenCalledWith(
+          VIDEO.uri,
+          [136, 137, 138, 139, 140, 141, 142].map((q) => posicaoNoArquivoS(q, 240)),
+          expect.any(Number),
+        );
+        expect(await screen.findByTestId('miniatura-139')).toBeOnTheScreen();
+
+        await fireEvent.press(screen.getByRole('button', { name: 'Mostrar o quadro 141' }));
+        expect(screen.getByText('Quadro 141 / 719')).toBeOnTheScreen();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('no começo do vídeo, a fita só tem quadros que existem', async () => {
+      await render(<TelaControlada inicial={1} />);
+      expect(
+        screen
+          .getAllByRole('button', { name: /^Mostrar o quadro/ })
+          .map((b) => b.props.accessibilityLabel),
+      ).toEqual([0, 1, 2, 3, 4].map((q) => `Mostrar o quadro ${q}`));
+    });
+
+    it('mostra o selo, as marcas e o trecho de voo na barra', async () => {
+      await render(
+        <PlayerQuadros
+          video={VIDEO}
+          fpsConfirmado={240}
+          quadro={139}
+          onMudarQuadro={aoMudar}
+          selo="D · decolagem"
+          marcasDaBarra={[
+            { quadro: 139, rotulo: 'D', tipo: 'evento' },
+            { quadro: 197, rotulo: 'A', tipo: 'evento' },
+          ]}
+          voo={{ de: 139, ate: 197 }}
+        />,
+      );
+      expect(screen.getByTestId('selo-evento')).toHaveTextContent('D · decolagem');
+      expect(screen.getAllByTestId('marca-barra-evento')).toHaveLength(2);
+      expect(screen.getByText('voo · 58 quadros')).toBeOnTheScreen();
+    });
   });
 });

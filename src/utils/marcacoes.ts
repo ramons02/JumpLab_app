@@ -85,3 +85,41 @@ export function todasCompletas(tentativas: TentativasPorPerna, protocolo: Protoc
     listas.every((lista) => (lista ?? []).every((t) => tentativaCompleta(t, protocolo)))
   );
 }
+
+/* Tela de marcação guiada (D23, HU007 RN19 a RN23). */
+
+/** Nome do evento para o passo guiado, o botão do rodapé e o selo do vídeo. */
+export const NOME_EVENTO: Record<EventoSalto, string> = {
+  toque: 'Toque no solo',
+  decolagem: 'Decolagem',
+  aterrissagem: 'Aterrissagem',
+};
+
+/** Letra do evento na barra de progresso e no selo do vídeo. */
+export const LETRA_EVENTO: Record<EventoSalto, string> = {
+  toque: 'T',
+  decolagem: 'D',
+  aterrissagem: 'A',
+};
+
+/** Qual quadro procurar para cada evento (passo guiado). */
+export const DICA_EVENTO: Record<EventoSalto, string> = {
+  toque: 'Pare no primeiro quadro com o pé no chão depois da queda da caixa.',
+  decolagem: 'Pare no último quadro com o pé ainda no chão.',
+  aterrissagem: 'Pare no primeiro quadro com o pé de volta no chão.',
+};
+
+/** Primeiro evento do protocolo, na ordem, ainda não marcado; null com todos marcados. */
+export function proximoEvento(marcas: MarcasSalto, protocolo: Protocol): EventoSalto | null {
+  return eventosDoProtocolo(protocolo).find((evento) => marcas[evento] === undefined) ?? null;
+}
+
+/** Texto do selo do evento marcado no quadro (ex.: `D · decolagem`); null se nenhum foi marcado nele. */
+export function seloDoQuadro(
+  marcas: MarcasSalto,
+  protocolo: Protocol,
+  quadro: number,
+): string | null {
+  const evento = eventosDoProtocolo(protocolo).find((e) => marcas[e] === quadro);
+  return evento ? `${LETRA_EVENTO[evento]} · ${NOME_EVENTO[evento].toLowerCase()}` : null;
+}

@@ -271,4 +271,78 @@ describe('analisador: marcar os eventos e calcular', () => {
       expect(screen.queryByText(/lesionada/)).toBeNull();
     });
   });
+
+  describe('D23: tela de marcação guiada', () => {
+    const rodape = () => screen.getByTestId('acao-rodape');
+
+    it('CA07 e CA08: passo guiado, marcar pelo rodapé, voo na barra e próxima tentativa', async () => {
+      await abrirAnalisador('CMJ Bilateral');
+      await escolherVideoEConfirmar();
+      await irAoQuadro(1000);
+
+      expect(screen.getByText('Passo 1 de 2 · Decolagem')).toBeOnTheScreen();
+      expect(rodape()).toHaveTextContent('Marcar decolagem no quadro 1000');
+      await fireEvent.press(rodape());
+      expect(screen.getByTestId('selo-evento')).toHaveTextContent('D · decolagem');
+
+      await irAoQuadro(1120);
+      expect(screen.getByText('Passo 2 de 2 · Aterrissagem')).toBeOnTheScreen();
+      await fireEvent.press(rodape());
+
+      expect(screen.getByText('voo · 120 quadros')).toBeOnTheScreen();
+      expect(screen.queryByTestId('passo-guiado')).toBeNull();
+      expect(
+        screen.getByText('Para corrigir: vá ao quadro certo e toque no evento.'),
+      ).toBeOnTheScreen();
+      expect(rodape()).toHaveTextContent('Ir para a tentativa 2');
+    });
+
+    it('CA09: Ir para a tentativa 2 abre a tentativa 2', async () => {
+      await abrirAnalisador('CMJ Bilateral');
+      await escolherVideoEConfirmar();
+      await completarCmj();
+      await fireEvent.press(rodape());
+      expect(aba(/^Tentativa 2/)).toBeSelected();
+      expect(screen.queryByTestId('acao-rodape')).toBeNull();
+    });
+
+    it('CA10: Ir ao quadro leva ao evento marcado', async () => {
+      await abrirAnalisador('CMJ Bilateral');
+      await escolherVideoEConfirmar();
+      await completarCmj();
+      await fireEvent.press(botao('Ir ao quadro 1000'));
+      expect(screen.getByText('Quadro 1000 / 2399')).toBeOnTheScreen();
+      expect(screen.getByTestId('selo-evento')).toHaveTextContent('D · decolagem');
+    });
+
+    it('o rodapé recusa fora de ordem como o botão do evento', async () => {
+      await abrirAnalisador('Drop Jump');
+      await escolherVideoEConfirmar();
+      await marcarEm('[2. Decolagem]', 500);
+      expect(screen.getByText('Passo 1 de 3 · Toque no solo')).toBeOnTheScreen();
+      await irAoQuadro(600);
+      await fireEvent.press(rodape());
+      expect(screen.getByRole('alert')).toHaveTextContent(/o toque no solo precisa vir antes/);
+    });
+
+    it('unilateral: com a perna completa, o rodapé leva à outra perna; tudo completo, Ver resultado', async () => {
+      const app = await abrirAnalisador('CMJ Unilateral');
+      for (const n of [1, 2, 3]) {
+        if (n > 1) await fireEvent.press(rodape());
+        expect(aba(new RegExp(`^Tentativa ${n}`))).toBeSelected();
+        await escolherVideoEConfirmar(`direita${n}.mp4`);
+        await completarCmj();
+      }
+      expect(rodape()).toHaveTextContent('Ir para a perna esquerda, tentativa 1');
+      await fireEvent.press(rodape());
+      for (const n of [1, 2, 3]) {
+        if (n > 1) await fireEvent.press(rodape());
+        await escolherVideoEConfirmar(`esquerda${n}.mp4`);
+        await completarCmj();
+      }
+      expect(rodape()).toHaveTextContent('Ver resultado');
+      await fireEvent.press(rodape());
+      await waitFor(() => expect(app.getPathname()).toBe('/assessment/result'));
+    });
+  });
 });
